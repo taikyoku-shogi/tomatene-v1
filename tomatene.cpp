@@ -12,7 +12,7 @@
 
 #define ESTIMATED_GAME_LENGTH = 900;
 
-std::vector<std::string> splitString(std::string str, char delimiter) {
+constexpr std::vector<std::string> splitString(std::string str, char delimiter) {
 	std::vector<std::string> res;
 	std::stringstream ss(str);
 	std::string token;
@@ -21,6 +21,34 @@ std::vector<std::string> splitString(std::string str, char delimiter) {
 	}
 	return res;
 }
+int x = 42;
+
+// adapted from https://stackoverflow.com/a/58048821
+constexpr std::vector<std::string_view> splitStringView(const std::string_view str, const char delimeter = ',') {
+	std::vector<std::string_view> res;
+	int left = 0;
+	int right = -1;
+	for(int i = 0; i < static_cast<int>(str.size()); i++) {
+		if(str[i] == delimeter) {
+			left = right;
+			right = i;
+			int index = left + 1;
+			int length = right - index;
+			
+			std::string_view column(str.data() + index, length);
+			res.push_back(column);
+		}
+	}
+	const std::string_view finalColumn(str.data() + right + 1, str.size() - right - 1);
+	res.push_back(finalColumn);
+	return res;
+}
+template <typename T>
+constexpr T stringViewToNum(std::string_view str) {
+	T value = 0;
+	std::from_chars(str.data(), str.data() + str.size(), value);
+	return value;
+}
 std::string textAfter(std::string str, std::string target) {
 	size_t i = str.find(target);
 	if(i == std::string::npos) {
@@ -28,19 +56,31 @@ std::string textAfter(std::string str, std::string target) {
 	}
 	return str.substr(i + 1);
 }
-std::string getItem(std::vector<std::string> vec, int index) {
-	if(index < 0 || index >= vec.size()) {
+std::string getItem(std::vector<std::string> vec, size_t index) {
+	if(index >= vec.size()) {
 		return ""; // WHYYYY C++ DOESN'T HAVE THIS.....
 	}
 	return vec[index];
 }
-bool isNumber(std::string str) {
+constexpr bool isNumber(std::string_view str) {
 	for(char c : str) {
-		if(!std::isdigit(c)) {
+		if(c < '0' || c > '9') {
 			return false;
 		}
 	}
 	return true;
+}
+constexpr inline bool isLetter(char c) {
+	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+constexpr inline bool isUppercaseLetter(char c) {
+	return c >= 'A' && c <= 'Z';
+}
+constexpr inline char capitaliseLetter(char c) {
+	if(isUppercaseLetter(c)) {
+		return c;
+	}
+	return c - ('a' - 'A');
 }
 template <typename T>
 T sign(T x) {
@@ -85,50 +125,65 @@ inline constexpr PieceIdsWrapper pieceIds;
 struct Piece {
 	uint16_t value;
 	
-	operator uint16_t() const {
+	constexpr operator uint16_t() const {
 		return value;
 	}
 	
-	static inline Piece create(std::string species, bool canPromote, uint8_t owner) {
+	static inline constexpr Piece create(std::string_view species, bool canPromote, uint8_t owner) {
 		uint16_t id = pieceIds[species];
 		return create(id, canPromote, owner);
 	}
-	static inline Piece create(uint16_t id, bool canPromote, uint8_t owner) {
+	static inline constexpr Piece create(uint16_t id, bool canPromote, uint8_t owner) {
 		// std::cout << "creating piece " << species << " = " << id << std::endl;
 		return Piece { static_cast<uint16_t>((owner << 10) | (canPromote << 9) | id) };
 	}
 	
-	inline uint8_t getOwner() const {
+	constexpr inline uint8_t getOwner() const {
 		return value >> 10;
 	}
 	inline uint16_t canPromote() const {
 		return ((value >> 9) & 1) && PieceTable[getSpecies()].promotion != 0;
 	}
-	inline uint16_t getSpecies() const {
+	constexpr inline uint16_t getSpecies() const {
 		return value & 0b111111111;
 	}
-	inline bool isRoyal() const {
+	constexpr inline bool isRoyal() const {
 		uint16_t pieceSpecies = getSpecies();
 		return pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP;
 	}
 };
 
-int32_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
+constexpr int32_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
 	if(!piece) return 0;
 	return 1; // placeholder for actual piece evaluation function
 }
 
-class GameState {
+class Board {
 public:
 	std::array<Piece, 1296> board{};
 	uint8_t currentPlayer;
 	std::array<int8_t, 2> royalsLeft{};
-	std::vector<uint32_t> moves;
+	std::string toString() const {
+		std::ostringstream oss;
+		oss << "Player: " << static_cast<int>(currentPlayer) << "\nBoard: [";
+		for(size_t i = 0; i < 1296; i++) {
+			oss << board[i];
+			if(i != 1295) oss << ", ";
+		}
+		oss << "]";
+		return oss.str();
+	}
+	int32_t eval() const {
+		if(currentPlayer) {
+			return absEval * -1;
+		}
+		return absEval;
+	}
 	
-	Piece getSquare(uint8_t x, uint8_t y) const {
+	constexpr Piece getSquare(uint8_t x, uint8_t y) const {
 		return board[x + 36 * y];
 	}
-	void setSquare(uint8_t x, uint8_t y, Piece piece) {
+	constexpr void setSquare(uint8_t x, uint8_t y, Piece piece) {
 		if(getSquare(x, y)) {
 			// clearing before setting makes it a bit easier
 			clearSquare(x, y);
@@ -149,67 +204,62 @@ public:
 		}
 		board[x + 36 * y] = Piece{0};
 	}
-	std::string toString() const {
-		std::ostringstream oss;
-		oss << "Player: " << static_cast<int>(currentPlayer) << "\nBoard: [";
-		for(size_t i = 0; i < 1296; i++) {
-			oss << board[i];
-			if(i != 1295) oss << ", ";
-		}
-		oss << "]";
-		return oss.str();
-	}
-	int32_t eval() const {
-		if(currentPlayer) {
-			return absEval * -1;
-		}
-		return absEval;
-	}
 	
-	static GameState fromTsfen(std::string tsfen) {
-		auto fields = splitString(tsfen, ' ');
-		GameState gameState;
+	static constexpr Board fromTsfen(std::string tsfen) {
+		auto fields = splitStringView(tsfen, ' ');
+		Board board;
 		
-		auto rows = splitString(fields[0], '/');
+		auto rows = splitStringView(fields[0], '/');
 		int y = 0;
 		for(auto row : rows) {
 			int x = 0;
-			auto cells = splitString(row, ',');
+			auto cells = splitStringView(row, ',');
 			for(auto cell : cells) {
 				if(isNumber(cell)) {
 					// empty spaces
-					int emptySquares = stoi(cell);
+					int emptySquares = stringViewToNum<uint8_t>(cell);
 					x += emptySquares;
-					// for(int i = 0; i < emptySquares; i++) {
-					// 	gameState.clearSquare(x++, y);
-					// }
 					continue;
 				}
 				std::string pieceSpecies;
 				size_t i = 0;
-				while(i < cell.size() && std::isalpha(cell[i])) {
+				while(i < cell.size() && isLetter(cell[i])) {
 					pieceSpecies += cell[i++];
 				}
 				int count = 1;
 				if(i < cell.size()) {
-					count = std::stoi(cell.substr(i));
+					count = stringViewToNum<uint8_t>(cell.substr(i));
 				}
-				bool isSecondPlayer = std::isupper(pieceSpecies[0]);
+				bool isSecondPlayer = isUppercaseLetter(pieceSpecies[0]);
 				std::transform(pieceSpecies.begin(), pieceSpecies.end(), pieceSpecies.begin(), [](auto c) {
-					return std::toupper(c);
+					return capitaliseLetter(c);
 				});
 				for(int j = 0; j < count; j++) {
-					gameState.setSquare(x++, y, Piece::create(pieceSpecies, true, isSecondPlayer));
+					board.setSquare(x++, y, Piece::create(pieceSpecies, true, isSecondPlayer));
 				}
 			}
 			y++;
 		}
-		gameState.currentPlayer = stoi(fields[1]) % 2;
+		board.currentPlayer = stringViewToNum<uint8_t>(fields[1]) % 2;
 		
+		return board;
+	}
+// protected:
+	int32_t absEval = 0;
+};
+constexpr inline Board initialBoard = Board::fromTsfen(INITIAL_TSFEN);
+
+class GameState : public Board {
+public:
+	std::vector<uint32_t> moves;
+	
+	static GameState fromBoard(Board board) {
+		GameState gameState;
+		// goofy syntax...
+		static_cast<Board&>(gameState) = board;
+		// todo: make this generate moves
 		return gameState;
 	}
-private:
-	int32_t absEval = 0;
 };
 
 inline bool inPromotionZone(uint8_t owner, uint8_t y) {
@@ -339,8 +389,6 @@ int main() {
 	float startingTime = 0;
 	float timeIncrement = 0;
 	
-	int moveCounter = 0;
-	
 	GameState gameState;
 	
 	std::string line;
@@ -363,14 +411,18 @@ int main() {
 				player = std::stoi(getItem(arguments, 1));
 			} else if(command == "startgame") {
 				std::string initialPos = textAfter(line, " ");
+				Board board;
 				if(initialPos == "initial") {
-					initialPos = INITIAL_TSFEN;
+					std::cout << "using initial tsfen!" << std::endl;
+					// initialPos = INITIAL_TSFEN;
+					board = initialBoard;
+				} else {
+					std::cout << "got tsfen: '" << initialPos << "'" << std::endl;
+					board = Board::fromTsfen(initialPos);
+					std::cout << "parsed tsfen!" << std::endl;
 				}
-				std::cout << "got tsfen: '" << initialPos << "'" << std::endl;
-				gameState = GameState::fromTsfen(initialPos);
-				std::cout << "parsed tsfen!" << std::endl;
+				gameState = GameState::fromBoard(board);
 				std::cout << gameState.toString() << std::endl;
-				moveCounter = 0;
 			} else if(command == "win") {
 				inGame = false;
 			} else if(command == "loss") {
@@ -378,8 +430,7 @@ int main() {
 			} else if(command == "draw") {
 				inGame = false;
 			} else if(command == "opmove") {
-				moveCounter++;
-				
+				// todo
 			} else if(command == "setparam") {
 				// parameters not yet implemented, this command should never be received
 			} else if(command == "quit") {
