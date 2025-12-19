@@ -1,16 +1,20 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <sstream>
+#include <thread>
+#include <chrono>
 
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
+
+#include "zobristHashes.h"
+#include "transpositionTable.h"
 
 #define ENGINE_NAME "Tomatene"
 #define ENGINE_DESC "Experimental taikyoku shogi engine"
 #define ENGINE_AUTHOR "s1050613"
 #define ENGINE_VERSION "v0"
 
-#define INITIAL_TSFEN "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-
-#define ESTIMATED_GAME_LENGTH = 900;
+inline constexpr float ESTIMATED_GAME_LENGTH = 900;
 
 constexpr std::vector<std::string> splitString(std::string str, char delimiter) {
 	std::vector<std::string> res;
@@ -62,9 +66,12 @@ std::string getItem(std::vector<std::string> vec, size_t index) {
 	}
 	return vec[index];
 }
+constexpr inline bool isNumber(char c) {
+	return c >= '0' && c <= '9';
+}
 constexpr bool isNumber(std::string_view str) {
 	for(char c : str) {
-		if(c < '0' || c > '9') {
+		if(!isNumber(c)) {
 			return false;
 		}
 	}
@@ -87,6 +94,9 @@ T sign(T x) {
 	return (x > 0) - (x < 0);
 }
 
+// Centipawns
+typedef int32_t eval_t;
+
 struct PieceSpecies {
 	enum Type : uint16_t {
 		None,
@@ -97,17 +107,23 @@ struct PieceSpecies {
 	};
 };
 
+inline constexpr bool isLionLikePiece(PieceSpecies::Type pieceSpecies) {
+	return pieceSpecies == PieceSpecies::L || pieceSpecies == PieceSpecies::FFI || pieceSpecies == PieceSpecies::BS || pieceSpecies == PieceSpecies::H;
+}
+inline constexpr bool isRangeCapturingPiece(PieceSpecies::Type pieceSpecies) {
+	return pieceSpecies == PieceSpecies::GG || pieceSpecies == PieceSpecies::VG || pieceSpecies == PieceSpecies::FLG || pieceSpecies == PieceSpecies::AG || pieceSpecies == PieceSpecies::FID || pieceSpecies == PieceSpecies::FCR;
+}
+
 struct PieceInfo {
 	const char* movement;
 	PieceSpecies::Type promotion;
 };
 inline constexpr PieceInfo PieceTable[] = {
+	{ "", PieceSpecies::None },
 	#define Piece(code, move, promo) { move, PieceSpecies::promo },
 		#include "pieces.inc"
 	#undef Piece
 };
-
-// std::unordered_map<std::string, uint16_t> pieceIds;
 
 inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::TotalCount - 1> PieceSpeciesToId = {
 	#define Piece(code, move, promo) { #code, PieceSpecies::code },
@@ -115,11 +131,24 @@ inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::T
 	#undef Piece
 };
 struct PieceIdsWrapper {
-	constexpr uint16_t operator[](std::string_view species) const {
+	inline constexpr uint16_t operator[](std::string_view species) const {
 		return PieceSpeciesToId.at(species);
 	}
 };
 inline constexpr PieceIdsWrapper pieceIds;
+
+TranspositionTable transpositionTable;
+
+bool atsiInitialised = false;
+bool inGame = false; // i sthis needed?
+uint8_t player = 0;
+float startingTime = 0;
+float timeIncrement = 0;
+
+constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY) {
+	// std::cout << "log Creating move: "<< std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
+	return srcX << 18 | srcY << 12 | destX << 6 | destY;
+}
 
 // hacky wrapper around a uint16_t lol
 struct Piece {
@@ -144,25 +173,45 @@ struct Piece {
 	inline uint16_t canPromote() const {
 		return ((value >> 9) & 1) && PieceTable[getSpecies()].promotion != 0;
 	}
-	constexpr inline uint16_t getSpecies() const {
-		return value & 0b111111111;
+	constexpr inline PieceSpecies::Type getSpecies() const {
+		return static_cast<PieceSpecies::Type>(value & 0b111111111);
 	}
 	constexpr inline bool isRoyal() const {
 		uint16_t pieceSpecies = getSpecies();
 		return pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP;
 	}
+	constexpr inline bool isInPromotionZone(int8_t y) const {
+		return getOwner()? y > 24 : y < 11;
+	}
 };
 
-constexpr int32_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
+constexpr eval_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
 	if(!piece) return 0;
-	return 1; // placeholder for actual piece evaluation function
+	uint8_t owner = piece.getOwner();
+	// flip x and y to be relative to the piece. 0 means to the left of the piece or the back of the board behind the piece.
+	if(owner) {
+		x = 35 - x;
+	} else {
+		y = 35 - y;
+	}
+	
+	eval_t pieceBaseEval = 100; // AAAAAAHHH
+	eval_t horizontalCenterBonus = 18 - std::abs(x - 18);
+	eval_t verticalCenterBonus = std::min(y, static_cast<uint8_t>(25));
+	
+	return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus;
 }
 
-class Board {
+class GameState {
 public:
 	std::array<Piece, 1296> board{};
-	uint8_t currentPlayer;
+	uint8_t currentPlayer = 0;
 	std::array<int8_t, 2> royalsLeft{};
+	std::array<std::array<std::vector<uint32_t>, 1296>, 2> movesPerSquarePerPlayer;
+	// this could be made unsigned, but we'll be converting it to signed all the time
+	eval_t absEval = 0;
+	int32_t hash = 0;
+	
 	std::string toString() const {
 		std::ostringstream oss;
 		oss << "Player: " << static_cast<int>(currentPlayer) << "\nBoard: [";
@@ -170,29 +219,38 @@ public:
 			oss << board[i];
 			if(i != 1295) oss << ", ";
 		}
-		oss << "]";
+		oss << "]\nZobrist hash: " << hash;
 		return oss.str();
 	}
-	int32_t eval() const {
+	eval_t eval() const {
 		if(currentPlayer) {
 			return absEval * -1;
 		}
 		return absEval;
 	}
 	
-	constexpr Piece getSquare(uint8_t x, uint8_t y) const {
+	Piece getSquare(uint8_t x, uint8_t y) const {
+		// std::cout << std::to_string(x) << "," << std::to_string(y) << std::endl;
 		return board[x + 36 * y];
 	}
-	constexpr void setSquare(uint8_t x, uint8_t y, Piece piece) {
+	void setSquare(uint8_t x, uint8_t y, Piece piece) {
 		if(getSquare(x, y)) {
 			// clearing before setting makes it a bit easier
 			clearSquare(x, y);
+		}
+		// handle promotion here
+		if(piece.canPromote() && piece.isInPromotionZone(y)) {
+			PieceSpecies::Type promotedSpecies = PieceTable[piece.getSpecies()].promotion;
+			if(promotedSpecies) {
+				piece = Piece::create(promotedSpecies, 0, piece.getOwner());
+			}
 		}
 		board[x + 36 * y] = piece;
 		absEval += evalPiece(piece, x, y) * (piece.getOwner()? -1 : 1);
 		if(piece.isRoyal()) {
 			royalsLeft[piece.getOwner()]++;
 		}
+		hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
 	}
 	void clearSquare(uint8_t x, uint8_t y) {
 		Piece oldPiece = getSquare(x, y);
@@ -203,11 +261,62 @@ public:
 			}
 		}
 		board[x + 36 * y] = Piece{0};
+		hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+		// movesPerSquarePerPlayer[x + 36 * y].clear();
 	}
 	
-	static constexpr Board fromTsfen(std::string tsfen) {
+	void generateMoves() {
+		size_t i = 0;
+		for(int y = 0; y < 36; y++) {
+			for(int x = 0; x < 36; x++) {
+				movesPerSquarePerPlayer[0][i].clear();
+				movesPerSquarePerPlayer[1][i].clear();
+				Piece piece = getSquare(x, y);
+				if(piece && piece.getSpecies() == PieceSpecies::P) {
+					uint8_t destY = y + (piece.getOwner()? 1 : -1);
+					if(destY > 35) return;
+					Piece forwardPiece = getSquare(x, destY);
+					if(!forwardPiece || forwardPiece.getOwner() != piece.getOwner()) {
+						auto move = createMove(x, y, x, destY);
+						movesPerSquarePerPlayer[piece.getOwner()][i].push_back(move);
+					}
+				}
+				i++;
+			}
+		}
+	}
+	
+	std::vector<uint32_t> getAllMovesForPlayer(uint8_t player) {
+		size_t totalSpace = 0;
+		// for(size_t i = 0; i < 1296; i++) {
+		// 	if(board[i] && board[i].getOwner() == player) {
+		// 		std::vector<uint32_t> &moves = movesPerSquarePerPlayer[i];
+		// 		totalSpace += moves.size();
+		// 	}
+		// }
+		for(const std::vector<uint32_t> &moves : movesPerSquarePerPlayer[player]) {
+			totalSpace += moves.size();
+		}
+		// std::cout << "log Space for " << totalSpace << " moves"<<std::endl;
+		
+		std::vector<uint32_t> allMoves;
+		allMoves.reserve(totalSpace);
+		for(const std::vector<uint32_t> &moves : movesPerSquarePerPlayer[player]) {
+			allMoves.insert(allMoves.end(), moves.begin(), moves.end());
+		}
+		// for(size_t i = 0; i < 1296; i++) {
+		// 	if(board[i] && board[i].getOwner() == player) {
+		// 		std::vector<uint32_t> &moves = movesPerSquarePerPlayer[i];
+		// 		allMoves.insert(allMoves.end(), moves.begin(), moves.end());
+		// 	}
+		// }
+		
+		return allMoves;
+	}
+	
+	static GameState fromTsfen(std::string_view tsfen) {
 		auto fields = splitStringView(tsfen, ' ');
-		Board board;
+		GameState gameState;
 		
 		auto rows = splitStringView(fields[0], '/');
 		int y = 0;
@@ -235,32 +344,22 @@ public:
 					return capitaliseLetter(c);
 				});
 				for(int j = 0; j < count; j++) {
-					board.setSquare(x++, y, Piece::create(pieceSpecies, true, isSecondPlayer));
+					gameState.setSquare(x++, y, Piece::create(pieceSpecies, true, isSecondPlayer));
 				}
 			}
 			y++;
 		}
-		board.currentPlayer = stringViewToNum<uint8_t>(fields[1]) % 2;
+		gameState.currentPlayer = stringViewToNum<uint8_t>(fields[1]) % 2;
+		gameState.generateMoves();
 		
-		return board;
-	}
-// protected:
-	int32_t absEval = 0;
-};
-constexpr inline Board initialBoard = Board::fromTsfen(INITIAL_TSFEN);
-
-class GameState : public Board {
-public:
-	std::vector<uint32_t> moves;
-	
-	static GameState fromBoard(Board board) {
-		GameState gameState;
-		// goofy syntax...
-		static_cast<Board&>(gameState) = board;
-		// todo: make this generate moves
 		return gameState;
 	}
 };
+
+inline constexpr std::string_view INITIAL_TSFEN = {
+	#include "initialTsfen.inc"
+};
+inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
 inline bool inPromotionZone(uint8_t owner, uint8_t y) {
 	return owner? y > 24 : y < 11;
@@ -269,22 +368,18 @@ void makeMove(GameState &gameState, uint32_t move) {
 	// move layout:
 	// 6 bits: src x, 6 bits: src y
 	// 6 bits: dst x, 6 bits: dst y
-	// for capricorn, 1 bit extra: promotion
 	// for range capturing pieces, 1 bit extra: capture all
 	// for lion-like pieces, extra 1 bit: does middle step, extra 2 bits: middle step x offset, extra 2 bits: middle step y offset
-	// for free eagle, 1 bit extra: captured all in the way, 1 bit more extra: capturing 3 or 4
 	
 	uint8_t srcX = (move >> 18) & 0b111111;
 	uint8_t srcY = (move >> 12) & 0b111111;
 	Piece piece = gameState.getSquare(srcX, srcY);
 	uint8_t destX = (move >> 6) & 0b111111;
 	uint8_t destY = move & 0b111111;
-	uint16_t pieceSpecies = piece.getSpecies();
+	PieceSpecies::Type pieceSpecies = piece.getSpecies();
 	uint8_t pieceOwner = piece.getOwner();
 	bool middleStepShouldPromote = false;
-	if(pieceSpecies == PieceSpecies::C) {
-		middleStepShouldPromote = move >> 24;
-	} else if(pieceSpecies == PieceSpecies::L || pieceSpecies == PieceSpecies::FFI || pieceSpecies == PieceSpecies::BS || pieceSpecies == PieceSpecies::H) {
+	if(isLionLikePiece(pieceSpecies)) {
 		// lion-like pieces
 		int8_t doesMiddleStep = move >> 28;
 		if(doesMiddleStep) {
@@ -294,23 +389,7 @@ void makeMove(GameState &gameState, uint32_t move) {
 			gameState.clearSquare(srcX + middleStepX, middleY);
 			middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
 		}
-	} else if(pieceSpecies == PieceSpecies::FE) {
-		// free eagle
-		bool captureAllFlag = move >> 24;
-		if(captureAllFlag) {
-			int8_t dirX = sign(destX - srcX);
-			int8_t dirY = sign(destY - srcY);
-			bool shouldMove4 = move >> 25;
-			uint8_t steps = 3 + shouldMove4;
-			uint8_t x = srcX + dirX;
-			uint8_t y = srcY + dirY;
-			for(uint8_t i = 0; i < steps; i++) {
-				gameState.clearSquare(x, y);
-				x += dirX;
-				y += dirY;
-			}
-		}
-	} else if(pieceSpecies == PieceSpecies::GG || pieceSpecies == PieceSpecies::VG || pieceSpecies == PieceSpecies::FLG || pieceSpecies == PieceSpecies::AG || pieceSpecies == PieceSpecies::FID || pieceSpecies == PieceSpecies::FCR) {
+	} else if(isRangeCapturingPiece(pieceSpecies)) {
 		// range capturing pieces
 		bool captureAllFlag = move >> 24;
 		if(captureAllFlag) {
@@ -338,12 +417,66 @@ void makeMove(GameState &gameState, uint32_t move) {
 	
 	gameState.clearSquare(srcX, srcY);
 	gameState.setSquare(destX, destY, piece);
+	gameState.generateMoves();
+	gameState.currentPlayer = 1 - gameState.currentPlayer;
+}
+
+std::string stringifyBoardPos(uint8_t x, uint8_t y) {
+	uint8_t file = 36 - x;
+	std::string rank(1, 'a' + (y % 26)); // I love c++
+	if(y >= 26) {
+		rank += rank;
+	}
+	return std::to_string(file) + rank;
+}
+std::pair<uint8_t, uint8_t> parseBoardPos(std::string boardPos) {
+	uint8_t file = isNumber(boardPos.at(1))? (boardPos.at(0) - '0') * 10 + (boardPos.at(1) - '0') : boardPos.at(0) - '0';
+	uint8_t x = 36 - file;
+	std::string rank = boardPos.substr(1 + isNumber(boardPos.at(1)));
+	uint8_t y = rank.at(0) - 'a' + (rank.length() > 1) * 26;
+	return { x, y };
+}
+std::string stringifyMove(GameState &gameState, uint32_t move) {
+	uint8_t srcX = (move >> 18) & 0b111111;
+	uint8_t srcY = (move >> 12) & 0b111111;
+	uint8_t destX = (move >> 6) & 0b111111;
+	uint8_t destY = move & 0b111111;
+	
+	// std::cout << "log stringifyMove = " << std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
+	std::string moveStr = stringifyBoardPos(srcX, srcY) + " " + stringifyBoardPos(destX, destY);
+	
+	Piece piece = gameState.getSquare(srcX, srcY);
+	PieceSpecies::Type pieceSpecies = piece.getSpecies();
+	if(isLionLikePiece(pieceSpecies)) {
+		int8_t doesMiddleStep = move >> 28;
+		if(doesMiddleStep) {
+			int8_t middleStepX = ((move >> 26) & 0b11) - 1;
+			uint8_t middleX = srcX + middleStepX;
+			int8_t middleStepY = ((move >> 24) & 0b11) - 1;
+			uint8_t middleY = srcY + middleStepY;
+			moveStr += " " + stringifyBoardPos(middleX, middleY);
+		}
+	}
+	
+	return moveStr;
+}
+uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
+	auto srcPos = parseBoardPos(arguments[1]);
+	auto destPos = parseBoardPos(arguments[arguments.size() - 3]);
+	std::cout << "log Parsed move: " << std::to_string(srcPos.first) << " "<< std::to_string(srcPos.second) << " "<< std::to_string(destPos.first) << " "<< std::to_string(destPos.second) << std::endl;
+	// if(arguments.size() > 3) {
+		
+	// }
+	return createMove(srcPos.first, srcPos.second, destPos.first, destPos.second);
 }
 
 #define INF_SCORE 1000000
 
+unsigned int nodesSearched = 0;
+
 void unmakeMove(GameState &gameState, uint32_t move) {}
-int32_t search(GameState &gameState, int32_t alpha, int32_t beta, uint8_t depth) {
+eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
+	nodesSearched++;
 	// checking royal pieces only needs to be done for the current player - no point checking the player who just moved
 	if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
 		return -INF_SCORE;
@@ -351,44 +484,75 @@ int32_t search(GameState &gameState, int32_t alpha, int32_t beta, uint8_t depth)
 	if(depth == 0) {
 		return gameState.eval();
 	}
-	std::vector<uint32_t> moves = gameState.moves;
-	for(auto move : moves) {
-		makeMove(gameState, move);
-		int32_t score = -search(gameState, -beta, -alpha, depth - 1);
-		unmakeMove(gameState, move);
-		if(score >= beta) {
-			// fail-soft
-			return score;
-		}
-		if(score > alpha) {
-			alpha = score;
+	std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
+	// std::cout << "log Found " << moves.size() << " moves" << std::endl;
+	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
+	if(ttEntry) {
+		std::vector<uint32_t>::iterator it = std::find(moves.begin(), moves.end(), ttEntry->bestMove);
+		if(it != moves.end()) {
+			// std::rotate(moves.begin(), it, it + 1);
+			// std::swap(*moves.begin(), *it);
+			for(size_t i = 0; i < moves.size(); i++) {
+				if(moves[i] == ttEntry->bestMove) {
+					moves[i] = moves[0];
+					moves[0] = ttEntry->bestMove;
+					// std::cout << "log Found TT move " << std::to_string(ttEntry->bestMove) << std::endl;
+					break;
+				}
+			}
 		}
 	}
-	return alpha;
-}
-uint32_t bestMove(GameState &gameState, uint8_t depth) {
-	int alpha = -INF_SCORE;
 	uint32_t bestMove = 0;
-	std::vector<uint32_t> moves = gameState.moves;
-	for(auto move : moves) {
-		makeMove(gameState, move);
-		int32_t score = -search(gameState, -INF_SCORE, -alpha, depth - 1);
-		unmakeMove(gameState, move);
+	for(uint32_t move : moves) {
+		// std::cout << "log trying move " << stringifyMove(gameState, move) << std::endl;
+		GameState newGameState = gameState;
+		makeMove(newGameState, move);
+		int32_t score = -search(newGameState, -beta, -alpha, depth - 1);
+		// unmakeMove(gameState, move);
 		if(score > alpha) {
 			alpha = score;
 			bestMove = move;
+			if(alpha >= beta) {
+				break;
+			}
 		}
 	}
-	return bestMove;
+	transpositionTable.put(gameState.hash, bestMove);
+	return alpha;
+}
+
+void makeBestMove(GameState &gameState) {
+	const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
+	// std::cout << "log Time to move: " << std::to_string(timeToMove) << " seconds" << std::endl;
+	using clock = std::chrono::steady_clock;
+	auto startTime = clock::now();
+	auto stopTime = startTime + std::chrono::duration<float>(timeToMove);
+	
+	eval_t eval;
+	for(int depth = 1; depth <= 2; depth++) {
+		std::cout << "log Searching to depth " << depth << "..." << std::endl;
+		nodesSearched = 0;
+		eval = search(gameState, -INF_SCORE, INF_SCORE, depth);
+		std::cout << "log Score for us after depth " << depth << " and " << nodesSearched << " nodes: " << eval << std::endl;
+		if(clock::now() >= stopTime) {
+			break;
+		}
+	}
+	
+	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
+	if(!ttEntry) {
+		std::cout << "log Fatal error: No TT entry found for gameState hash " << gameState.hash << std::endl;
+		throw std::runtime_error("No TT entry found!!!!!!");
+	}
+	
+	uint32_t bestMove = ttEntry->bestMove;
+	std::cout << "move " << stringifyMove(gameState, bestMove) << std::endl;
+	makeMove(gameState, bestMove);
+	std::cout << "eval " << gameState.absEval << std::endl;
+	std::cout << "log Zobrist hash: " << gameState.hash << std::endl;
 }
 
 int main() {
-	bool atsiInitialised = true;
-	bool inGame = false;
-	uint8_t player = 0;
-	float startingTime = 0;
-	float timeIncrement = 0;
-	
 	GameState gameState;
 	
 	std::string line;
@@ -396,7 +560,7 @@ int main() {
 		std::vector<std::string> arguments = splitString(line, ' ');
 		if(!arguments.size()) continue;
 		std::string command = getItem(arguments, 0);
-		std::cout << atsiInitialised << std::endl;
+		// std::cout << atsiInitialised << std::endl;
 		if(atsiInitialised) {
 			if(command == "identify") {
 				std::cout << "info \"" << ENGINE_NAME << "\" \"" << ENGINE_DESC << "\" \"" << ENGINE_AUTHOR << "\" \"" << ENGINE_VERSION << "\"" << std::endl;
@@ -407,22 +571,27 @@ int main() {
 				} else {
 					timeIncrement = 0;
 				}
-			} else if(command == "side") {
+			} else if(command == "player") {
 				player = std::stoi(getItem(arguments, 1));
 			} else if(command == "startgame") {
 				std::string initialPos = textAfter(line, " ");
-				Board board;
+				using clock = std::chrono::steady_clock;
+				auto start = clock::now();
 				if(initialPos == "initial") {
-					std::cout << "using initial tsfen!" << std::endl;
-					// initialPos = INITIAL_TSFEN;
-					board = initialBoard;
+					// std::cout << "using initial tsfen!" << std::endl;
+					gameState = initialGameState;
 				} else {
-					std::cout << "got tsfen: '" << initialPos << "'" << std::endl;
-					board = Board::fromTsfen(initialPos);
-					std::cout << "parsed tsfen!" << std::endl;
+					// std::cout << "got tsfen: '" << initialPos << "'" << std::endl;
+					gameState = GameState::fromTsfen(initialPos);
+					// std::cout << "parsed tsfen!" << std::endl;
 				}
-				gameState = GameState::fromBoard(board);
-				std::cout << gameState.toString() << std::endl;
+				auto end = clock::now();
+				auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+				// std::cout << "Elapsed: " << elapsed.count() << " µs\n";
+				// std::cout << gameState.toString() << std::endl;
+				if(player == 0) {
+					makeBestMove(gameState);
+				}
 			} else if(command == "win") {
 				inGame = false;
 			} else if(command == "loss") {
@@ -430,7 +599,11 @@ int main() {
 			} else if(command == "draw") {
 				inGame = false;
 			} else if(command == "opmove") {
-				// todo
+				// todo: parse move and call makeMove() or something...
+				uint32_t move = parseMove(gameState, arguments);
+				makeMove(gameState, move);
+				// gameState.currentPlayer = 1 - gameState.currentPlayer;
+				makeBestMove(gameState);
 			} else if(command == "setparam") {
 				// parameters not yet implemented, this command should never be received
 			} else if(command == "quit") {
@@ -439,7 +612,6 @@ int main() {
 		} else {
 			if(command == "atsiinit") {
 				std::string version = getItem(arguments, 1);
-				std::cout << "'" << version << "'" << std::endl;
 				if(version == "v0") {
 					std::cout << "atsiok" << std::endl;
 					atsiInitialised = true;

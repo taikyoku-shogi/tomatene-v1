@@ -7,7 +7,8 @@
 				"${workspaceFolder}/include"
 			],
 			"compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
-			"cppStandard": "gnu++23",
+			"compilerArgs": ["-std=c++23"],
+			"cppStandard": "c++23",
 			"intelliSenseMode": "windows-gcc-x64"
 		}
 	],

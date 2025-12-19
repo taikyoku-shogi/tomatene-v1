@@ -1,4 +1,4 @@
-.PHONY: all clean dist
+.PHONY: all fast preprocess dist clean
 CXX = g++
 CXXFLAGS = -std=c++23 -Iinclude -Wall -Wextra -Wpedantic
 SRC = tomatene.cpp
@@ -9,6 +9,9 @@ COMPILE = $(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET_DIR)/$(TARGET)
 
 all: $(SRC) | dist
 	$(COMPILE)
+
+fast: $(SRC) | dist
+	$(COMPILE)_fast -Ofast
 
 preprocess: $(SRC) | dist
 	$(COMPILE).i -E
