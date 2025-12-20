@@ -95073,1562 +95073,10 @@ namespace __detail
 }
 # 3379 "C:/msys64/ucrt64/include/c++/15.2.0/chrono" 2 3
 # 5 "tomatene.cpp" 2
-
-# 1 "include/frozen/unordered_map.h" 1
-# 26 "include/frozen/unordered_map.h"
-# 1 "include/frozen/bits/basic_types.h" 1
-# 26 "include/frozen/bits/basic_types.h"
-# 1 "include/frozen/bits/exceptions.h" 1
-# 27 "include/frozen/bits/basic_types.h" 2
-# 1 "include/frozen/bits/constexpr_assert.h" 1
-# 26 "include/frozen/bits/constexpr_assert.h"
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/cassert" 1 3
-# 46 "C:/msys64/ucrt64/include/c++/15.2.0/cassert" 3
-# 1 "C:/msys64/ucrt64/include/assert.h" 1 3
-# 17 "C:/msys64/ucrt64/include/assert.h" 3
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/stdlib.h" 1 3
-# 38 "C:/msys64/ucrt64/include/c++/15.2.0/stdlib.h" 3
-using std::abort;
-using std::atexit;
-using std::exit;
-
-
-  using std::at_quick_exit;
-
-
-  using std::quick_exit;
-
-
-  using std::_Exit;
-
-
-
-
-using std::div_t;
-using std::ldiv_t;
-
-using std::abs;
-using std::atof;
-using std::atoi;
-using std::atol;
-using std::bsearch;
-using std::calloc;
-using std::div;
-using std::free;
-using std::getenv;
-using std::labs;
-using std::ldiv;
-using std::malloc;
-
-using std::mblen;
-using std::mbstowcs;
-using std::mbtowc;
-
-using std::qsort;
-using std::rand;
-using std::realloc;
-using std::srand;
-using std::strtod;
-using std::strtol;
-using std::strtoul;
-using std::system;
-
-using std::wcstombs;
-using std::wctomb;
-# 18 "C:/msys64/ucrt64/include/assert.h" 2 3
-
-
-
-extern "C" {
-
-
-__attribute__ ((__dllimport__)) void __attribute__((__cdecl__)) __attribute__ ((__noreturn__)) _wassert(const wchar_t *_Message,const wchar_t *_File,unsigned _Line);
-__attribute__ ((__dllimport__)) void __attribute__((__cdecl__)) __attribute__ ((__noreturn__)) _assert (const char *_Message, const char *_File, unsigned _Line);
-
-
-}
-# 47 "C:/msys64/ucrt64/include/c++/15.2.0/cassert" 2 3
-# 27 "include/frozen/bits/constexpr_assert.h" 2
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 1 3
-# 70 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 3
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 1 3
-# 62 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
-namespace std
-{
-
-
-  namespace rel_ops __attribute__ ((__deprecated__ ("use '" "<=>" "' instead")))
-  {
-# 86 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
-    template <class _Tp>
-      inline bool
-      operator!=(const _Tp& __x, const _Tp& __y)
-      { return !(__x == __y); }
-# 99 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
-    template <class _Tp>
-      inline bool
-      operator>(const _Tp& __x, const _Tp& __y)
-      { return __y < __x; }
-# 112 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
-    template <class _Tp>
-      inline bool
-      operator<=(const _Tp& __x, const _Tp& __y)
-      { return !(__y < __x); }
-# 125 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
-    template <class _Tp>
-      inline bool
-      operator>=(const _Tp& __x, const _Tp& __y)
-      { return !(__x < __y); }
-  }
-
-
-}
-# 71 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 2 3
-# 103 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 3
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/version.h" 1 3
-# 104 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 2 3
-
-namespace std
-{
-
-
-
-
-  template <typename _Tp, typename _Up = _Tp>
-    constexpr
-    inline _Tp
-    exchange(_Tp& __obj, _Up&& __new_val)
-    noexcept(__and_<is_nothrow_move_constructible<_Tp>,
-      is_nothrow_assignable<_Tp&, _Up>>::value)
-    { return std::__exchange(__obj, std::forward<_Up>(__new_val)); }
-
-
-
-  template<typename _Tp>
-    [[nodiscard]]
-    constexpr add_const_t<_Tp>&
-    as_const(_Tp& __t) noexcept
-    { return __t; }
-
-  template<typename _Tp>
-    void as_const(const _Tp&&) = delete;
-
-
-
-  template<typename _Tp, typename _Up>
-    constexpr bool
-    cmp_equal(_Tp __t, _Up __u) noexcept
-    {
-      static_assert(__is_standard_integer<_Tp>::value);
-      static_assert(__is_standard_integer<_Up>::value);
-
-      if constexpr (is_signed_v<_Tp> == is_signed_v<_Up>)
- return __t == __u;
-      else if constexpr (is_signed_v<_Tp>)
- return __t >= 0 && make_unsigned_t<_Tp>(__t) == __u;
-      else
- return __u >= 0 && __t == make_unsigned_t<_Up>(__u);
-    }
-
-  template<typename _Tp, typename _Up>
-    constexpr bool
-    cmp_not_equal(_Tp __t, _Up __u) noexcept
-    { return !std::cmp_equal(__t, __u); }
-
-  template<typename _Tp, typename _Up>
-    constexpr bool
-    cmp_less(_Tp __t, _Up __u) noexcept
-    {
-      static_assert(__is_standard_integer<_Tp>::value);
-      static_assert(__is_standard_integer<_Up>::value);
-
-      if constexpr (is_signed_v<_Tp> == is_signed_v<_Up>)
- return __t < __u;
-      else if constexpr (is_signed_v<_Tp>)
- return __t < 0 || make_unsigned_t<_Tp>(__t) < __u;
-      else
- return __u >= 0 && __t < make_unsigned_t<_Up>(__u);
-    }
-
-  template<typename _Tp, typename _Up>
-    constexpr bool
-    cmp_greater(_Tp __t, _Up __u) noexcept
-    { return std::cmp_less(__u, __t); }
-
-  template<typename _Tp, typename _Up>
-    constexpr bool
-    cmp_less_equal(_Tp __t, _Up __u) noexcept
-    { return !std::cmp_less(__u, __t); }
-
-  template<typename _Tp, typename _Up>
-    constexpr bool
-    cmp_greater_equal(_Tp __t, _Up __u) noexcept
-    { return !std::cmp_less(__t, __u); }
-
-  template<typename _Res, typename _Tp>
-    constexpr bool
-    in_range(_Tp __t) noexcept
-    {
-      static_assert(__is_standard_integer<_Res>::value);
-      static_assert(__is_standard_integer<_Tp>::value);
-      using __gnu_cxx::__int_traits;
-
-      if constexpr (is_signed_v<_Tp> == is_signed_v<_Res>)
- return __int_traits<_Res>::__min <= __t
-   && __t <= __int_traits<_Res>::__max;
-      else if constexpr (is_signed_v<_Tp>)
- return __t >= 0
-   && make_unsigned_t<_Tp>(__t) <= __int_traits<_Res>::__max;
-      else
- return __t <= make_unsigned_t<_Res>(__int_traits<_Res>::__max);
-    }
-
-
-
-
-  template<typename _Tp>
-    [[nodiscard]]
-    constexpr underlying_type_t<_Tp>
-    to_underlying(_Tp __value) noexcept
-    { return static_cast<underlying_type_t<_Tp>>(__value); }
-# 223 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 3
-  [[noreturn,__gnu__::__always_inline__]]
-  inline void
-  unreachable()
-  {
-
-
-
-    __builtin_trap();
-
-
-
-  }
-
-
-
-}
-# 28 "include/frozen/bits/constexpr_assert.h" 2
-
-
-# 29 "include/frozen/bits/constexpr_assert.h"
-inline void constexpr_assert_failed() {}
-# 28 "include/frozen/bits/basic_types.h" 2
-
-
-
-
-
-
-namespace frozen {
-
-namespace bits {
-
-
-struct ignored_arg {};
-
-template <class T, std::size_t N>
-class cvector {
-  T data [N] = {};
-  std::size_t dsize = 0;
-
-public:
-
-  using value_type = T;
-  using reference = value_type &;
-  using const_reference = const value_type &;
-  using pointer = value_type *;
-  using const_pointer = const value_type *;
-  using iterator = pointer;
-  using const_iterator = const_pointer;
-  using size_type = std::size_t;
-  using difference_type = std::ptrdiff_t;
-
-
-  constexpr cvector(void) = default;
-  constexpr cvector(size_type count, const T& value) : dsize(count) {
-    for (std::size_t i = 0; i < N; ++i)
-      data[i] = value;
-  }
-
-
-  constexpr iterator begin() noexcept { return data; }
-  constexpr iterator end() noexcept { return data + dsize; }
-  constexpr const_iterator begin() const noexcept { return data; }
-  constexpr const_iterator end() const noexcept { return data + dsize; }
-
-
-  constexpr size_type size() const { return dsize; }
-
-
-  constexpr reference operator[](std::size_t index) { return data[index]; }
-  constexpr const_reference operator[](std::size_t index) const { return data[index]; }
-
-  constexpr reference back() { return data[dsize - 1]; }
-  constexpr const_reference back() const { return data[dsize - 1]; }
-
-
-  constexpr void push_back(const T & a) { data[dsize++] = a; }
-  constexpr void push_back(T && a) { data[dsize++] = std::move(a); }
-  constexpr void pop_back() { --dsize; }
-
-  constexpr void clear() { dsize = 0; }
-};
-
-template <class T, std::size_t N>
-class carray {
-  T data_ [N] = {};
-
-  template <class Iter, std::size_t... I>
-  constexpr carray(Iter iter, std::index_sequence<I...>)
-      : data_{((void)I, *iter++)...} {}
-  template <std::size_t... I>
-  constexpr carray(const T& value, std::index_sequence<I...>)
-      : data_{((void)I, value)...} {}
-
-  static constexpr void check_initializer(std::initializer_list<T> init) {
-    (void)init;
-    ((void)((init.size() == N) ? 0 : (constexpr_assert_failed(), 0)));
-  }
-
-public:
-
-  using value_type = T;
-  using reference = value_type &;
-  using const_reference = const value_type &;
-  using pointer = value_type *;
-  using const_pointer = const value_type *;
-  using iterator = pointer;
-  using const_iterator = const_pointer;
-  using size_type = std::size_t;
-  using difference_type = std::ptrdiff_t;
-
-
-  constexpr carray() = default;
-  constexpr carray(const value_type& val)
-    : carray(val, std::make_index_sequence<N>()) {}
-  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value, std::size_t> M>
-  constexpr carray(U const (&init)[M])
-    : carray(init, std::make_index_sequence<N>())
-  {
-    static_assert(M >= N, "Cannot initialize a carray with an smaller array");
-  }
-  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value, std::size_t> M>
-  constexpr carray(std::array<U, M> const &init)
-    : carray(init.begin(), std::make_index_sequence<N>())
-  {
-    static_assert(M >= N, "Cannot initialize a carray with an smaller array");
-  }
-  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value>* = nullptr>
-  constexpr carray(std::initializer_list<U> init)
-    : carray((check_initializer(init), init.begin()), std::make_index_sequence<N>())
-  {
-  }
-  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value>* = nullptr>
-  constexpr carray(const carray<U, N>& rhs)
-    : carray(rhs.begin(), std::make_index_sequence<N>())
-  {
-  }
-
-
-  constexpr iterator begin() noexcept { return data_; }
-  constexpr const_iterator begin() const noexcept { return data_; }
-  constexpr iterator end() noexcept { return data_ + N; }
-  constexpr const_iterator end() const noexcept { return data_ + N; }
-
-
-  constexpr size_type size() const { return N; }
-  constexpr size_type max_size() const { return N; }
-
-
-  constexpr reference operator[](std::size_t index) { return data_[index]; }
-  constexpr const_reference operator[](std::size_t index) const { return data_[index]; }
-
-  constexpr reference at(std::size_t index) {
-    if (index > N)
-      throw std::out_of_range("Index (" + std::to_string(index) + ") out of bound (" + std::to_string(N) + ')');
-    return data_[index];
-  }
-  constexpr const_reference at(std::size_t index) const {
-    if (index > N)
-      throw std::out_of_range("Index (" + std::to_string(index) + ") out of bound (" + std::to_string(N) + ')');
-    return data_[index];
-  }
-
-  constexpr reference front() { return data_[0]; }
-  constexpr const_reference front() const { return data_[0]; }
-
-  constexpr reference back() { return data_[N - 1]; }
-  constexpr const_reference back() const { return data_[N - 1]; }
-
-  constexpr value_type* data() noexcept { return data_; }
-  constexpr const value_type* data() const noexcept { return data_; }
-};
-template <class T>
-class carray<T, 0> {
-
-public:
-
-  using value_type = T;
-  using reference = value_type &;
-  using const_reference = const value_type &;
-  using pointer = value_type *;
-  using const_pointer = const value_type *;
-  using iterator = pointer;
-  using const_iterator = const_pointer;
-  using size_type = std::size_t;
-  using difference_type = std::ptrdiff_t;
-
-
-  constexpr carray(void) = default;
-
-};
-
-}
-
-}
-# 27 "include/frozen/unordered_map.h" 2
-# 1 "include/frozen/bits/elsa.h" 1
-# 28 "include/frozen/bits/elsa.h"
-namespace frozen {
-
-template <class T = void> struct elsa {
-  static_assert(std::is_integral<T>::value || std::is_enum<T>::value,
-                "only supports integral types, specialize for other types");
-
-  constexpr std::size_t operator()(T const &value, std::size_t seed) const {
-    std::size_t key = seed ^ static_cast<std::size_t>(value);
-    key = (~key) + (key << 21);
-    key = key ^ (key >> 24);
-    key = (key + (key << 3)) + (key << 8);
-    key = key ^ (key >> 14);
-    key = (key + (key << 2)) + (key << 4);
-    key = key ^ (key >> 28);
-    key = key + (key << 31);
-    return key;
-  }
-};
-
-template <> struct elsa<void> {
-  template<class T>
-  constexpr std::size_t operator()(T const &value, std::size_t seed) const {
-    return elsa<T>{}(value, seed);
-  }
-};
-
-template <class T=void> using anna = elsa<T>;
-}
-# 28 "include/frozen/unordered_map.h" 2
-
-# 1 "include/frozen/bits/pmh.h" 1
-# 27 "include/frozen/bits/pmh.h"
-# 1 "include/frozen/bits/algorithms.h" 1
-# 31 "include/frozen/bits/algorithms.h"
-namespace frozen {
-
-namespace bits {
-
-auto constexpr next_highest_power_of_two(std::size_t v) {
-
-  constexpr auto trip_count = std::numeric_limits<decltype(v)>::digits;
-  v--;
-  for(std::size_t i = 1; i < trip_count; i <<= 1)
-    v |= v >> i;
-  v++;
-  return v;
-}
-
-template<class T>
-auto constexpr log(T v) {
-  std::size_t n = 0;
-  while (v > 1) {
-    n += 1;
-    v >>= 1;
-  }
-  return n;
-}
-
-constexpr std::size_t bit_weight(std::size_t n) {
-  return (n <= 8*sizeof(unsigned int))
-    + (n <= 8*sizeof(unsigned long))
-    + (n <= 8*sizeof(unsigned long long))
-    + (n <= 128);
-}
-
-unsigned int select_uint_least(std::integral_constant<std::size_t, 4>);
-unsigned long select_uint_least(std::integral_constant<std::size_t, 3>);
-unsigned long long select_uint_least(std::integral_constant<std::size_t, 2>);
-template<std::size_t N>
-unsigned long long select_uint_least(std::integral_constant<std::size_t, N>) {
-  static_assert(N < 2, "unsupported type size");
-  return {};
-}
-
-
-template<std::size_t N>
-using select_uint_least_t = decltype(select_uint_least(std::integral_constant<std::size_t, bit_weight(N)>()));
-
-template <typename Iter, typename Compare>
-constexpr auto min_element(Iter begin, const Iter end,
-                           Compare const &compare) {
-  auto result = begin;
-  while (begin != end) {
-    if (compare(*begin, *result)) {
-      result = begin;
-    }
-    ++begin;
-  }
-  return result;
-}
-
-template <class T>
-constexpr void cswap(T &a, T &b) {
-  auto tmp = a;
-  a = b;
-  b = tmp;
-}
-
-template <class T, class U>
-constexpr void cswap(std::pair<T, U> & a, std::pair<T, U> & b) {
-  cswap(a.first, b.first);
-  cswap(a.second, b.second);
-}
-
-template <class... Tys, std::size_t... Is>
-constexpr void cswap(std::tuple<Tys...> &a, std::tuple<Tys...> &b, std::index_sequence<Is...>) {
-  using swallow = int[];
-  (void) swallow{(cswap(std::get<Is>(a), std::get<Is>(b)), 0)...};
-}
-
-template <class... Tys>
-constexpr void cswap(std::tuple<Tys...> &a, std::tuple<Tys...> &b) {
-  cswap(a, b, std::make_index_sequence<sizeof...(Tys)>());
-}
-
-template <typename Iter>
-constexpr void iter_swap(Iter a, Iter b) {
-  cswap(*a, *b);
-}
-
-template <typename Iterator, class Compare>
-constexpr Iterator partition(Iterator left, Iterator right, Compare const &compare) {
-  auto pivot = left + (right - left) / 2;
-  iter_swap(right, pivot);
-  pivot = right;
-  for (auto it = left; 0 < right - it; ++it) {
-    if (compare(*it, *pivot)) {
-      iter_swap(it, left);
-      left++;
-    }
-  }
-  iter_swap(pivot, left);
-  pivot = left;
-  return pivot;
-}
-
-template <typename Iterator, class Compare>
-constexpr void quicksort(Iterator left, Iterator right, Compare const &compare) {
-  while (0 < right - left) {
-    auto new_pivot = bits::partition(left, right, compare);
-    quicksort(left, new_pivot, compare);
-    left = new_pivot + 1;
-  }
-}
-
-template <typename Container, class Compare>
-constexpr Container quicksort(Container const &array,
-                                     Compare const &compare) {
-  Container res = array;
-  quicksort(res.begin(), res.end() - 1, compare);
-  return res;
-}
-
-template <class T, class Compare> struct LowerBound {
-  T const &value_;
-  Compare const &compare_;
-  constexpr LowerBound(T const &value, Compare const &compare)
-      : value_(value), compare_(compare) {}
-
-  template <class ForwardIt>
-  inline constexpr ForwardIt doit_fast(ForwardIt first,
-                                  std::integral_constant<std::size_t, 0>) {
-    return first;
-  }
-
-  template <class ForwardIt, std::size_t N>
-  inline constexpr ForwardIt doit_fast(ForwardIt first,
-                                  std::integral_constant<std::size_t, N>) {
-    auto constexpr step = N / 2;
-    static_assert(N/2 == N - N / 2 - 1, "power of two minus 1");
-    auto it = first + step;
-    auto next_it = compare_(*it, value_) ? it + 1 : first;
-    return doit_fast(next_it, std::integral_constant<std::size_t, N / 2>{});
-  }
-
-  template <class ForwardIt, std::size_t N>
-  inline constexpr ForwardIt doitfirst(ForwardIt first, std::integral_constant<std::size_t, N>, std::integral_constant<bool, true>) {
-    return doit_fast(first, std::integral_constant<std::size_t, N>{});
-  }
-
-  template <class ForwardIt, std::size_t N>
-  inline constexpr ForwardIt doitfirst(ForwardIt first, std::integral_constant<std::size_t, N>, std::integral_constant<bool, false>) {
-    auto constexpr next_power = next_highest_power_of_two(N);
-    auto constexpr next_start = next_power / 2 - 1;
-    auto it = first + next_start;
-    if (compare_(*it, value_)) {
-      auto constexpr next = N - next_start - 1;
-      return doitfirst(it + 1, std::integral_constant<std::size_t, next>{}, std::integral_constant<bool, next_highest_power_of_two(next) - 1 == next>{});
-    }
-    else
-      return doit_fast(first, std::integral_constant<std::size_t, next_start>{});
-  }
-
-  template <class ForwardIt>
-  inline constexpr ForwardIt doitfirst(ForwardIt first, std::integral_constant<std::size_t, 1>, std::integral_constant<bool, false>) {
-    return doit_fast(first, std::integral_constant<std::size_t, 1>{});
-  }
-};
-
-template <std::size_t N, class ForwardIt, class T, class Compare>
-constexpr ForwardIt lower_bound(ForwardIt first, const T &value, Compare const &compare) {
-  return LowerBound<T, Compare>{value, compare}.doitfirst(first, std::integral_constant<std::size_t, N>{}, std::integral_constant<bool, next_highest_power_of_two(N) - 1 == N>{});
-}
-
-template <std::size_t N, class Compare, class ForwardIt, class T>
-constexpr bool binary_search(ForwardIt first, const T &value,
-                             Compare const &compare) {
-  ForwardIt where = lower_bound<N>(first, value, compare);
-  return (!(where == first + N) && !(compare(value, *where)));
-}
-
-
-template<class InputIt1, class InputIt2>
-constexpr bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2)
-{
-  for (; first1 != last1; ++first1, ++first2) {
-    if (!(*first1 == *first2)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-template<class InputIt1, class InputIt2>
-constexpr bool lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
-{
-  for (; (first1 != last1) && (first2 != last2); ++first1, ++first2) {
-    if (*first1 < *first2)
-      return true;
-    if (*first2 < *first1)
-      return false;
-  }
-  return (first1 == last1) && (first2 != last2);
-}
-
-}
-}
-# 28 "include/frozen/bits/pmh.h" 2
-
-
-
-
-
-
-
-namespace frozen {
-
-namespace bits {
-
-
-struct bucket_size_compare {
-  template <typename B>
-  bool constexpr operator()(B const &b0,
-                            B const &b1) const {
-    return b0.size() > b1.size();
-  }
-};
-
-
-
-
-
-
-template <std::size_t M>
-struct pmh_buckets {
-
-
-  static constexpr auto bucket_max = 2 * (1u << (log(M) / 2));
-
-  using bucket_t = cvector<std::size_t, bucket_max>;
-  carray<bucket_t, M> buckets;
-  std::uint64_t seed;
-
-
-
-  struct bucket_ref {
-    unsigned hash;
-    const bucket_t * ptr;
-
-
-    using value_type = typename bucket_t::value_type;
-    using const_iterator = typename bucket_t::const_iterator;
-
-    constexpr auto size() const { return ptr->size(); }
-    constexpr const auto & operator[](std::size_t idx) const { return (*ptr)[idx]; }
-    constexpr auto begin() const { return ptr->begin(); }
-    constexpr auto end() const { return ptr->end(); }
-  };
-
-
-  template <std::size_t... Is>
-  carray<bucket_ref, M> constexpr make_bucket_refs(std::index_sequence<Is...>) const {
-    return {{ bucket_ref{Is, &buckets[Is]}... }};
-  }
-
-
-  carray<bucket_ref, M> constexpr get_sorted_buckets() const {
-    carray<bucket_ref, M> result{this->make_bucket_refs(std::make_index_sequence<M>())};
-    bits::quicksort(result.begin(), result.end() - 1, bucket_size_compare{});
-    return result;
-  }
-};
-
-template <std::size_t M, class Item, std::size_t N, class Hash, class Key, class PRG>
-pmh_buckets<M> constexpr make_pmh_buckets(const carray<Item, N> & items,
-                                Hash const & hash,
-                                Key const & key,
-                                PRG & prg) {
-  using result_t = pmh_buckets<M>;
-
-  while (1) {
-    result_t result{};
-    result.seed = prg();
-    bool rejected = false;
-    for (std::size_t i = 0; i < items.size(); ++i) {
-      auto & bucket = result.buckets[hash(key(items[i]), static_cast<std::size_t>(result.seed)) % M];
-      if (bucket.size() >= result_t::bucket_max) {
-        rejected = true;
-        break;
-      }
-      bucket.push_back(i);
-    }
-    if (!rejected) { return result; }
-  }
-}
-
-
-template<class T, std::size_t N>
-constexpr bool all_different_from(cvector<T, N> & data, T & a) {
-  for (std::size_t i = 0; i < data.size(); ++i)
-    if (data[i] == a)
-      return false;
-
-  return true;
-}
-
-
-
-struct seed_or_index {
-  using value_type = std::uint64_t;
-
-private:
-  static constexpr value_type MINUS_ONE = std::numeric_limits<value_type>::max();
-  static constexpr value_type HIGH_BIT = ~(MINUS_ONE >> 1);
-
-  value_type value_ = 0;
-
-public:
-  constexpr value_type value() const { return value_; }
-  constexpr bool is_seed() const { return value_ & HIGH_BIT; }
-
-  constexpr seed_or_index(bool is_seed, value_type value)
-    : value_(is_seed ? (value | HIGH_BIT) : (value & ~HIGH_BIT)) {}
-
-  constexpr seed_or_index() = default;
-  constexpr seed_or_index(const seed_or_index &) = default;
-  constexpr seed_or_index & operator =(const seed_or_index &) = default;
-};
-
-
-template <std::size_t M, class Hasher>
-struct pmh_tables : private Hasher {
-  std::uint64_t first_seed_;
-  carray<seed_or_index, M> first_table_;
-  carray<std::size_t, M> second_table_;
-
-  constexpr pmh_tables(
-      std::uint64_t first_seed,
-      carray<seed_or_index, M> first_table,
-      carray<std::size_t, M> second_table,
-      Hasher hash) noexcept
-    : Hasher(hash)
-    , first_seed_(first_seed)
-    , first_table_(first_table)
-    , second_table_(second_table)
-  {}
-
-  constexpr Hasher const& hash_function() const noexcept {
-    return static_cast<Hasher const&>(*this);
-  }
-
-  template <typename KeyType>
-  constexpr std::size_t lookup(const KeyType & key) const {
-    return lookup(key, hash_function());
-  }
-
-
-
-  template <typename KeyType, typename HasherType>
-  constexpr std::size_t lookup(const KeyType & key, const HasherType& hasher) const {
-    auto const d = first_table_[hasher(key, static_cast<std::size_t>(first_seed_)) % M];
-    if (!d.is_seed()) { return static_cast<std::size_t>(d.value()); }
-    else { return second_table_[hasher(key, static_cast<std::size_t>(d.value())) % M]; }
-  }
-};
-
-
-template <std::size_t M, class Item, std::size_t N, class Hash, class Key, class KeyEqual, class PRG>
-pmh_tables<M, Hash> constexpr make_pmh_tables(const carray<Item, N> &
-                                                               items,
-                                                           Hash const &hash,
-                                                           KeyEqual const &equal,
-                                                           Key const &key,
-                                                           PRG prg) {
-
-  auto step_one = make_pmh_buckets<M>(items, hash, key, prg);
-
-
-  for(auto const& bucket : step_one.buckets)
-    for(std::size_t i = 1; i < bucket.size(); ++i)
-      ((void)((!equal(key(items[0]), key(items[i]))) ? 0 : (constexpr_assert_failed(), 0)));
-
-
-  auto buckets = step_one.get_sorted_buckets();
-
-
-
-
-
-
-  const auto UNUSED = items.size();
-
-
-  carray<seed_or_index, M> G({false, UNUSED});
-
-
-  carray<std::size_t, M> H(UNUSED);
-
-
-  for (const auto & bucket : buckets) {
-    auto const bsize = bucket.size();
-
-    if (bsize == 1) {
-
-
-      G[bucket.hash] = {false, static_cast<std::uint64_t>(bucket[0])};
-    } else if (bsize > 1) {
-
-
-
-      seed_or_index d{true, prg()};
-      cvector<std::size_t, decltype(step_one)::bucket_max> bucket_slots;
-
-      while (bucket_slots.size() < bsize) {
-        auto slot = hash(key(items[bucket[bucket_slots.size()]]), static_cast<std::size_t>(d.value())) % M;
-
-        if (H[slot] != UNUSED || !all_different_from(bucket_slots, slot)) {
-          bucket_slots.clear();
-          d = {true, prg()};
-          continue;
-        }
-
-        bucket_slots.push_back(slot);
-      }
-
-
-
-      G[bucket.hash] = d;
-      for (std::size_t i = 0; i < bsize; ++i)
-        H[bucket_slots[i]] = bucket[i];
-    }
-  }
-
-  return {step_one.seed, G, H, hash};
-}
-
-}
-
-}
-# 30 "include/frozen/unordered_map.h" 2
-# 1 "include/frozen/bits/version.h" 1
-# 31 "include/frozen/unordered_map.h" 2
-# 1 "include/frozen/random.h" 1
-# 32 "include/frozen/random.h"
-namespace frozen {
-template <class UIntType, UIntType a, UIntType c, UIntType m>
-class linear_congruential_engine {
-
-  static_assert(std::is_unsigned<UIntType>::value,
-                "UIntType must be an unsigned integral type");
-
-  template<class T>
-  static constexpr UIntType modulo(T val, std::integral_constant<UIntType, 0>) {
-    return static_cast<UIntType>(val);
-  }
-
-  template<class T, UIntType M>
-  static constexpr UIntType modulo(T val, std::integral_constant<UIntType, M>) {
-
-    return static_cast<UIntType>(val % M);
-  }
-
-public:
-  using result_type = UIntType;
-  static constexpr result_type multiplier = a;
-  static constexpr result_type increment = c;
-  static constexpr result_type modulus = m;
-  static constexpr result_type default_seed = 1u;
-
-  linear_congruential_engine() = default;
-  constexpr linear_congruential_engine(result_type s) { seed(s); }
-
-  void seed(result_type s = default_seed) { state_ = s; }
-  constexpr result_type operator()() {
-   using uint_least_t = bits::select_uint_least_t<bits::log(a) + bits::log(m) + 4>;
-    uint_least_t tmp = static_cast<uint_least_t>(multiplier) * state_ + increment;
-
-    state_ = modulo(tmp, std::integral_constant<UIntType, modulus>());
-    return state_;
-  }
-  constexpr void discard(unsigned long long n) {
-    while (n--)
-      operator()();
-  }
-  static constexpr result_type min() { return increment == 0u ? 1u : 0u; }
-  static constexpr result_type max() { return modulus - 1u; }
-  friend constexpr bool operator==(linear_congruential_engine const &self,
-                                   linear_congruential_engine const &other) {
-    return self.state_ == other.state_;
-  }
-  friend constexpr bool operator!=(linear_congruential_engine const &self,
-                                   linear_congruential_engine const &other) {
-    return !(self == other);
-  }
-
-private:
-  result_type state_ = default_seed;
-};
-
-using minstd_rand0 =
-    linear_congruential_engine<std::uint_fast32_t, 16807, 0, 2147483647>;
-using minstd_rand =
-    linear_congruential_engine<std::uint_fast32_t, 48271, 0, 2147483647>;
-
-
-using default_prg_t = minstd_rand;
-
-}
-# 32 "include/frozen/unordered_map.h" 2
-
-
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/functional" 1 3
-# 61 "C:/msys64/ucrt64/include/c++/15.2.0/functional" 3
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 1 3
-# 47 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-
-# 47 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-namespace std
-{
-
-
-
-
-
-
-
-  class bad_function_call : public std::exception
-  {
-  public:
-    virtual ~bad_function_call() noexcept;
-
-    const char* what() const noexcept;
-  };
-
-
-
-
-
-
-
-  template<typename _Tp>
-    struct __is_location_invariant
-    : is_trivially_copyable<_Tp>::type
-    { };
-
-  class _Undefined_class;
-
-  union _Nocopy_types
-  {
-    void* _M_object;
-    const void* _M_const_object;
-    void (*_M_function_pointer)();
-    void (_Undefined_class::*_M_member_pointer)();
-  };
-
-  union [[gnu::may_alias]] _Any_data
-  {
-    void* _M_access() noexcept { return &_M_pod_data[0]; }
-    const void* _M_access() const noexcept { return &_M_pod_data[0]; }
-
-    template<typename _Tp>
-      _Tp&
-      _M_access() noexcept
-      { return *static_cast<_Tp*>(_M_access()); }
-
-    template<typename _Tp>
-      const _Tp&
-      _M_access() const noexcept
-      { return *static_cast<const _Tp*>(_M_access()); }
-
-    _Nocopy_types _M_unused;
-    char _M_pod_data[sizeof(_Nocopy_types)];
-  };
-
-  enum _Manager_operation
-  {
-    __get_type_info,
-    __get_functor_ptr,
-    __clone_functor,
-    __destroy_functor
-  };
-
-  template<typename _Signature>
-    class function;
-
-
-  class _Function_base
-  {
-  public:
-    static const size_t _M_max_size = sizeof(_Nocopy_types);
-    static const size_t _M_max_align = __alignof__(_Nocopy_types);
-
-    template<typename _Functor>
-      class _Base_manager
-      {
-      protected:
- static const bool __stored_locally =
- (__is_location_invariant<_Functor>::value
-  && sizeof(_Functor) <= _M_max_size
-  && __alignof__(_Functor) <= _M_max_align
-  && (_M_max_align % __alignof__(_Functor) == 0));
-
- using _Local_storage = integral_constant<bool, __stored_locally>;
-
-
- static _Functor*
- _M_get_pointer(const _Any_data& __source) noexcept
- {
-   if constexpr (__stored_locally)
-     {
-       const _Functor& __f = __source._M_access<_Functor>();
-       return const_cast<_Functor*>(std::__addressof(__f));
-     }
-   else
-     return __source._M_access<_Functor*>();
- }
-
-      private:
-
-
- template<typename _Fn>
-   static void
-   _M_create(_Any_data& __dest, _Fn&& __f, true_type)
-   {
-     ::new (__dest._M_access()) _Functor(std::forward<_Fn>(__f));
-   }
-
-
- template<typename _Fn>
-   static void
-   _M_create(_Any_data& __dest, _Fn&& __f, false_type)
-   {
-     __dest._M_access<_Functor*>()
-       = new _Functor(std::forward<_Fn>(__f));
-   }
-
-
- static void
- _M_destroy(_Any_data& __victim, true_type)
- {
-   __victim._M_access<_Functor>().~_Functor();
- }
-
-
- static void
- _M_destroy(_Any_data& __victim, false_type)
- {
-   delete __victim._M_access<_Functor*>();
- }
-
-      public:
- static bool
- _M_manager(_Any_data& __dest, const _Any_data& __source,
-     _Manager_operation __op)
- {
-   switch (__op)
-     {
-     case __get_type_info:
-
-       __dest._M_access<const type_info*>() = &typeid(_Functor);
-
-
-
-       break;
-
-     case __get_functor_ptr:
-       __dest._M_access<_Functor*>() = _M_get_pointer(__source);
-       break;
-
-     case __clone_functor:
-       _M_init_functor(__dest,
-    *const_cast<const _Functor*>(_M_get_pointer(__source)));
-       break;
-
-     case __destroy_functor:
-       _M_destroy(__dest, _Local_storage());
-       break;
-     }
-   return false;
- }
-
- template<typename _Fn>
-   static void
-   _M_init_functor(_Any_data& __functor, _Fn&& __f)
-   noexcept(__and_<_Local_storage,
-     is_nothrow_constructible<_Functor, _Fn>>::value)
-   {
-     _M_create(__functor, std::forward<_Fn>(__f), _Local_storage());
-   }
-
- template<typename _Signature>
-   static bool
-   _M_not_empty_function(const function<_Signature>& __f) noexcept
-   { return static_cast<bool>(__f); }
-
- template<typename _Tp>
-   static bool
-   _M_not_empty_function(_Tp* __fp) noexcept
-   { return __fp != nullptr; }
-
- template<typename _Class, typename _Tp>
-   static bool
-   _M_not_empty_function(_Tp _Class::* __mp) noexcept
-   { return __mp != nullptr; }
-
- template<typename _Tp>
-   static bool
-   _M_not_empty_function(const _Tp&) noexcept
-   { return true; }
-      };
-
-    _Function_base() = default;
-
-    ~_Function_base()
-    {
-      if (_M_manager)
- _M_manager(_M_functor, _M_functor, __destroy_functor);
-    }
-
-    bool _M_empty() const { return !_M_manager; }
-
-    using _Manager_type
-      = bool (*)(_Any_data&, const _Any_data&, _Manager_operation);
-
-    _Any_data _M_functor{};
-    _Manager_type _M_manager{};
-  };
-
-  template<typename _Signature, typename _Functor>
-    class _Function_handler;
-
-  template<typename _Res, typename _Functor, typename... _ArgTypes>
-    class _Function_handler<_Res(_ArgTypes...), _Functor>
-    : public _Function_base::_Base_manager<_Functor>
-    {
-      using _Base = _Function_base::_Base_manager<_Functor>;
-
-    public:
-      static bool
-      _M_manager(_Any_data& __dest, const _Any_data& __source,
-   _Manager_operation __op)
-      {
- switch (__op)
-   {
-
-   case __get_type_info:
-     __dest._M_access<const type_info*>() = &typeid(_Functor);
-     break;
-
-   case __get_functor_ptr:
-     __dest._M_access<_Functor*>() = _Base::_M_get_pointer(__source);
-     break;
-
-   default:
-     _Base::_M_manager(__dest, __source, __op);
-   }
- return false;
-      }
-
-      static _Res
-      _M_invoke(const _Any_data& __functor, _ArgTypes&&... __args)
-      {
- return std::__invoke_r<_Res>(*_Base::_M_get_pointer(__functor),
-         std::forward<_ArgTypes>(__args)...);
-      }
-
-      template<typename _Fn>
- static constexpr bool
- _S_nothrow_init() noexcept
- {
-   return __and_<typename _Base::_Local_storage,
-   is_nothrow_constructible<_Functor, _Fn>>::value;
- }
-    };
-
-
-  template<>
-    class _Function_handler<void, void>
-    {
-    public:
-      static bool
-      _M_manager(_Any_data&, const _Any_data&, _Manager_operation)
-      { return false; }
-    };
-
-
-
-
-
-  template<typename _Signature, typename _Functor,
-    bool __valid = is_object<_Functor>::value>
-    struct _Target_handler
-    : _Function_handler<_Signature, typename remove_cv<_Functor>::type>
-    { };
-
-  template<typename _Signature, typename _Functor>
-    struct _Target_handler<_Signature, _Functor, false>
-    : _Function_handler<void, void>
-    { };
-
-
-
-
-
-
-  template<typename _Res, typename... _ArgTypes>
-    class function<_Res(_ArgTypes...)>
-    : public _Maybe_unary_or_binary_function<_Res, _ArgTypes...>,
-      private _Function_base
-    {
-
-
-      template<typename _Func,
-        bool _Self = is_same<__remove_cvref_t<_Func>, function>::value>
- using _Decay_t
-   = typename __enable_if_t<!_Self, decay<_Func>>::type;
-
-      template<typename _Func,
-        typename _DFunc = _Decay_t<_Func>,
-        typename _Res2 = __invoke_result<_DFunc&, _ArgTypes...>>
- struct _Callable
- : __is_invocable_impl<_Res2, _Res>::type
- { };
-
-      template<typename _Cond, typename _Tp = void>
- using _Requires = __enable_if_t<_Cond::value, _Tp>;
-
-      template<typename _Functor>
- using _Handler
-   = _Function_handler<_Res(_ArgTypes...), __decay_t<_Functor>>;
-
-    public:
-      typedef _Res result_type;
-
-
-
-
-
-
-
-      function() noexcept
-      : _Function_base() { }
-
-
-
-
-
-      function(nullptr_t) noexcept
-      : _Function_base() { }
-# 388 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      function(const function& __x)
-      : _Function_base()
-      {
- if (static_cast<bool>(__x))
-   {
-     __x._M_manager(_M_functor, __x._M_functor, __clone_functor);
-     _M_invoker = __x._M_invoker;
-     _M_manager = __x._M_manager;
-   }
-      }
-# 406 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      function(function&& __x) noexcept
-      : _Function_base(), _M_invoker(__x._M_invoker)
-      {
- if (static_cast<bool>(__x))
-   {
-     _M_functor = __x._M_functor;
-     _M_manager = __x._M_manager;
-     __x._M_manager = nullptr;
-     __x._M_invoker = nullptr;
-   }
-      }
-# 435 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      template<typename _Functor,
-        typename _Constraints = _Requires<_Callable<_Functor>>>
- function(_Functor&& __f)
- noexcept(_Handler<_Functor>::template _S_nothrow_init<_Functor>())
- : _Function_base()
- {
-   static_assert(is_copy_constructible<__decay_t<_Functor>>::value,
-       "std::function target must be copy-constructible");
-   static_assert(is_constructible<__decay_t<_Functor>, _Functor>::value,
-       "std::function target must be constructible from the "
-       "constructor argument");
-
-   using _My_handler = _Handler<_Functor>;
-
-   if (_My_handler::_M_not_empty_function(__f))
-     {
-       _My_handler::_M_init_functor(_M_functor,
-        std::forward<_Functor>(__f));
-       _M_invoker = &_My_handler::_M_invoke;
-       _M_manager = &_My_handler::_M_manager;
-     }
- }
-# 470 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      function&
-      operator=(const function& __x)
-      {
- function(__x).swap(*this);
- return *this;
-      }
-# 488 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      function&
-      operator=(function&& __x) noexcept
-      {
- function(std::move(__x)).swap(*this);
- return *this;
-      }
-# 502 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      function&
-      operator=(nullptr_t) noexcept
-      {
- if (_M_manager)
-   {
-     _M_manager(_M_functor, _M_functor, __destroy_functor);
-     _M_manager = nullptr;
-     _M_invoker = nullptr;
-   }
- return *this;
-      }
-# 531 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      template<typename _Functor>
- _Requires<_Callable<_Functor>, function&>
- operator=(_Functor&& __f)
- noexcept(_Handler<_Functor>::template _S_nothrow_init<_Functor>())
- {
-   function(std::forward<_Functor>(__f)).swap(*this);
-   return *this;
- }
-
-
-      template<typename _Functor>
- function&
- operator=(reference_wrapper<_Functor> __f) noexcept
- {
-   function(__f).swap(*this);
-   return *this;
- }
-# 558 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      void swap(function& __x) noexcept
-      {
- std::swap(_M_functor, __x._M_functor);
- std::swap(_M_manager, __x._M_manager);
- std::swap(_M_invoker, __x._M_invoker);
-      }
-# 575 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      explicit operator bool() const noexcept
-      { return !_M_empty(); }
-# 588 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      _Res
-      operator()(_ArgTypes... __args) const
-      {
- if (_M_empty())
-   __throw_bad_function_call();
- return _M_invoker(_M_functor, std::forward<_ArgTypes>(__args)...);
-      }
-# 607 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      const type_info&
-      target_type() const noexcept
-      {
- if (_M_manager)
-   {
-     _Any_data __typeinfo_result;
-     _M_manager(__typeinfo_result, _M_functor, __get_type_info);
-     if (auto __ti = __typeinfo_result._M_access<const type_info*>())
-       return *__ti;
-   }
- return typeid(void);
-      }
-# 632 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-      template<typename _Functor>
- _Functor*
- target() noexcept
- {
-   const function* __const_this = this;
-   const _Functor* __func = __const_this->template target<_Functor>();
-
-
-   return *const_cast<_Functor**>(&__func);
- }
-
-      template<typename _Functor>
- const _Functor*
- target() const noexcept
- {
-   if constexpr (is_object<_Functor>::value)
-     {
-
-
-       using _Handler = _Target_handler<_Res(_ArgTypes...), _Functor>;
-
-       if (_M_manager == &_Handler::_M_manager
-
-    || (_M_manager && typeid(_Functor) == target_type())
-
-   )
-  {
-    _Any_data __ptr;
-    _M_manager(__ptr, _M_functor, __get_functor_ptr);
-    return __ptr._M_access<const _Functor*>();
-  }
-     }
-   return nullptr;
- }
-
-
-    private:
-      using _Invoker_type = _Res (*)(const _Any_data&, _ArgTypes&&...);
-      _Invoker_type _M_invoker = nullptr;
-    };
-
-
-  template<typename>
-    struct __function_guide_helper
-    { };
-
-  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
-    struct __function_guide_helper<
-      _Res (_Tp::*) (_Args...) noexcept(_Nx)
-    >
-    { using type = _Res(_Args...); };
-
-  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
-    struct __function_guide_helper<
-      _Res (_Tp::*) (_Args...) & noexcept(_Nx)
-    >
-    { using type = _Res(_Args...); };
-
-  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
-    struct __function_guide_helper<
-      _Res (_Tp::*) (_Args...) const noexcept(_Nx)
-    >
-    { using type = _Res(_Args...); };
-
-  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
-    struct __function_guide_helper<
-      _Res (_Tp::*) (_Args...) const & noexcept(_Nx)
-    >
-    { using type = _Res(_Args...); };
-
-
-
-
-  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
-    struct __function_guide_helper<_Res (*) (_Tp, _Args...) noexcept(_Nx)>
-    { using type = _Res(_Args...); };
-
-
-
-  template<typename _StaticCallOp>
-    struct __function_guide_static_helper
-    { };
-
-  template<typename _Res, bool _Nx, typename... _Args>
-    struct __function_guide_static_helper<_Res (*) (_Args...) noexcept(_Nx)>
-    { using type = _Res(_Args...); };
-
-  template<typename _Fn, typename _Op>
-    using __function_guide_t = typename __conditional_t<
-      requires (_Fn& __f) { (void) __f.operator(); },
-      __function_guide_static_helper<_Op>,
-      __function_guide_helper<_Op>>::type;
-
-
-
-
-
-  template<typename _Res, typename... _ArgTypes>
-    function(_Res(*)(_ArgTypes...)) -> function<_Res(_ArgTypes...)>;
-
-  template<typename _Fn, typename _Signature
-      = __function_guide_t<_Fn, decltype(&_Fn::operator())>>
-    function(_Fn) -> function<_Signature>;
-# 745 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-  template<typename _Res, typename... _Args>
-    inline bool
-    operator==(const function<_Res(_Args...)>& __f, nullptr_t) noexcept
-    { return !static_cast<bool>(__f); }
-# 784 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
-  template<typename _Res, typename... _Args>
-    inline void
-    swap(function<_Res(_Args...)>& __x, function<_Res(_Args...)>& __y) noexcept
-    { __x.swap(__y); }
-
-
-  namespace __detail::__variant
-  {
-    template<typename> struct _Never_valueless_alt;
-
-
-
-    template<typename _Signature>
-      struct _Never_valueless_alt<std::function<_Signature>>
-      : std::true_type
-      { };
-  }
-
-
-
-}
-# 62 "C:/msys64/ucrt64/include/c++/15.2.0/functional" 2 3
-
-
-
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 1 3
-# 43 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 3
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_map.h" 1 3
-# 33 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_map.h" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_set" 1 3
+# 43 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_set" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 1 3
+# 33 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
 # 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/hashtable.h" 1 3
 # 37 "C:/msys64/ucrt64/include/c++/15.2.0/bits/hashtable.h" 3
 # 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/hashtable_policy.h" 1 3
@@ -101270,7 +99718,7 @@ namespace std
 }
 
 #pragma GCC diagnostic pop
-# 34 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_map.h" 2 3
+# 34 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 2 3
 
 
 
@@ -101278,6 +99726,3106 @@ namespace std
 
 
 
+namespace std
+{
+
+
+
+
+  template<bool _Cache>
+    using __uset_traits = __detail::_Hashtable_traits<_Cache, true, true>;
+
+  template<typename _Value,
+    typename _Hash = hash<_Value>,
+    typename _Pred = std::equal_to<_Value>,
+      typename _Alloc = std::allocator<_Value>,
+    typename _Tr = __uset_traits<__cache_default<_Value, _Hash>::value>>
+    using __uset_hashtable = _Hashtable<_Value, _Value, _Alloc,
+     __detail::_Identity, _Pred, _Hash,
+     __detail::_Mod_range_hashing,
+     __detail::_Default_ranged_hash,
+     __detail::_Prime_rehash_policy, _Tr>;
+
+
+  template<bool _Cache>
+    using __umset_traits = __detail::_Hashtable_traits<_Cache, true, false>;
+
+  template<typename _Value,
+    typename _Hash = hash<_Value>,
+    typename _Pred = std::equal_to<_Value>,
+    typename _Alloc = std::allocator<_Value>,
+    typename _Tr = __umset_traits<__cache_default<_Value, _Hash>::value>>
+    using __umset_hashtable = _Hashtable<_Value, _Value, _Alloc,
+      __detail::_Identity,
+      _Pred, _Hash,
+      __detail::_Mod_range_hashing,
+      __detail::_Default_ranged_hash,
+      __detail::_Prime_rehash_policy, _Tr>;
+
+  template<class _Value, class _Hash, class _Pred, class _Alloc>
+    class unordered_multiset;
+# 103 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+  template<typename _Value,
+    typename _Hash = hash<_Value>,
+    typename _Pred = equal_to<_Value>,
+    typename _Alloc = allocator<_Value>>
+    class unordered_set
+    {
+      typedef __uset_hashtable<_Value, _Hash, _Pred, _Alloc> _Hashtable;
+      _Hashtable _M_h;
+
+    public:
+
+
+
+      typedef typename _Hashtable::key_type key_type;
+      typedef typename _Hashtable::value_type value_type;
+      typedef typename _Hashtable::hasher hasher;
+      typedef typename _Hashtable::key_equal key_equal;
+      typedef typename _Hashtable::allocator_type allocator_type;
+
+
+
+
+      typedef typename _Hashtable::pointer pointer;
+      typedef typename _Hashtable::const_pointer const_pointer;
+      typedef typename _Hashtable::reference reference;
+      typedef typename _Hashtable::const_reference const_reference;
+      typedef typename _Hashtable::iterator iterator;
+      typedef typename _Hashtable::const_iterator const_iterator;
+      typedef typename _Hashtable::local_iterator local_iterator;
+      typedef typename _Hashtable::const_local_iterator const_local_iterator;
+      typedef typename _Hashtable::size_type size_type;
+      typedef typename _Hashtable::difference_type difference_type;
+
+
+
+      using node_type = typename _Hashtable::node_type;
+      using insert_return_type = typename _Hashtable::insert_return_type;
+
+
+
+
+
+      unordered_set() = default;
+# 154 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      explicit
+      unordered_set(size_type __n,
+      const hasher& __hf = hasher(),
+      const key_equal& __eql = key_equal(),
+      const allocator_type& __a = allocator_type())
+      : _M_h(__n, __hf, __eql, __a)
+      { }
+# 175 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename _InputIterator>
+ unordered_set(_InputIterator __first, _InputIterator __last,
+        size_type __n = 0,
+        const hasher& __hf = hasher(),
+        const key_equal& __eql = key_equal(),
+        const allocator_type& __a = allocator_type())
+ : _M_h(__first, __last, __n, __hf, __eql, __a)
+ { }
+
+
+      unordered_set(const unordered_set&) = default;
+
+
+      unordered_set(unordered_set&&) = default;
+
+
+
+
+
+      explicit
+      unordered_set(const allocator_type& __a)
+      : _M_h(__a)
+      { }
+
+
+
+
+
+
+      unordered_set(const unordered_set& __uset,
+      const allocator_type& __a)
+      : _M_h(__uset._M_h, __a)
+      { }
+
+
+
+
+
+
+      unordered_set(unordered_set&& __uset,
+      const allocator_type& __a)
+ noexcept( noexcept(_Hashtable(std::move(__uset._M_h), __a)) )
+      : _M_h(std::move(__uset._M_h), __a)
+      { }
+# 231 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      unordered_set(initializer_list<value_type> __l,
+      size_type __n = 0,
+      const hasher& __hf = hasher(),
+      const key_equal& __eql = key_equal(),
+      const allocator_type& __a = allocator_type())
+      : _M_h(__l, __n, __hf, __eql, __a)
+      { }
+
+      unordered_set(size_type __n, const allocator_type& __a)
+      : unordered_set(__n, hasher(), key_equal(), __a)
+      { }
+
+      unordered_set(size_type __n, const hasher& __hf,
+      const allocator_type& __a)
+      : unordered_set(__n, __hf, key_equal(), __a)
+      { }
+
+      template<typename _InputIterator>
+ unordered_set(_InputIterator __first, _InputIterator __last,
+        size_type __n,
+        const allocator_type& __a)
+ : unordered_set(__first, __last, __n, hasher(), key_equal(), __a)
+ { }
+
+      template<typename _InputIterator>
+ unordered_set(_InputIterator __first, _InputIterator __last,
+        size_type __n, const hasher& __hf,
+        const allocator_type& __a)
+ : unordered_set(__first, __last, __n, __hf, key_equal(), __a)
+ { }
+
+      unordered_set(initializer_list<value_type> __l,
+      size_type __n,
+      const allocator_type& __a)
+      : unordered_set(__l, __n, hasher(), key_equal(), __a)
+      { }
+
+      unordered_set(initializer_list<value_type> __l,
+      size_type __n, const hasher& __hf,
+      const allocator_type& __a)
+      : unordered_set(__l, __n, __hf, key_equal(), __a)
+      { }
+# 288 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_set(from_range_t, _Rg&& __rg,
+         size_type __n = 0,
+         const hasher& __hf = hasher(),
+         const key_equal& __eql = key_equal(),
+         const allocator_type& __a = allocator_type())
+   : _M_h(__n, __hf, __eql, __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+
+
+
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_set(from_range_t, _Rg&& __rg, const allocator_type& __a)
+   : _M_h(0, hasher(), key_equal(), __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_set(from_range_t, _Rg&& __rg, size_type __n,
+         const allocator_type& __a)
+   : _M_h(__n, hasher(), key_equal(), __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_set(from_range_t, _Rg&& __rg, size_type __n,
+         const hasher& __hf, const allocator_type& __a)
+   : _M_h(__n, __hf, key_equal(), __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+
+
+
+      unordered_set&
+      operator=(const unordered_set&) = default;
+
+
+      unordered_set&
+      operator=(unordered_set&&) = default;
+# 336 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      unordered_set&
+      operator=(initializer_list<value_type> __l)
+      {
+ _M_h = __l;
+ return *this;
+      }
+
+
+      allocator_type
+      get_allocator() const noexcept
+      { return _M_h.get_allocator(); }
+
+
+
+
+      [[__nodiscard__]] bool
+      empty() const noexcept
+      { return _M_h.empty(); }
+
+
+      size_type
+      size() const noexcept
+      { return _M_h.size(); }
+
+
+      size_type
+      max_size() const noexcept
+      { return _M_h.max_size(); }
+# 372 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      begin() noexcept
+      { return _M_h.begin(); }
+
+      const_iterator
+      begin() const noexcept
+      { return _M_h.begin(); }
+
+
+
+
+
+
+
+      iterator
+      end() noexcept
+      { return _M_h.end(); }
+
+      const_iterator
+      end() const noexcept
+      { return _M_h.end(); }
+
+
+
+
+
+
+      const_iterator
+      cbegin() const noexcept
+      { return _M_h.begin(); }
+
+
+
+
+
+      const_iterator
+      cend() const noexcept
+      { return _M_h.end(); }
+# 428 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename... _Args>
+ std::pair<iterator, bool>
+ emplace(_Args&&... __args)
+ { return _M_h.emplace(std::forward<_Args>(__args)...); }
+# 454 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename... _Args>
+ iterator
+ emplace_hint(const_iterator __pos, _Args&&... __args)
+ { return _M_h.emplace_hint(__pos, std::forward<_Args>(__args)...); }
+# 473 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      std::pair<iterator, bool>
+      insert(const value_type& __x)
+      { return _M_h.insert(__x); }
+
+      std::pair<iterator, bool>
+      insert(value_type&& __x)
+      { return _M_h.insert(std::move(__x)); }
+# 502 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      insert(const_iterator __hint, const value_type& __x)
+      { return _M_h.insert(__hint, __x); }
+
+      iterator
+      insert(const_iterator __hint, value_type&& __x)
+      { return _M_h.insert(__hint, std::move(__x)); }
+# 520 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename _InputIterator>
+ void
+ insert(_InputIterator __first, _InputIterator __last)
+ { _M_h.insert(__first, __last); }
+# 532 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      insert(initializer_list<value_type> __l)
+      { _M_h.insert(__l); }
+# 543 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<__detail::__container_compatible_range<_Value> _Rg>
+ void
+ insert_range(_Rg&& __rg)
+ {
+   auto __first = ranges::begin(__rg);
+   const auto __last = ranges::end(__rg);
+   for (; __first != __last; ++__first)
+     _M_h.emplace(*__first);
+ }
+
+
+
+
+      node_type
+      extract(const_iterator __pos)
+      {
+ do { if (__builtin_expect(!bool(__pos != end()), false)) std::__glibcxx_assert_fail("C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h", 559, __PRETTY_FUNCTION__, "__pos != end()"); } while (false);
+ return _M_h.extract(__pos);
+      }
+
+
+      node_type
+      extract(const key_type& __key)
+      { return _M_h.extract(__key); }
+
+
+      insert_return_type
+      insert(node_type&& __nh)
+      { return _M_h._M_reinsert_node(std::move(__nh)); }
+
+
+      iterator
+      insert(const_iterator, node_type&& __nh)
+      { return _M_h._M_reinsert_node(std::move(__nh)).position; }
+# 593 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      erase(const_iterator __position)
+      { return _M_h.erase(__position); }
+
+
+      iterator
+      erase(iterator __position)
+      { return _M_h.erase(__position); }
+# 615 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      size_type
+      erase(const key_type& __x)
+      { return _M_h.erase(__x); }
+# 633 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      erase(const_iterator __first, const_iterator __last)
+      { return _M_h.erase(__first, __last); }
+
+
+
+
+
+
+
+      void
+      clear() noexcept
+      { _M_h.clear(); }
+# 656 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      swap(unordered_set& __x)
+      noexcept( noexcept(_M_h.swap(__x._M_h)) )
+      { _M_h.swap(__x._M_h); }
+
+
+      template<typename, typename, typename>
+ friend class std::_Hash_merge_helper;
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_set<_Value, _H2, _P2, _Alloc>& __source)
+ {
+   if constexpr (is_same_v<_H2, _Hash> && is_same_v<_P2, _Pred>)
+     if (std::__addressof(__source) == this) [[__unlikely__]]
+       return;
+
+   using _Merge_helper = _Hash_merge_helper<unordered_set, _H2, _P2>;
+   _M_h._M_merge_unique(_Merge_helper::_S_get_table(__source));
+ }
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_set<_Value, _H2, _P2, _Alloc>&& __source)
+ {
+   using _Merge_helper = _Hash_merge_helper<unordered_set, _H2, _P2>;
+   _M_h._M_merge_unique(_Merge_helper::_S_get_table(__source));
+ }
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_multiset<_Value, _H2, _P2, _Alloc>& __source)
+ {
+   using _Merge_helper = _Hash_merge_helper<unordered_set, _H2, _P2>;
+   _M_h._M_merge_unique(_Merge_helper::_S_get_table(__source));
+ }
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_multiset<_Value, _H2, _P2, _Alloc>&& __source)
+ { merge(__source); }
+
+
+
+
+
+
+      hasher
+      hash_function() const
+      { return _M_h.hash_function(); }
+
+
+
+      key_equal
+      key_eq() const
+      { return _M_h.key_eq(); }
+# 727 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      find(const key_type& __x)
+      { return _M_h.find(__x); }
+
+
+      template<typename _Kt>
+ auto
+ find(const _Kt& __k)
+ -> decltype(_M_h._M_find_tr(__k))
+ { return _M_h._M_find_tr(__k); }
+
+
+      const_iterator
+      find(const key_type& __x) const
+      { return _M_h.find(__x); }
+
+
+      template<typename _Kt>
+ auto
+ find(const _Kt& __k) const
+ -> decltype(_M_h._M_find_tr(__k))
+ { return _M_h._M_find_tr(__k); }
+# 762 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      size_type
+      count(const key_type& __x) const
+      { return _M_h.count(__x); }
+
+
+      template<typename _Kt>
+ auto
+ count(const _Kt& __k) const
+ -> decltype(_M_h._M_count_tr(__k))
+ { return _M_h._M_count_tr(__k); }
+# 782 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      bool
+      contains(const key_type& __x) const
+      { return _M_h.find(__x) != _M_h.end(); }
+
+      template<typename _Kt>
+ auto
+ contains(const _Kt& __k) const
+ -> decltype(_M_h._M_find_tr(__k), void(), true)
+ { return _M_h._M_find_tr(__k) != _M_h.end(); }
+# 803 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      std::pair<iterator, iterator>
+      equal_range(const key_type& __x)
+      { return _M_h.equal_range(__x); }
+
+
+      template<typename _Kt>
+ auto
+ equal_range(const _Kt& __k)
+ -> decltype(_M_h._M_equal_range_tr(__k))
+ { return _M_h._M_equal_range_tr(__k); }
+
+
+      std::pair<const_iterator, const_iterator>
+      equal_range(const key_type& __x) const
+      { return _M_h.equal_range(__x); }
+
+
+      template<typename _Kt>
+ auto
+ equal_range(const _Kt& __k) const
+ -> decltype(_M_h._M_equal_range_tr(__k))
+ { return _M_h._M_equal_range_tr(__k); }
+
+
+
+
+
+
+      size_type
+      bucket_count() const noexcept
+      { return _M_h.bucket_count(); }
+
+
+      size_type
+      max_bucket_count() const noexcept
+      { return _M_h.max_bucket_count(); }
+
+
+
+
+
+
+      size_type
+      bucket_size(size_type __n) const
+      { return _M_h.bucket_size(__n); }
+
+
+
+
+
+
+      size_type
+      bucket(const key_type& __key) const
+      { return _M_h.bucket(__key); }
+# 865 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      local_iterator
+      begin(size_type __n)
+      { return _M_h.begin(__n); }
+
+      const_local_iterator
+      begin(size_type __n) const
+      { return _M_h.begin(__n); }
+
+      const_local_iterator
+      cbegin(size_type __n) const
+      { return _M_h.cbegin(__n); }
+# 885 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      local_iterator
+      end(size_type __n)
+      { return _M_h.end(__n); }
+
+      const_local_iterator
+      end(size_type __n) const
+      { return _M_h.end(__n); }
+
+      const_local_iterator
+      cend(size_type __n) const
+      { return _M_h.cend(__n); }
+
+
+
+
+
+      float
+      load_factor() const noexcept
+      { return _M_h.load_factor(); }
+
+
+
+      float
+      max_load_factor() const noexcept
+      { return _M_h.max_load_factor(); }
+
+
+
+
+
+      void
+      max_load_factor(float __z)
+      { _M_h.max_load_factor(__z); }
+# 926 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      rehash(size_type __n)
+      { _M_h.rehash(__n); }
+# 937 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      reserve(size_type __n)
+      { _M_h.reserve(__n); }
+
+      template<typename _Value1, typename _Hash1, typename _Pred1,
+        typename _Alloc1>
+        friend bool
+        operator==(const unordered_set<_Value1, _Hash1, _Pred1, _Alloc1>&,
+     const unordered_set<_Value1, _Hash1, _Pred1, _Alloc1>&);
+    };
+
+
+
+  template<typename _InputIterator,
+    typename _Hash =
+      hash<typename iterator_traits<_InputIterator>::value_type>,
+    typename _Pred =
+      equal_to<typename iterator_traits<_InputIterator>::value_type>,
+    typename _Allocator =
+      allocator<typename iterator_traits<_InputIterator>::value_type>,
+    typename = _RequireInputIter<_InputIterator>,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireNotAllocator<_Pred>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_set(_InputIterator, _InputIterator,
+    unordered_set<int>::size_type = {},
+    _Hash = _Hash(), _Pred = _Pred(), _Allocator = _Allocator())
+    -> unordered_set<typename iterator_traits<_InputIterator>::value_type,
+       _Hash, _Pred, _Allocator>;
+
+  template<typename _Tp, typename _Hash = hash<_Tp>,
+    typename _Pred = equal_to<_Tp>,
+    typename _Allocator = allocator<_Tp>,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireNotAllocator<_Pred>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_set(initializer_list<_Tp>,
+    unordered_set<int>::size_type = {},
+    _Hash = _Hash(), _Pred = _Pred(), _Allocator = _Allocator())
+    -> unordered_set<_Tp, _Hash, _Pred, _Allocator>;
+
+  template<typename _InputIterator, typename _Allocator,
+    typename = _RequireInputIter<_InputIterator>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_set(_InputIterator, _InputIterator,
+    unordered_set<int>::size_type, _Allocator)
+    -> unordered_set<typename iterator_traits<_InputIterator>::value_type,
+       hash<
+         typename iterator_traits<_InputIterator>::value_type>,
+       equal_to<
+         typename iterator_traits<_InputIterator>::value_type>,
+       _Allocator>;
+
+  template<typename _InputIterator, typename _Hash, typename _Allocator,
+    typename = _RequireInputIter<_InputIterator>,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_set(_InputIterator, _InputIterator,
+    unordered_set<int>::size_type,
+    _Hash, _Allocator)
+    -> unordered_set<typename iterator_traits<_InputIterator>::value_type,
+       _Hash,
+       equal_to<
+         typename iterator_traits<_InputIterator>::value_type>,
+       _Allocator>;
+
+  template<typename _Tp, typename _Allocator,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_set(initializer_list<_Tp>,
+    unordered_set<int>::size_type, _Allocator)
+    -> unordered_set<_Tp, hash<_Tp>, equal_to<_Tp>, _Allocator>;
+
+  template<typename _Tp, typename _Hash, typename _Allocator,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_set(initializer_list<_Tp>,
+    unordered_set<int>::size_type, _Hash, _Allocator)
+    -> unordered_set<_Tp, _Hash, equal_to<_Tp>, _Allocator>;
+
+
+  template<ranges::input_range _Rg,
+    __not_allocator_like _Hash = hash<ranges::range_value_t<_Rg>>,
+    __not_allocator_like _Pred = equal_to<ranges::range_value_t<_Rg>>,
+    __allocator_like _Allocator = allocator<ranges::range_value_t<_Rg>>>
+    unordered_set(from_range_t, _Rg&&, unordered_set<int>::size_type = {},
+    _Hash = _Hash(), _Pred = _Pred(), _Allocator = _Allocator())
+    -> unordered_set<ranges::range_value_t<_Rg>, _Hash, _Pred, _Allocator>;
+
+  template<ranges::input_range _Rg,
+    __allocator_like _Allocator>
+    unordered_set(from_range_t, _Rg&&, unordered_set<int>::size_type,
+    _Allocator)
+    -> unordered_set<ranges::range_value_t<_Rg>,
+       hash<ranges::range_value_t<_Rg>>,
+       equal_to<ranges::range_value_t<_Rg>>,
+       _Allocator>;
+
+  template<ranges::input_range _Rg,
+     __allocator_like _Allocator>
+    unordered_set(from_range_t, _Rg&&, _Allocator)
+    -> unordered_set<ranges::range_value_t<_Rg>,
+       hash<ranges::range_value_t<_Rg>>,
+       equal_to<ranges::range_value_t<_Rg>>,
+       _Allocator>;
+
+  template<ranges::input_range _Rg,
+    __not_allocator_like _Hash,
+    __allocator_like _Allocator>
+    unordered_set(from_range_t, _Rg&&, unordered_set<int>::size_type,
+    _Hash, _Allocator)
+    -> unordered_set<ranges::range_value_t<_Rg>, _Hash,
+       equal_to<ranges::range_value_t<_Rg>>,
+       _Allocator>;
+# 1074 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+  template<typename _Value,
+    typename _Hash = hash<_Value>,
+    typename _Pred = equal_to<_Value>,
+    typename _Alloc = allocator<_Value>>
+    class unordered_multiset
+    {
+      typedef __umset_hashtable<_Value, _Hash, _Pred, _Alloc> _Hashtable;
+      _Hashtable _M_h;
+
+    public:
+
+
+
+      typedef typename _Hashtable::key_type key_type;
+      typedef typename _Hashtable::value_type value_type;
+      typedef typename _Hashtable::hasher hasher;
+      typedef typename _Hashtable::key_equal key_equal;
+      typedef typename _Hashtable::allocator_type allocator_type;
+
+
+
+
+      typedef typename _Hashtable::pointer pointer;
+      typedef typename _Hashtable::const_pointer const_pointer;
+      typedef typename _Hashtable::reference reference;
+      typedef typename _Hashtable::const_reference const_reference;
+      typedef typename _Hashtable::iterator iterator;
+      typedef typename _Hashtable::const_iterator const_iterator;
+      typedef typename _Hashtable::local_iterator local_iterator;
+      typedef typename _Hashtable::const_local_iterator const_local_iterator;
+      typedef typename _Hashtable::size_type size_type;
+      typedef typename _Hashtable::difference_type difference_type;
+
+
+
+      using node_type = typename _Hashtable::node_type;
+
+
+
+
+
+      unordered_multiset() = default;
+# 1124 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      explicit
+      unordered_multiset(size_type __n,
+    const hasher& __hf = hasher(),
+    const key_equal& __eql = key_equal(),
+    const allocator_type& __a = allocator_type())
+      : _M_h(__n, __hf, __eql, __a)
+      { }
+# 1145 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename _InputIterator>
+ unordered_multiset(_InputIterator __first, _InputIterator __last,
+      size_type __n = 0,
+      const hasher& __hf = hasher(),
+      const key_equal& __eql = key_equal(),
+      const allocator_type& __a = allocator_type())
+ : _M_h(__first, __last, __n, __hf, __eql, __a)
+ { }
+
+
+      unordered_multiset(const unordered_multiset&) = default;
+
+
+      unordered_multiset(unordered_multiset&&) = default;
+# 1171 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      unordered_multiset(initializer_list<value_type> __l,
+    size_type __n = 0,
+    const hasher& __hf = hasher(),
+    const key_equal& __eql = key_equal(),
+    const allocator_type& __a = allocator_type())
+      : _M_h(__l, __n, __hf, __eql, __a)
+      { }
+
+
+      unordered_multiset&
+      operator=(const unordered_multiset&) = default;
+
+
+      unordered_multiset&
+      operator=(unordered_multiset&&) = default;
+
+
+
+
+
+      explicit
+      unordered_multiset(const allocator_type& __a)
+      : _M_h(__a)
+      { }
+
+
+
+
+
+
+      unordered_multiset(const unordered_multiset& __umset,
+    const allocator_type& __a)
+      : _M_h(__umset._M_h, __a)
+      { }
+
+
+
+
+
+
+      unordered_multiset(unordered_multiset&& __umset,
+    const allocator_type& __a)
+ noexcept( noexcept(_Hashtable(std::move(__umset._M_h), __a)) )
+      : _M_h(std::move(__umset._M_h), __a)
+      { }
+
+      unordered_multiset(size_type __n, const allocator_type& __a)
+      : unordered_multiset(__n, hasher(), key_equal(), __a)
+      { }
+
+      unordered_multiset(size_type __n, const hasher& __hf,
+    const allocator_type& __a)
+      : unordered_multiset(__n, __hf, key_equal(), __a)
+      { }
+
+      template<typename _InputIterator>
+ unordered_multiset(_InputIterator __first, _InputIterator __last,
+      size_type __n,
+      const allocator_type& __a)
+ : unordered_multiset(__first, __last, __n, hasher(), key_equal(), __a)
+ { }
+
+      template<typename _InputIterator>
+ unordered_multiset(_InputIterator __first, _InputIterator __last,
+      size_type __n, const hasher& __hf,
+      const allocator_type& __a)
+ : unordered_multiset(__first, __last, __n, __hf, key_equal(), __a)
+ { }
+
+      unordered_multiset(initializer_list<value_type> __l,
+    size_type __n,
+    const allocator_type& __a)
+      : unordered_multiset(__l, __n, hasher(), key_equal(), __a)
+      { }
+
+      unordered_multiset(initializer_list<value_type> __l,
+    size_type __n, const hasher& __hf,
+    const allocator_type& __a)
+      : unordered_multiset(__l, __n, __hf, key_equal(), __a)
+      { }
+# 1266 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_multiset(from_range_t, _Rg&& __rg,
+       size_type __n = 0,
+       const hasher& __hf = hasher(),
+       const key_equal& __eql = key_equal(),
+       const allocator_type& __a = allocator_type())
+   : _M_h(__n, __hf, __eql, __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+
+
+
+
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_multiset(from_range_t, _Rg&& __rg, const allocator_type& __a)
+   : _M_h(0, hasher(), key_equal(), __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_multiset(from_range_t, _Rg&& __rg, size_type __n,
+       const allocator_type& __a)
+   : _M_h(__n, hasher(), key_equal(), __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+
+       template<__detail::__container_compatible_range<_Value> _Rg>
+  unordered_multiset(from_range_t, _Rg&& __rg, size_type __n,
+       const hasher& __hf, const allocator_type& __a)
+   : _M_h(__n, __hf, key_equal(), __a)
+   { insert_range(std::forward<_Rg>(__rg)); }
+# 1308 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      unordered_multiset&
+      operator=(initializer_list<value_type> __l)
+      {
+ _M_h = __l;
+ return *this;
+      }
+
+
+      allocator_type
+      get_allocator() const noexcept
+      { return _M_h.get_allocator(); }
+
+
+
+
+      [[__nodiscard__]] bool
+      empty() const noexcept
+      { return _M_h.empty(); }
+
+
+      size_type
+      size() const noexcept
+      { return _M_h.size(); }
+
+
+      size_type
+      max_size() const noexcept
+      { return _M_h.max_size(); }
+# 1344 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      begin() noexcept
+      { return _M_h.begin(); }
+
+      const_iterator
+      begin() const noexcept
+      { return _M_h.begin(); }
+
+
+
+
+
+
+
+      iterator
+      end() noexcept
+      { return _M_h.end(); }
+
+      const_iterator
+      end() const noexcept
+      { return _M_h.end(); }
+
+
+
+
+
+
+      const_iterator
+      cbegin() const noexcept
+      { return _M_h.begin(); }
+
+
+
+
+
+      const_iterator
+      cend() const noexcept
+      { return _M_h.end(); }
+# 1392 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename... _Args>
+ iterator
+ emplace(_Args&&... __args)
+ { return _M_h.emplace(std::forward<_Args>(__args)...); }
+# 1414 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename... _Args>
+ iterator
+ emplace_hint(const_iterator __pos, _Args&&... __args)
+ { return _M_h.emplace_hint(__pos, std::forward<_Args>(__args)...); }
+# 1427 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      insert(const value_type& __x)
+      { return _M_h.insert(__x); }
+
+      iterator
+      insert(value_type&& __x)
+      { return _M_h.insert(std::move(__x)); }
+# 1453 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      insert(const_iterator __hint, const value_type& __x)
+      { return _M_h.insert(__hint, __x); }
+
+      iterator
+      insert(const_iterator __hint, value_type&& __x)
+      { return _M_h.insert(__hint, std::move(__x)); }
+# 1470 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<typename _InputIterator>
+ void
+ insert(_InputIterator __first, _InputIterator __last)
+ { _M_h.insert(__first, __last); }
+# 1482 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      insert(initializer_list<value_type> __l)
+      { _M_h.insert(__l); }
+# 1493 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      template<__detail::__container_compatible_range<_Value> _Rg>
+ void
+ insert_range(_Rg&& __rg)
+ {
+   auto __first = ranges::begin(__rg);
+   const auto __last = ranges::end(__rg);
+   if (__first == __last)
+     return;
+
+   if constexpr (ranges::forward_range<_Rg> || ranges::sized_range<_Rg>)
+     _M_h._M_rehash_insert(size_type(ranges::distance(__rg)));
+   else
+     _M_h._M_rehash_insert(1);
+
+   for (; __first != __last; ++__first)
+     _M_h.emplace(*__first);
+ }
+
+
+
+
+      node_type
+      extract(const_iterator __pos)
+      {
+ do { if (__builtin_expect(!bool(__pos != end()), false)) std::__glibcxx_assert_fail("C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h", 1517, __PRETTY_FUNCTION__, "__pos != end()"); } while (false);
+ return _M_h.extract(__pos);
+      }
+
+
+      node_type
+      extract(const key_type& __key)
+      { return _M_h.extract(__key); }
+
+
+      iterator
+      insert(node_type&& __nh)
+      { return _M_h._M_reinsert_node_multi(cend(), std::move(__nh)); }
+
+
+      iterator
+      insert(const_iterator __hint, node_type&& __nh)
+      { return _M_h._M_reinsert_node_multi(__hint, std::move(__nh)); }
+# 1552 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      erase(const_iterator __position)
+      { return _M_h.erase(__position); }
+
+
+      iterator
+      erase(iterator __position)
+      { return _M_h.erase(__position); }
+# 1575 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      size_type
+      erase(const key_type& __x)
+      { return _M_h.erase(__x); }
+# 1595 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      erase(const_iterator __first, const_iterator __last)
+      { return _M_h.erase(__first, __last); }
+# 1606 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      clear() noexcept
+      { _M_h.clear(); }
+# 1619 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      swap(unordered_multiset& __x)
+      noexcept( noexcept(_M_h.swap(__x._M_h)) )
+      { _M_h.swap(__x._M_h); }
+
+
+      template<typename, typename, typename>
+ friend class std::_Hash_merge_helper;
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_multiset<_Value, _H2, _P2, _Alloc>& __source)
+ {
+   if constexpr (is_same_v<_H2, _Hash> && is_same_v<_P2, _Pred>)
+     if (std::__addressof(__source) == this) [[__unlikely__]]
+       return;
+
+   using _Merge_helper
+     = _Hash_merge_helper<unordered_multiset, _H2, _P2>;
+   _M_h._M_merge_multi(_Merge_helper::_S_get_table(__source));
+ }
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_multiset<_Value, _H2, _P2, _Alloc>&& __source)
+ {
+   using _Merge_helper
+     = _Hash_merge_helper<unordered_multiset, _H2, _P2>;
+   _M_h._M_merge_multi(_Merge_helper::_S_get_table(__source));
+ }
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_set<_Value, _H2, _P2, _Alloc>& __source)
+ {
+   using _Merge_helper
+     = _Hash_merge_helper<unordered_multiset, _H2, _P2>;
+   _M_h._M_merge_multi(_Merge_helper::_S_get_table(__source));
+ }
+
+      template<typename _H2, typename _P2>
+ void
+ merge(unordered_set<_Value, _H2, _P2, _Alloc>&& __source)
+ { merge(__source); }
+
+
+
+
+
+
+      hasher
+      hash_function() const
+      { return _M_h.hash_function(); }
+
+
+
+      key_equal
+      key_eq() const
+      { return _M_h.key_eq(); }
+# 1693 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      iterator
+      find(const key_type& __x)
+      { return _M_h.find(__x); }
+
+
+      template<typename _Kt>
+ auto
+ find(const _Kt& __x)
+ -> decltype(_M_h._M_find_tr(__x))
+ { return _M_h._M_find_tr(__x); }
+
+
+      const_iterator
+      find(const key_type& __x) const
+      { return _M_h.find(__x); }
+
+
+      template<typename _Kt>
+ auto
+ find(const _Kt& __x) const
+ -> decltype(_M_h._M_find_tr(__x))
+ { return _M_h._M_find_tr(__x); }
+# 1724 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      size_type
+      count(const key_type& __x) const
+      { return _M_h.count(__x); }
+
+
+      template<typename _Kt>
+ auto
+ count(const _Kt& __x) const -> decltype(_M_h._M_count_tr(__x))
+ { return _M_h._M_count_tr(__x); }
+# 1743 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      bool
+      contains(const key_type& __x) const
+      { return _M_h.find(__x) != _M_h.end(); }
+
+      template<typename _Kt>
+ auto
+ contains(const _Kt& __x) const
+ -> decltype(_M_h._M_find_tr(__x), void(), true)
+ { return _M_h._M_find_tr(__x) != _M_h.end(); }
+# 1762 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      std::pair<iterator, iterator>
+      equal_range(const key_type& __x)
+      { return _M_h.equal_range(__x); }
+
+
+      template<typename _Kt>
+ auto
+ equal_range(const _Kt& __x)
+ -> decltype(_M_h._M_equal_range_tr(__x))
+ { return _M_h._M_equal_range_tr(__x); }
+
+
+      std::pair<const_iterator, const_iterator>
+      equal_range(const key_type& __x) const
+      { return _M_h.equal_range(__x); }
+
+
+      template<typename _Kt>
+ auto
+ equal_range(const _Kt& __x) const
+ -> decltype(_M_h._M_equal_range_tr(__x))
+ { return _M_h._M_equal_range_tr(__x); }
+
+
+
+
+
+
+      size_type
+      bucket_count() const noexcept
+      { return _M_h.bucket_count(); }
+
+
+      size_type
+      max_bucket_count() const noexcept
+      { return _M_h.max_bucket_count(); }
+
+
+
+
+
+
+      size_type
+      bucket_size(size_type __n) const
+      { return _M_h.bucket_size(__n); }
+
+
+
+
+
+
+      size_type
+      bucket(const key_type& __key) const
+      { return _M_h.bucket(__key); }
+# 1824 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      local_iterator
+      begin(size_type __n)
+      { return _M_h.begin(__n); }
+
+      const_local_iterator
+      begin(size_type __n) const
+      { return _M_h.begin(__n); }
+
+      const_local_iterator
+      cbegin(size_type __n) const
+      { return _M_h.cbegin(__n); }
+# 1844 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      local_iterator
+      end(size_type __n)
+      { return _M_h.end(__n); }
+
+      const_local_iterator
+      end(size_type __n) const
+      { return _M_h.end(__n); }
+
+      const_local_iterator
+      cend(size_type __n) const
+      { return _M_h.cend(__n); }
+
+
+
+
+
+      float
+      load_factor() const noexcept
+      { return _M_h.load_factor(); }
+
+
+
+      float
+      max_load_factor() const noexcept
+      { return _M_h.max_load_factor(); }
+
+
+
+
+
+      void
+      max_load_factor(float __z)
+      { _M_h.max_load_factor(__z); }
+# 1885 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      rehash(size_type __n)
+      { _M_h.rehash(__n); }
+# 1896 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+      void
+      reserve(size_type __n)
+      { _M_h.reserve(__n); }
+
+      template<typename _Value1, typename _Hash1, typename _Pred1,
+        typename _Alloc1>
+        friend bool
+      operator==(const unordered_multiset<_Value1, _Hash1, _Pred1, _Alloc1>&,
+   const unordered_multiset<_Value1, _Hash1, _Pred1, _Alloc1>&);
+    };
+
+
+
+
+  template<typename _InputIterator,
+    typename _Hash =
+      hash<typename iterator_traits<_InputIterator>::value_type>,
+    typename _Pred =
+      equal_to<typename iterator_traits<_InputIterator>::value_type>,
+    typename _Allocator =
+      allocator<typename iterator_traits<_InputIterator>::value_type>,
+    typename = _RequireInputIter<_InputIterator>,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireNotAllocator<_Pred>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_multiset(_InputIterator, _InputIterator,
+         unordered_multiset<int>::size_type = {},
+         _Hash = _Hash(), _Pred = _Pred(),
+         _Allocator = _Allocator())
+    -> unordered_multiset<typename iterator_traits<_InputIterator>::value_type,
+                          _Hash, _Pred, _Allocator>;
+
+  template<typename _Tp, typename _Hash = hash<_Tp>,
+    typename _Pred = equal_to<_Tp>,
+    typename _Allocator = allocator<_Tp>,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireNotAllocator<_Pred>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_multiset(initializer_list<_Tp>,
+         unordered_multiset<int>::size_type = {},
+         _Hash = _Hash(), _Pred = _Pred(),
+         _Allocator = _Allocator())
+    -> unordered_multiset<_Tp, _Hash, _Pred, _Allocator>;
+
+  template<typename _InputIterator, typename _Allocator,
+    typename = _RequireInputIter<_InputIterator>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_multiset(_InputIterator, _InputIterator,
+         unordered_multiset<int>::size_type, _Allocator)
+    -> unordered_multiset<typename iterator_traits<_InputIterator>::value_type,
+     hash<typename
+          iterator_traits<_InputIterator>::value_type>,
+     equal_to<typename
+       iterator_traits<_InputIterator>::value_type>,
+     _Allocator>;
+
+  template<typename _InputIterator, typename _Hash, typename _Allocator,
+    typename = _RequireInputIter<_InputIterator>,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_multiset(_InputIterator, _InputIterator,
+         unordered_multiset<int>::size_type,
+         _Hash, _Allocator)
+    -> unordered_multiset<typename
+     iterator_traits<_InputIterator>::value_type,
+     _Hash,
+     equal_to<
+       typename
+       iterator_traits<_InputIterator>::value_type>,
+     _Allocator>;
+
+  template<typename _Tp, typename _Allocator,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_multiset(initializer_list<_Tp>,
+         unordered_multiset<int>::size_type, _Allocator)
+    -> unordered_multiset<_Tp, hash<_Tp>, equal_to<_Tp>, _Allocator>;
+
+  template<typename _Tp, typename _Hash, typename _Allocator,
+    typename = _RequireNotAllocatorOrIntegral<_Hash>,
+    typename = _RequireAllocator<_Allocator>>
+    unordered_multiset(initializer_list<_Tp>,
+         unordered_multiset<int>::size_type, _Hash, _Allocator)
+    -> unordered_multiset<_Tp, _Hash, equal_to<_Tp>, _Allocator>;
+
+
+  template<ranges::input_range _Rg,
+    __not_allocator_like _Hash = hash<ranges::range_value_t<_Rg>>,
+    __not_allocator_like _Pred = equal_to<ranges::range_value_t<_Rg>>,
+    __allocator_like _Allocator = allocator<ranges::range_value_t<_Rg>>>
+    unordered_multiset(from_range_t, _Rg&&,
+         unordered_multiset<int>::size_type = {},
+         _Hash = _Hash(), _Pred = _Pred(),
+         _Allocator = _Allocator())
+    -> unordered_multiset<ranges::range_value_t<_Rg>, _Hash, _Pred, _Allocator>;
+
+   template<ranges::input_range _Rg,
+     __allocator_like _Allocator>
+     unordered_multiset(from_range_t, _Rg&&, _Allocator)
+     -> unordered_multiset<ranges::range_value_t<_Rg>,
+      hash<ranges::range_value_t<_Rg>>,
+      equal_to<ranges::range_value_t<_Rg>>,
+      _Allocator>;
+
+  template<ranges::input_range _Rg,
+    __allocator_like _Allocator>
+    unordered_multiset(from_range_t, _Rg&&, unordered_multiset<int>::size_type,
+         _Allocator)
+    -> unordered_multiset<ranges::range_value_t<_Rg>,
+     hash<ranges::range_value_t<_Rg>>,
+     equal_to<ranges::range_value_t<_Rg>>,
+     _Allocator>;
+
+  template<ranges::input_range _Rg,
+    __not_allocator_like _Hash,
+    __allocator_like _Allocator>
+    unordered_multiset(from_range_t, _Rg&&,
+         unordered_multiset<int>::size_type,
+         _Hash, _Allocator)
+    -> unordered_multiset<ranges::range_value_t<_Rg>, _Hash,
+     equal_to<ranges::range_value_t<_Rg>>,
+     _Allocator>;
+
+
+
+  template<class _Value, class _Hash, class _Pred, class _Alloc>
+    inline void
+    swap(unordered_set<_Value, _Hash, _Pred, _Alloc>& __x,
+  unordered_set<_Value, _Hash, _Pred, _Alloc>& __y)
+    noexcept(noexcept(__x.swap(__y)))
+    { __x.swap(__y); }
+
+  template<class _Value, class _Hash, class _Pred, class _Alloc>
+    inline void
+    swap(unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __x,
+  unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __y)
+    noexcept(noexcept(__x.swap(__y)))
+    { __x.swap(__y); }
+
+  template<class _Value, class _Hash, class _Pred, class _Alloc>
+    inline bool
+    operator==(const unordered_set<_Value, _Hash, _Pred, _Alloc>& __x,
+        const unordered_set<_Value, _Hash, _Pred, _Alloc>& __y)
+    { return __x._M_h._M_equal(__y._M_h); }
+# 2048 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+  template<class _Value, class _Hash, class _Pred, class _Alloc>
+    inline bool
+    operator==(const unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __x,
+        const unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __y)
+    { return __x._M_h._M_equal(__y._M_h); }
+# 2062 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_set.h" 3
+
+
+
+
+  template<typename _Val, typename _Hash1, typename _Eq1, typename _Alloc,
+    typename _Hash2, typename _Eq2>
+    struct _Hash_merge_helper<
+      std::unordered_set<_Val, _Hash1, _Eq1, _Alloc>, _Hash2, _Eq2>
+    {
+    private:
+      template<typename... _Tp>
+ using unordered_set = std::unordered_set<_Tp...>;
+      template<typename... _Tp>
+ using unordered_multiset = std::unordered_multiset<_Tp...>;
+
+      friend unordered_set<_Val, _Hash1, _Eq1, _Alloc>;
+
+      static auto&
+      _S_get_table(unordered_set<_Val, _Hash2, _Eq2, _Alloc>& __set)
+      { return __set._M_h; }
+
+      static auto&
+      _S_get_table(unordered_multiset<_Val, _Hash2, _Eq2, _Alloc>& __set)
+      { return __set._M_h; }
+    };
+
+
+  template<typename _Val, typename _Hash1, typename _Eq1, typename _Alloc,
+    typename _Hash2, typename _Eq2>
+    struct _Hash_merge_helper<
+      std::unordered_multiset<_Val, _Hash1, _Eq1, _Alloc>,
+      _Hash2, _Eq2>
+    {
+    private:
+      template<typename... _Tp>
+ using unordered_set = std::unordered_set<_Tp...>;
+      template<typename... _Tp>
+ using unordered_multiset = std::unordered_multiset<_Tp...>;
+
+      friend unordered_multiset<_Val, _Hash1, _Eq1, _Alloc>;
+
+      static auto&
+      _S_get_table(unordered_set<_Val, _Hash2, _Eq2, _Alloc>& __set)
+      { return __set._M_h; }
+
+      static auto&
+      _S_get_table(unordered_multiset<_Val, _Hash2, _Eq2, _Alloc>& __set)
+      { return __set._M_h; }
+    };
+
+
+
+}
+# 44 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_set" 2 3
+
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/erase_if.h" 1 3
+# 41 "C:/msys64/ucrt64/include/c++/15.2.0/bits/erase_if.h" 3
+namespace std
+{
+
+
+  namespace __detail
+  {
+    template<typename _Container, typename _UnsafeContainer,
+      typename _Predicate>
+      typename _Container::size_type
+      __erase_nodes_if(_Container& __cont, _UnsafeContainer& __ucont,
+         _Predicate __pred)
+      {
+ typename _Container::size_type __num = 0;
+ for (auto __iter = __ucont.begin(), __last = __ucont.end();
+      __iter != __last;)
+   {
+     if (__pred(*__iter))
+       {
+  __iter = __cont.erase(__iter);
+  ++__num;
+       }
+     else
+       ++__iter;
+   }
+ return __num;
+      }
+  }
+
+
+}
+# 46 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_set" 2 3
+# 57 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_set" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/version.h" 1 3
+# 58 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_set" 2 3
+
+
+
+namespace std
+{
+
+  namespace pmr
+  {
+    template<typename _Key, typename _Hash = std::hash<_Key>,
+      typename _Pred = std::equal_to<_Key>>
+      using unordered_set
+ = std::unordered_set<_Key, _Hash, _Pred,
+        polymorphic_allocator<_Key>>;
+    template<typename _Key, typename _Hash = std::hash<_Key>,
+      typename _Pred = std::equal_to<_Key>>
+      using unordered_multiset
+ = std::unordered_multiset<_Key, _Hash, _Pred,
+      polymorphic_allocator<_Key>>;
+  }
+
+}
+
+
+
+namespace std
+{
+
+  template<typename _Key, typename _Hash, typename _CPred, typename _Alloc,
+    typename _Predicate>
+    inline typename unordered_set<_Key, _Hash, _CPred, _Alloc>::size_type
+    erase_if(unordered_set<_Key, _Hash, _CPred, _Alloc>& __cont,
+      _Predicate __pred)
+    {
+      std::unordered_set<_Key, _Hash, _CPred, _Alloc>&
+ __ucont = __cont;
+      return __detail::__erase_nodes_if(__cont, __ucont, __pred);
+    }
+
+  template<typename _Key, typename _Hash, typename _CPred, typename _Alloc,
+    typename _Predicate>
+    inline typename unordered_multiset<_Key, _Hash, _CPred, _Alloc>::size_type
+    erase_if(unordered_multiset<_Key, _Hash, _CPred, _Alloc>& __cont,
+      _Predicate __pred)
+    {
+      std::unordered_multiset<_Key, _Hash, _CPred, _Alloc>&
+ __ucont = __cont;
+      return __detail::__erase_nodes_if(__cont, __ucont, __pred);
+    }
+
+}
+# 6 "tomatene.cpp" 2
+
+# 1 "include/frozen/unordered_map.h" 1
+# 26 "include/frozen/unordered_map.h"
+# 1 "include/frozen/bits/basic_types.h" 1
+# 26 "include/frozen/bits/basic_types.h"
+# 1 "include/frozen/bits/exceptions.h" 1
+# 27 "include/frozen/bits/basic_types.h" 2
+# 1 "include/frozen/bits/constexpr_assert.h" 1
+# 26 "include/frozen/bits/constexpr_assert.h"
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/cassert" 1 3
+# 46 "C:/msys64/ucrt64/include/c++/15.2.0/cassert" 3
+# 1 "C:/msys64/ucrt64/include/assert.h" 1 3
+# 17 "C:/msys64/ucrt64/include/assert.h" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/stdlib.h" 1 3
+# 38 "C:/msys64/ucrt64/include/c++/15.2.0/stdlib.h" 3
+using std::abort;
+using std::atexit;
+using std::exit;
+
+
+  using std::at_quick_exit;
+
+
+  using std::quick_exit;
+
+
+  using std::_Exit;
+
+
+
+
+using std::div_t;
+using std::ldiv_t;
+
+using std::abs;
+using std::atof;
+using std::atoi;
+using std::atol;
+using std::bsearch;
+using std::calloc;
+using std::div;
+using std::free;
+using std::getenv;
+using std::labs;
+using std::ldiv;
+using std::malloc;
+
+using std::mblen;
+using std::mbstowcs;
+using std::mbtowc;
+
+using std::qsort;
+using std::rand;
+using std::realloc;
+using std::srand;
+using std::strtod;
+using std::strtol;
+using std::strtoul;
+using std::system;
+
+using std::wcstombs;
+using std::wctomb;
+# 18 "C:/msys64/ucrt64/include/assert.h" 2 3
+
+
+
+extern "C" {
+
+
+__attribute__ ((__dllimport__)) void __attribute__((__cdecl__)) __attribute__ ((__noreturn__)) _wassert(const wchar_t *_Message,const wchar_t *_File,unsigned _Line);
+__attribute__ ((__dllimport__)) void __attribute__((__cdecl__)) __attribute__ ((__noreturn__)) _assert (const char *_Message, const char *_File, unsigned _Line);
+
+
+}
+# 47 "C:/msys64/ucrt64/include/c++/15.2.0/cassert" 2 3
+# 27 "include/frozen/bits/constexpr_assert.h" 2
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 1 3
+# 70 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 1 3
+# 62 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
+namespace std
+{
+
+
+  namespace rel_ops __attribute__ ((__deprecated__ ("use '" "<=>" "' instead")))
+  {
+# 86 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
+    template <class _Tp>
+      inline bool
+      operator!=(const _Tp& __x, const _Tp& __y)
+      { return !(__x == __y); }
+# 99 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
+    template <class _Tp>
+      inline bool
+      operator>(const _Tp& __x, const _Tp& __y)
+      { return __y < __x; }
+# 112 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
+    template <class _Tp>
+      inline bool
+      operator<=(const _Tp& __x, const _Tp& __y)
+      { return !(__y < __x); }
+# 125 "C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_relops.h" 3
+    template <class _Tp>
+      inline bool
+      operator>=(const _Tp& __x, const _Tp& __y)
+      { return !(__x < __y); }
+  }
+
+
+}
+# 71 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 2 3
+# 103 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/version.h" 1 3
+# 104 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 2 3
+
+namespace std
+{
+
+
+
+
+  template <typename _Tp, typename _Up = _Tp>
+    constexpr
+    inline _Tp
+    exchange(_Tp& __obj, _Up&& __new_val)
+    noexcept(__and_<is_nothrow_move_constructible<_Tp>,
+      is_nothrow_assignable<_Tp&, _Up>>::value)
+    { return std::__exchange(__obj, std::forward<_Up>(__new_val)); }
+
+
+
+  template<typename _Tp>
+    [[nodiscard]]
+    constexpr add_const_t<_Tp>&
+    as_const(_Tp& __t) noexcept
+    { return __t; }
+
+  template<typename _Tp>
+    void as_const(const _Tp&&) = delete;
+
+
+
+  template<typename _Tp, typename _Up>
+    constexpr bool
+    cmp_equal(_Tp __t, _Up __u) noexcept
+    {
+      static_assert(__is_standard_integer<_Tp>::value);
+      static_assert(__is_standard_integer<_Up>::value);
+
+      if constexpr (is_signed_v<_Tp> == is_signed_v<_Up>)
+ return __t == __u;
+      else if constexpr (is_signed_v<_Tp>)
+ return __t >= 0 && make_unsigned_t<_Tp>(__t) == __u;
+      else
+ return __u >= 0 && __t == make_unsigned_t<_Up>(__u);
+    }
+
+  template<typename _Tp, typename _Up>
+    constexpr bool
+    cmp_not_equal(_Tp __t, _Up __u) noexcept
+    { return !std::cmp_equal(__t, __u); }
+
+  template<typename _Tp, typename _Up>
+    constexpr bool
+    cmp_less(_Tp __t, _Up __u) noexcept
+    {
+      static_assert(__is_standard_integer<_Tp>::value);
+      static_assert(__is_standard_integer<_Up>::value);
+
+      if constexpr (is_signed_v<_Tp> == is_signed_v<_Up>)
+ return __t < __u;
+      else if constexpr (is_signed_v<_Tp>)
+ return __t < 0 || make_unsigned_t<_Tp>(__t) < __u;
+      else
+ return __u >= 0 && __t < make_unsigned_t<_Up>(__u);
+    }
+
+  template<typename _Tp, typename _Up>
+    constexpr bool
+    cmp_greater(_Tp __t, _Up __u) noexcept
+    { return std::cmp_less(__u, __t); }
+
+  template<typename _Tp, typename _Up>
+    constexpr bool
+    cmp_less_equal(_Tp __t, _Up __u) noexcept
+    { return !std::cmp_less(__u, __t); }
+
+  template<typename _Tp, typename _Up>
+    constexpr bool
+    cmp_greater_equal(_Tp __t, _Up __u) noexcept
+    { return !std::cmp_less(__t, __u); }
+
+  template<typename _Res, typename _Tp>
+    constexpr bool
+    in_range(_Tp __t) noexcept
+    {
+      static_assert(__is_standard_integer<_Res>::value);
+      static_assert(__is_standard_integer<_Tp>::value);
+      using __gnu_cxx::__int_traits;
+
+      if constexpr (is_signed_v<_Tp> == is_signed_v<_Res>)
+ return __int_traits<_Res>::__min <= __t
+   && __t <= __int_traits<_Res>::__max;
+      else if constexpr (is_signed_v<_Tp>)
+ return __t >= 0
+   && make_unsigned_t<_Tp>(__t) <= __int_traits<_Res>::__max;
+      else
+ return __t <= make_unsigned_t<_Res>(__int_traits<_Res>::__max);
+    }
+
+
+
+
+  template<typename _Tp>
+    [[nodiscard]]
+    constexpr underlying_type_t<_Tp>
+    to_underlying(_Tp __value) noexcept
+    { return static_cast<underlying_type_t<_Tp>>(__value); }
+# 223 "C:/msys64/ucrt64/include/c++/15.2.0/utility" 3
+  [[noreturn,__gnu__::__always_inline__]]
+  inline void
+  unreachable()
+  {
+
+
+
+    __builtin_trap();
+
+
+
+  }
+
+
+
+}
+# 28 "include/frozen/bits/constexpr_assert.h" 2
+
+
+# 29 "include/frozen/bits/constexpr_assert.h"
+inline void constexpr_assert_failed() {}
+# 28 "include/frozen/bits/basic_types.h" 2
+
+
+
+
+
+
+namespace frozen {
+
+namespace bits {
+
+
+struct ignored_arg {};
+
+template <class T, std::size_t N>
+class cvector {
+  T data [N] = {};
+  std::size_t dsize = 0;
+
+public:
+
+  using value_type = T;
+  using reference = value_type &;
+  using const_reference = const value_type &;
+  using pointer = value_type *;
+  using const_pointer = const value_type *;
+  using iterator = pointer;
+  using const_iterator = const_pointer;
+  using size_type = std::size_t;
+  using difference_type = std::ptrdiff_t;
+
+
+  constexpr cvector(void) = default;
+  constexpr cvector(size_type count, const T& value) : dsize(count) {
+    for (std::size_t i = 0; i < N; ++i)
+      data[i] = value;
+  }
+
+
+  constexpr iterator begin() noexcept { return data; }
+  constexpr iterator end() noexcept { return data + dsize; }
+  constexpr const_iterator begin() const noexcept { return data; }
+  constexpr const_iterator end() const noexcept { return data + dsize; }
+
+
+  constexpr size_type size() const { return dsize; }
+
+
+  constexpr reference operator[](std::size_t index) { return data[index]; }
+  constexpr const_reference operator[](std::size_t index) const { return data[index]; }
+
+  constexpr reference back() { return data[dsize - 1]; }
+  constexpr const_reference back() const { return data[dsize - 1]; }
+
+
+  constexpr void push_back(const T & a) { data[dsize++] = a; }
+  constexpr void push_back(T && a) { data[dsize++] = std::move(a); }
+  constexpr void pop_back() { --dsize; }
+
+  constexpr void clear() { dsize = 0; }
+};
+
+template <class T, std::size_t N>
+class carray {
+  T data_ [N] = {};
+
+  template <class Iter, std::size_t... I>
+  constexpr carray(Iter iter, std::index_sequence<I...>)
+      : data_{((void)I, *iter++)...} {}
+  template <std::size_t... I>
+  constexpr carray(const T& value, std::index_sequence<I...>)
+      : data_{((void)I, value)...} {}
+
+  static constexpr void check_initializer(std::initializer_list<T> init) {
+    (void)init;
+    ((void)((init.size() == N) ? 0 : (constexpr_assert_failed(), 0)));
+  }
+
+public:
+
+  using value_type = T;
+  using reference = value_type &;
+  using const_reference = const value_type &;
+  using pointer = value_type *;
+  using const_pointer = const value_type *;
+  using iterator = pointer;
+  using const_iterator = const_pointer;
+  using size_type = std::size_t;
+  using difference_type = std::ptrdiff_t;
+
+
+  constexpr carray() = default;
+  constexpr carray(const value_type& val)
+    : carray(val, std::make_index_sequence<N>()) {}
+  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value, std::size_t> M>
+  constexpr carray(U const (&init)[M])
+    : carray(init, std::make_index_sequence<N>())
+  {
+    static_assert(M >= N, "Cannot initialize a carray with an smaller array");
+  }
+  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value, std::size_t> M>
+  constexpr carray(std::array<U, M> const &init)
+    : carray(init.begin(), std::make_index_sequence<N>())
+  {
+    static_assert(M >= N, "Cannot initialize a carray with an smaller array");
+  }
+  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value>* = nullptr>
+  constexpr carray(std::initializer_list<U> init)
+    : carray((check_initializer(init), init.begin()), std::make_index_sequence<N>())
+  {
+  }
+  template <typename U, std::enable_if_t<std::is_convertible<U, T>::value>* = nullptr>
+  constexpr carray(const carray<U, N>& rhs)
+    : carray(rhs.begin(), std::make_index_sequence<N>())
+  {
+  }
+
+
+  constexpr iterator begin() noexcept { return data_; }
+  constexpr const_iterator begin() const noexcept { return data_; }
+  constexpr iterator end() noexcept { return data_ + N; }
+  constexpr const_iterator end() const noexcept { return data_ + N; }
+
+
+  constexpr size_type size() const { return N; }
+  constexpr size_type max_size() const { return N; }
+
+
+  constexpr reference operator[](std::size_t index) { return data_[index]; }
+  constexpr const_reference operator[](std::size_t index) const { return data_[index]; }
+
+  constexpr reference at(std::size_t index) {
+    if (index > N)
+      throw std::out_of_range("Index (" + std::to_string(index) + ") out of bound (" + std::to_string(N) + ')');
+    return data_[index];
+  }
+  constexpr const_reference at(std::size_t index) const {
+    if (index > N)
+      throw std::out_of_range("Index (" + std::to_string(index) + ") out of bound (" + std::to_string(N) + ')');
+    return data_[index];
+  }
+
+  constexpr reference front() { return data_[0]; }
+  constexpr const_reference front() const { return data_[0]; }
+
+  constexpr reference back() { return data_[N - 1]; }
+  constexpr const_reference back() const { return data_[N - 1]; }
+
+  constexpr value_type* data() noexcept { return data_; }
+  constexpr const value_type* data() const noexcept { return data_; }
+};
+template <class T>
+class carray<T, 0> {
+
+public:
+
+  using value_type = T;
+  using reference = value_type &;
+  using const_reference = const value_type &;
+  using pointer = value_type *;
+  using const_pointer = const value_type *;
+  using iterator = pointer;
+  using const_iterator = const_pointer;
+  using size_type = std::size_t;
+  using difference_type = std::ptrdiff_t;
+
+
+  constexpr carray(void) = default;
+
+};
+
+}
+
+}
+# 27 "include/frozen/unordered_map.h" 2
+# 1 "include/frozen/bits/elsa.h" 1
+# 28 "include/frozen/bits/elsa.h"
+namespace frozen {
+
+template <class T = void> struct elsa {
+  static_assert(std::is_integral<T>::value || std::is_enum<T>::value,
+                "only supports integral types, specialize for other types");
+
+  constexpr std::size_t operator()(T const &value, std::size_t seed) const {
+    std::size_t key = seed ^ static_cast<std::size_t>(value);
+    key = (~key) + (key << 21);
+    key = key ^ (key >> 24);
+    key = (key + (key << 3)) + (key << 8);
+    key = key ^ (key >> 14);
+    key = (key + (key << 2)) + (key << 4);
+    key = key ^ (key >> 28);
+    key = key + (key << 31);
+    return key;
+  }
+};
+
+template <> struct elsa<void> {
+  template<class T>
+  constexpr std::size_t operator()(T const &value, std::size_t seed) const {
+    return elsa<T>{}(value, seed);
+  }
+};
+
+template <class T=void> using anna = elsa<T>;
+}
+# 28 "include/frozen/unordered_map.h" 2
+
+# 1 "include/frozen/bits/pmh.h" 1
+# 27 "include/frozen/bits/pmh.h"
+# 1 "include/frozen/bits/algorithms.h" 1
+# 31 "include/frozen/bits/algorithms.h"
+namespace frozen {
+
+namespace bits {
+
+auto constexpr next_highest_power_of_two(std::size_t v) {
+
+  constexpr auto trip_count = std::numeric_limits<decltype(v)>::digits;
+  v--;
+  for(std::size_t i = 1; i < trip_count; i <<= 1)
+    v |= v >> i;
+  v++;
+  return v;
+}
+
+template<class T>
+auto constexpr log(T v) {
+  std::size_t n = 0;
+  while (v > 1) {
+    n += 1;
+    v >>= 1;
+  }
+  return n;
+}
+
+constexpr std::size_t bit_weight(std::size_t n) {
+  return (n <= 8*sizeof(unsigned int))
+    + (n <= 8*sizeof(unsigned long))
+    + (n <= 8*sizeof(unsigned long long))
+    + (n <= 128);
+}
+
+unsigned int select_uint_least(std::integral_constant<std::size_t, 4>);
+unsigned long select_uint_least(std::integral_constant<std::size_t, 3>);
+unsigned long long select_uint_least(std::integral_constant<std::size_t, 2>);
+template<std::size_t N>
+unsigned long long select_uint_least(std::integral_constant<std::size_t, N>) {
+  static_assert(N < 2, "unsupported type size");
+  return {};
+}
+
+
+template<std::size_t N>
+using select_uint_least_t = decltype(select_uint_least(std::integral_constant<std::size_t, bit_weight(N)>()));
+
+template <typename Iter, typename Compare>
+constexpr auto min_element(Iter begin, const Iter end,
+                           Compare const &compare) {
+  auto result = begin;
+  while (begin != end) {
+    if (compare(*begin, *result)) {
+      result = begin;
+    }
+    ++begin;
+  }
+  return result;
+}
+
+template <class T>
+constexpr void cswap(T &a, T &b) {
+  auto tmp = a;
+  a = b;
+  b = tmp;
+}
+
+template <class T, class U>
+constexpr void cswap(std::pair<T, U> & a, std::pair<T, U> & b) {
+  cswap(a.first, b.first);
+  cswap(a.second, b.second);
+}
+
+template <class... Tys, std::size_t... Is>
+constexpr void cswap(std::tuple<Tys...> &a, std::tuple<Tys...> &b, std::index_sequence<Is...>) {
+  using swallow = int[];
+  (void) swallow{(cswap(std::get<Is>(a), std::get<Is>(b)), 0)...};
+}
+
+template <class... Tys>
+constexpr void cswap(std::tuple<Tys...> &a, std::tuple<Tys...> &b) {
+  cswap(a, b, std::make_index_sequence<sizeof...(Tys)>());
+}
+
+template <typename Iter>
+constexpr void iter_swap(Iter a, Iter b) {
+  cswap(*a, *b);
+}
+
+template <typename Iterator, class Compare>
+constexpr Iterator partition(Iterator left, Iterator right, Compare const &compare) {
+  auto pivot = left + (right - left) / 2;
+  iter_swap(right, pivot);
+  pivot = right;
+  for (auto it = left; 0 < right - it; ++it) {
+    if (compare(*it, *pivot)) {
+      iter_swap(it, left);
+      left++;
+    }
+  }
+  iter_swap(pivot, left);
+  pivot = left;
+  return pivot;
+}
+
+template <typename Iterator, class Compare>
+constexpr void quicksort(Iterator left, Iterator right, Compare const &compare) {
+  while (0 < right - left) {
+    auto new_pivot = bits::partition(left, right, compare);
+    quicksort(left, new_pivot, compare);
+    left = new_pivot + 1;
+  }
+}
+
+template <typename Container, class Compare>
+constexpr Container quicksort(Container const &array,
+                                     Compare const &compare) {
+  Container res = array;
+  quicksort(res.begin(), res.end() - 1, compare);
+  return res;
+}
+
+template <class T, class Compare> struct LowerBound {
+  T const &value_;
+  Compare const &compare_;
+  constexpr LowerBound(T const &value, Compare const &compare)
+      : value_(value), compare_(compare) {}
+
+  template <class ForwardIt>
+  inline constexpr ForwardIt doit_fast(ForwardIt first,
+                                  std::integral_constant<std::size_t, 0>) {
+    return first;
+  }
+
+  template <class ForwardIt, std::size_t N>
+  inline constexpr ForwardIt doit_fast(ForwardIt first,
+                                  std::integral_constant<std::size_t, N>) {
+    auto constexpr step = N / 2;
+    static_assert(N/2 == N - N / 2 - 1, "power of two minus 1");
+    auto it = first + step;
+    auto next_it = compare_(*it, value_) ? it + 1 : first;
+    return doit_fast(next_it, std::integral_constant<std::size_t, N / 2>{});
+  }
+
+  template <class ForwardIt, std::size_t N>
+  inline constexpr ForwardIt doitfirst(ForwardIt first, std::integral_constant<std::size_t, N>, std::integral_constant<bool, true>) {
+    return doit_fast(first, std::integral_constant<std::size_t, N>{});
+  }
+
+  template <class ForwardIt, std::size_t N>
+  inline constexpr ForwardIt doitfirst(ForwardIt first, std::integral_constant<std::size_t, N>, std::integral_constant<bool, false>) {
+    auto constexpr next_power = next_highest_power_of_two(N);
+    auto constexpr next_start = next_power / 2 - 1;
+    auto it = first + next_start;
+    if (compare_(*it, value_)) {
+      auto constexpr next = N - next_start - 1;
+      return doitfirst(it + 1, std::integral_constant<std::size_t, next>{}, std::integral_constant<bool, next_highest_power_of_two(next) - 1 == next>{});
+    }
+    else
+      return doit_fast(first, std::integral_constant<std::size_t, next_start>{});
+  }
+
+  template <class ForwardIt>
+  inline constexpr ForwardIt doitfirst(ForwardIt first, std::integral_constant<std::size_t, 1>, std::integral_constant<bool, false>) {
+    return doit_fast(first, std::integral_constant<std::size_t, 1>{});
+  }
+};
+
+template <std::size_t N, class ForwardIt, class T, class Compare>
+constexpr ForwardIt lower_bound(ForwardIt first, const T &value, Compare const &compare) {
+  return LowerBound<T, Compare>{value, compare}.doitfirst(first, std::integral_constant<std::size_t, N>{}, std::integral_constant<bool, next_highest_power_of_two(N) - 1 == N>{});
+}
+
+template <std::size_t N, class Compare, class ForwardIt, class T>
+constexpr bool binary_search(ForwardIt first, const T &value,
+                             Compare const &compare) {
+  ForwardIt where = lower_bound<N>(first, value, compare);
+  return (!(where == first + N) && !(compare(value, *where)));
+}
+
+
+template<class InputIt1, class InputIt2>
+constexpr bool equal(InputIt1 first1, InputIt1 last1, InputIt2 first2)
+{
+  for (; first1 != last1; ++first1, ++first2) {
+    if (!(*first1 == *first2)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template<class InputIt1, class InputIt2>
+constexpr bool lexicographical_compare(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+  for (; (first1 != last1) && (first2 != last2); ++first1, ++first2) {
+    if (*first1 < *first2)
+      return true;
+    if (*first2 < *first1)
+      return false;
+  }
+  return (first1 == last1) && (first2 != last2);
+}
+
+}
+}
+# 28 "include/frozen/bits/pmh.h" 2
+
+
+
+
+
+
+
+namespace frozen {
+
+namespace bits {
+
+
+struct bucket_size_compare {
+  template <typename B>
+  bool constexpr operator()(B const &b0,
+                            B const &b1) const {
+    return b0.size() > b1.size();
+  }
+};
+
+
+
+
+
+
+template <std::size_t M>
+struct pmh_buckets {
+
+
+  static constexpr auto bucket_max = 2 * (1u << (log(M) / 2));
+
+  using bucket_t = cvector<std::size_t, bucket_max>;
+  carray<bucket_t, M> buckets;
+  std::uint64_t seed;
+
+
+
+  struct bucket_ref {
+    unsigned hash;
+    const bucket_t * ptr;
+
+
+    using value_type = typename bucket_t::value_type;
+    using const_iterator = typename bucket_t::const_iterator;
+
+    constexpr auto size() const { return ptr->size(); }
+    constexpr const auto & operator[](std::size_t idx) const { return (*ptr)[idx]; }
+    constexpr auto begin() const { return ptr->begin(); }
+    constexpr auto end() const { return ptr->end(); }
+  };
+
+
+  template <std::size_t... Is>
+  carray<bucket_ref, M> constexpr make_bucket_refs(std::index_sequence<Is...>) const {
+    return {{ bucket_ref{Is, &buckets[Is]}... }};
+  }
+
+
+  carray<bucket_ref, M> constexpr get_sorted_buckets() const {
+    carray<bucket_ref, M> result{this->make_bucket_refs(std::make_index_sequence<M>())};
+    bits::quicksort(result.begin(), result.end() - 1, bucket_size_compare{});
+    return result;
+  }
+};
+
+template <std::size_t M, class Item, std::size_t N, class Hash, class Key, class PRG>
+pmh_buckets<M> constexpr make_pmh_buckets(const carray<Item, N> & items,
+                                Hash const & hash,
+                                Key const & key,
+                                PRG & prg) {
+  using result_t = pmh_buckets<M>;
+
+  while (1) {
+    result_t result{};
+    result.seed = prg();
+    bool rejected = false;
+    for (std::size_t i = 0; i < items.size(); ++i) {
+      auto & bucket = result.buckets[hash(key(items[i]), static_cast<std::size_t>(result.seed)) % M];
+      if (bucket.size() >= result_t::bucket_max) {
+        rejected = true;
+        break;
+      }
+      bucket.push_back(i);
+    }
+    if (!rejected) { return result; }
+  }
+}
+
+
+template<class T, std::size_t N>
+constexpr bool all_different_from(cvector<T, N> & data, T & a) {
+  for (std::size_t i = 0; i < data.size(); ++i)
+    if (data[i] == a)
+      return false;
+
+  return true;
+}
+
+
+
+struct seed_or_index {
+  using value_type = std::uint64_t;
+
+private:
+  static constexpr value_type MINUS_ONE = std::numeric_limits<value_type>::max();
+  static constexpr value_type HIGH_BIT = ~(MINUS_ONE >> 1);
+
+  value_type value_ = 0;
+
+public:
+  constexpr value_type value() const { return value_; }
+  constexpr bool is_seed() const { return value_ & HIGH_BIT; }
+
+  constexpr seed_or_index(bool is_seed, value_type value)
+    : value_(is_seed ? (value | HIGH_BIT) : (value & ~HIGH_BIT)) {}
+
+  constexpr seed_or_index() = default;
+  constexpr seed_or_index(const seed_or_index &) = default;
+  constexpr seed_or_index & operator =(const seed_or_index &) = default;
+};
+
+
+template <std::size_t M, class Hasher>
+struct pmh_tables : private Hasher {
+  std::uint64_t first_seed_;
+  carray<seed_or_index, M> first_table_;
+  carray<std::size_t, M> second_table_;
+
+  constexpr pmh_tables(
+      std::uint64_t first_seed,
+      carray<seed_or_index, M> first_table,
+      carray<std::size_t, M> second_table,
+      Hasher hash) noexcept
+    : Hasher(hash)
+    , first_seed_(first_seed)
+    , first_table_(first_table)
+    , second_table_(second_table)
+  {}
+
+  constexpr Hasher const& hash_function() const noexcept {
+    return static_cast<Hasher const&>(*this);
+  }
+
+  template <typename KeyType>
+  constexpr std::size_t lookup(const KeyType & key) const {
+    return lookup(key, hash_function());
+  }
+
+
+
+  template <typename KeyType, typename HasherType>
+  constexpr std::size_t lookup(const KeyType & key, const HasherType& hasher) const {
+    auto const d = first_table_[hasher(key, static_cast<std::size_t>(first_seed_)) % M];
+    if (!d.is_seed()) { return static_cast<std::size_t>(d.value()); }
+    else { return second_table_[hasher(key, static_cast<std::size_t>(d.value())) % M]; }
+  }
+};
+
+
+template <std::size_t M, class Item, std::size_t N, class Hash, class Key, class KeyEqual, class PRG>
+pmh_tables<M, Hash> constexpr make_pmh_tables(const carray<Item, N> &
+                                                               items,
+                                                           Hash const &hash,
+                                                           KeyEqual const &equal,
+                                                           Key const &key,
+                                                           PRG prg) {
+
+  auto step_one = make_pmh_buckets<M>(items, hash, key, prg);
+
+
+  for(auto const& bucket : step_one.buckets)
+    for(std::size_t i = 1; i < bucket.size(); ++i)
+      ((void)((!equal(key(items[0]), key(items[i]))) ? 0 : (constexpr_assert_failed(), 0)));
+
+
+  auto buckets = step_one.get_sorted_buckets();
+
+
+
+
+
+
+  const auto UNUSED = items.size();
+
+
+  carray<seed_or_index, M> G({false, UNUSED});
+
+
+  carray<std::size_t, M> H(UNUSED);
+
+
+  for (const auto & bucket : buckets) {
+    auto const bsize = bucket.size();
+
+    if (bsize == 1) {
+
+
+      G[bucket.hash] = {false, static_cast<std::uint64_t>(bucket[0])};
+    } else if (bsize > 1) {
+
+
+
+      seed_or_index d{true, prg()};
+      cvector<std::size_t, decltype(step_one)::bucket_max> bucket_slots;
+
+      while (bucket_slots.size() < bsize) {
+        auto slot = hash(key(items[bucket[bucket_slots.size()]]), static_cast<std::size_t>(d.value())) % M;
+
+        if (H[slot] != UNUSED || !all_different_from(bucket_slots, slot)) {
+          bucket_slots.clear();
+          d = {true, prg()};
+          continue;
+        }
+
+        bucket_slots.push_back(slot);
+      }
+
+
+
+      G[bucket.hash] = d;
+      for (std::size_t i = 0; i < bsize; ++i)
+        H[bucket_slots[i]] = bucket[i];
+    }
+  }
+
+  return {step_one.seed, G, H, hash};
+}
+
+}
+
+}
+# 30 "include/frozen/unordered_map.h" 2
+# 1 "include/frozen/bits/version.h" 1
+# 31 "include/frozen/unordered_map.h" 2
+# 1 "include/frozen/random.h" 1
+# 32 "include/frozen/random.h"
+namespace frozen {
+template <class UIntType, UIntType a, UIntType c, UIntType m>
+class linear_congruential_engine {
+
+  static_assert(std::is_unsigned<UIntType>::value,
+                "UIntType must be an unsigned integral type");
+
+  template<class T>
+  static constexpr UIntType modulo(T val, std::integral_constant<UIntType, 0>) {
+    return static_cast<UIntType>(val);
+  }
+
+  template<class T, UIntType M>
+  static constexpr UIntType modulo(T val, std::integral_constant<UIntType, M>) {
+
+    return static_cast<UIntType>(val % M);
+  }
+
+public:
+  using result_type = UIntType;
+  static constexpr result_type multiplier = a;
+  static constexpr result_type increment = c;
+  static constexpr result_type modulus = m;
+  static constexpr result_type default_seed = 1u;
+
+  linear_congruential_engine() = default;
+  constexpr linear_congruential_engine(result_type s) { seed(s); }
+
+  void seed(result_type s = default_seed) { state_ = s; }
+  constexpr result_type operator()() {
+   using uint_least_t = bits::select_uint_least_t<bits::log(a) + bits::log(m) + 4>;
+    uint_least_t tmp = static_cast<uint_least_t>(multiplier) * state_ + increment;
+
+    state_ = modulo(tmp, std::integral_constant<UIntType, modulus>());
+    return state_;
+  }
+  constexpr void discard(unsigned long long n) {
+    while (n--)
+      operator()();
+  }
+  static constexpr result_type min() { return increment == 0u ? 1u : 0u; }
+  static constexpr result_type max() { return modulus - 1u; }
+  friend constexpr bool operator==(linear_congruential_engine const &self,
+                                   linear_congruential_engine const &other) {
+    return self.state_ == other.state_;
+  }
+  friend constexpr bool operator!=(linear_congruential_engine const &self,
+                                   linear_congruential_engine const &other) {
+    return !(self == other);
+  }
+
+private:
+  result_type state_ = default_seed;
+};
+
+using minstd_rand0 =
+    linear_congruential_engine<std::uint_fast32_t, 16807, 0, 2147483647>;
+using minstd_rand =
+    linear_congruential_engine<std::uint_fast32_t, 48271, 0, 2147483647>;
+
+
+using default_prg_t = minstd_rand;
+
+}
+# 32 "include/frozen/unordered_map.h" 2
+
+
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/functional" 1 3
+# 61 "C:/msys64/ucrt64/include/c++/15.2.0/functional" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 1 3
+# 47 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+
+# 47 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+namespace std
+{
+
+
+
+
+
+
+
+  class bad_function_call : public std::exception
+  {
+  public:
+    virtual ~bad_function_call() noexcept;
+
+    const char* what() const noexcept;
+  };
+
+
+
+
+
+
+
+  template<typename _Tp>
+    struct __is_location_invariant
+    : is_trivially_copyable<_Tp>::type
+    { };
+
+  class _Undefined_class;
+
+  union _Nocopy_types
+  {
+    void* _M_object;
+    const void* _M_const_object;
+    void (*_M_function_pointer)();
+    void (_Undefined_class::*_M_member_pointer)();
+  };
+
+  union [[gnu::may_alias]] _Any_data
+  {
+    void* _M_access() noexcept { return &_M_pod_data[0]; }
+    const void* _M_access() const noexcept { return &_M_pod_data[0]; }
+
+    template<typename _Tp>
+      _Tp&
+      _M_access() noexcept
+      { return *static_cast<_Tp*>(_M_access()); }
+
+    template<typename _Tp>
+      const _Tp&
+      _M_access() const noexcept
+      { return *static_cast<const _Tp*>(_M_access()); }
+
+    _Nocopy_types _M_unused;
+    char _M_pod_data[sizeof(_Nocopy_types)];
+  };
+
+  enum _Manager_operation
+  {
+    __get_type_info,
+    __get_functor_ptr,
+    __clone_functor,
+    __destroy_functor
+  };
+
+  template<typename _Signature>
+    class function;
+
+
+  class _Function_base
+  {
+  public:
+    static const size_t _M_max_size = sizeof(_Nocopy_types);
+    static const size_t _M_max_align = __alignof__(_Nocopy_types);
+
+    template<typename _Functor>
+      class _Base_manager
+      {
+      protected:
+ static const bool __stored_locally =
+ (__is_location_invariant<_Functor>::value
+  && sizeof(_Functor) <= _M_max_size
+  && __alignof__(_Functor) <= _M_max_align
+  && (_M_max_align % __alignof__(_Functor) == 0));
+
+ using _Local_storage = integral_constant<bool, __stored_locally>;
+
+
+ static _Functor*
+ _M_get_pointer(const _Any_data& __source) noexcept
+ {
+   if constexpr (__stored_locally)
+     {
+       const _Functor& __f = __source._M_access<_Functor>();
+       return const_cast<_Functor*>(std::__addressof(__f));
+     }
+   else
+     return __source._M_access<_Functor*>();
+ }
+
+      private:
+
+
+ template<typename _Fn>
+   static void
+   _M_create(_Any_data& __dest, _Fn&& __f, true_type)
+   {
+     ::new (__dest._M_access()) _Functor(std::forward<_Fn>(__f));
+   }
+
+
+ template<typename _Fn>
+   static void
+   _M_create(_Any_data& __dest, _Fn&& __f, false_type)
+   {
+     __dest._M_access<_Functor*>()
+       = new _Functor(std::forward<_Fn>(__f));
+   }
+
+
+ static void
+ _M_destroy(_Any_data& __victim, true_type)
+ {
+   __victim._M_access<_Functor>().~_Functor();
+ }
+
+
+ static void
+ _M_destroy(_Any_data& __victim, false_type)
+ {
+   delete __victim._M_access<_Functor*>();
+ }
+
+      public:
+ static bool
+ _M_manager(_Any_data& __dest, const _Any_data& __source,
+     _Manager_operation __op)
+ {
+   switch (__op)
+     {
+     case __get_type_info:
+
+       __dest._M_access<const type_info*>() = &typeid(_Functor);
+
+
+
+       break;
+
+     case __get_functor_ptr:
+       __dest._M_access<_Functor*>() = _M_get_pointer(__source);
+       break;
+
+     case __clone_functor:
+       _M_init_functor(__dest,
+    *const_cast<const _Functor*>(_M_get_pointer(__source)));
+       break;
+
+     case __destroy_functor:
+       _M_destroy(__dest, _Local_storage());
+       break;
+     }
+   return false;
+ }
+
+ template<typename _Fn>
+   static void
+   _M_init_functor(_Any_data& __functor, _Fn&& __f)
+   noexcept(__and_<_Local_storage,
+     is_nothrow_constructible<_Functor, _Fn>>::value)
+   {
+     _M_create(__functor, std::forward<_Fn>(__f), _Local_storage());
+   }
+
+ template<typename _Signature>
+   static bool
+   _M_not_empty_function(const function<_Signature>& __f) noexcept
+   { return static_cast<bool>(__f); }
+
+ template<typename _Tp>
+   static bool
+   _M_not_empty_function(_Tp* __fp) noexcept
+   { return __fp != nullptr; }
+
+ template<typename _Class, typename _Tp>
+   static bool
+   _M_not_empty_function(_Tp _Class::* __mp) noexcept
+   { return __mp != nullptr; }
+
+ template<typename _Tp>
+   static bool
+   _M_not_empty_function(const _Tp&) noexcept
+   { return true; }
+      };
+
+    _Function_base() = default;
+
+    ~_Function_base()
+    {
+      if (_M_manager)
+ _M_manager(_M_functor, _M_functor, __destroy_functor);
+    }
+
+    bool _M_empty() const { return !_M_manager; }
+
+    using _Manager_type
+      = bool (*)(_Any_data&, const _Any_data&, _Manager_operation);
+
+    _Any_data _M_functor{};
+    _Manager_type _M_manager{};
+  };
+
+  template<typename _Signature, typename _Functor>
+    class _Function_handler;
+
+  template<typename _Res, typename _Functor, typename... _ArgTypes>
+    class _Function_handler<_Res(_ArgTypes...), _Functor>
+    : public _Function_base::_Base_manager<_Functor>
+    {
+      using _Base = _Function_base::_Base_manager<_Functor>;
+
+    public:
+      static bool
+      _M_manager(_Any_data& __dest, const _Any_data& __source,
+   _Manager_operation __op)
+      {
+ switch (__op)
+   {
+
+   case __get_type_info:
+     __dest._M_access<const type_info*>() = &typeid(_Functor);
+     break;
+
+   case __get_functor_ptr:
+     __dest._M_access<_Functor*>() = _Base::_M_get_pointer(__source);
+     break;
+
+   default:
+     _Base::_M_manager(__dest, __source, __op);
+   }
+ return false;
+      }
+
+      static _Res
+      _M_invoke(const _Any_data& __functor, _ArgTypes&&... __args)
+      {
+ return std::__invoke_r<_Res>(*_Base::_M_get_pointer(__functor),
+         std::forward<_ArgTypes>(__args)...);
+      }
+
+      template<typename _Fn>
+ static constexpr bool
+ _S_nothrow_init() noexcept
+ {
+   return __and_<typename _Base::_Local_storage,
+   is_nothrow_constructible<_Functor, _Fn>>::value;
+ }
+    };
+
+
+  template<>
+    class _Function_handler<void, void>
+    {
+    public:
+      static bool
+      _M_manager(_Any_data&, const _Any_data&, _Manager_operation)
+      { return false; }
+    };
+
+
+
+
+
+  template<typename _Signature, typename _Functor,
+    bool __valid = is_object<_Functor>::value>
+    struct _Target_handler
+    : _Function_handler<_Signature, typename remove_cv<_Functor>::type>
+    { };
+
+  template<typename _Signature, typename _Functor>
+    struct _Target_handler<_Signature, _Functor, false>
+    : _Function_handler<void, void>
+    { };
+
+
+
+
+
+
+  template<typename _Res, typename... _ArgTypes>
+    class function<_Res(_ArgTypes...)>
+    : public _Maybe_unary_or_binary_function<_Res, _ArgTypes...>,
+      private _Function_base
+    {
+
+
+      template<typename _Func,
+        bool _Self = is_same<__remove_cvref_t<_Func>, function>::value>
+ using _Decay_t
+   = typename __enable_if_t<!_Self, decay<_Func>>::type;
+
+      template<typename _Func,
+        typename _DFunc = _Decay_t<_Func>,
+        typename _Res2 = __invoke_result<_DFunc&, _ArgTypes...>>
+ struct _Callable
+ : __is_invocable_impl<_Res2, _Res>::type
+ { };
+
+      template<typename _Cond, typename _Tp = void>
+ using _Requires = __enable_if_t<_Cond::value, _Tp>;
+
+      template<typename _Functor>
+ using _Handler
+   = _Function_handler<_Res(_ArgTypes...), __decay_t<_Functor>>;
+
+    public:
+      typedef _Res result_type;
+
+
+
+
+
+
+
+      function() noexcept
+      : _Function_base() { }
+
+
+
+
+
+      function(nullptr_t) noexcept
+      : _Function_base() { }
+# 388 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      function(const function& __x)
+      : _Function_base()
+      {
+ if (static_cast<bool>(__x))
+   {
+     __x._M_manager(_M_functor, __x._M_functor, __clone_functor);
+     _M_invoker = __x._M_invoker;
+     _M_manager = __x._M_manager;
+   }
+      }
+# 406 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      function(function&& __x) noexcept
+      : _Function_base(), _M_invoker(__x._M_invoker)
+      {
+ if (static_cast<bool>(__x))
+   {
+     _M_functor = __x._M_functor;
+     _M_manager = __x._M_manager;
+     __x._M_manager = nullptr;
+     __x._M_invoker = nullptr;
+   }
+      }
+# 435 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      template<typename _Functor,
+        typename _Constraints = _Requires<_Callable<_Functor>>>
+ function(_Functor&& __f)
+ noexcept(_Handler<_Functor>::template _S_nothrow_init<_Functor>())
+ : _Function_base()
+ {
+   static_assert(is_copy_constructible<__decay_t<_Functor>>::value,
+       "std::function target must be copy-constructible");
+   static_assert(is_constructible<__decay_t<_Functor>, _Functor>::value,
+       "std::function target must be constructible from the "
+       "constructor argument");
+
+   using _My_handler = _Handler<_Functor>;
+
+   if (_My_handler::_M_not_empty_function(__f))
+     {
+       _My_handler::_M_init_functor(_M_functor,
+        std::forward<_Functor>(__f));
+       _M_invoker = &_My_handler::_M_invoke;
+       _M_manager = &_My_handler::_M_manager;
+     }
+ }
+# 470 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      function&
+      operator=(const function& __x)
+      {
+ function(__x).swap(*this);
+ return *this;
+      }
+# 488 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      function&
+      operator=(function&& __x) noexcept
+      {
+ function(std::move(__x)).swap(*this);
+ return *this;
+      }
+# 502 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      function&
+      operator=(nullptr_t) noexcept
+      {
+ if (_M_manager)
+   {
+     _M_manager(_M_functor, _M_functor, __destroy_functor);
+     _M_manager = nullptr;
+     _M_invoker = nullptr;
+   }
+ return *this;
+      }
+# 531 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      template<typename _Functor>
+ _Requires<_Callable<_Functor>, function&>
+ operator=(_Functor&& __f)
+ noexcept(_Handler<_Functor>::template _S_nothrow_init<_Functor>())
+ {
+   function(std::forward<_Functor>(__f)).swap(*this);
+   return *this;
+ }
+
+
+      template<typename _Functor>
+ function&
+ operator=(reference_wrapper<_Functor> __f) noexcept
+ {
+   function(__f).swap(*this);
+   return *this;
+ }
+# 558 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      void swap(function& __x) noexcept
+      {
+ std::swap(_M_functor, __x._M_functor);
+ std::swap(_M_manager, __x._M_manager);
+ std::swap(_M_invoker, __x._M_invoker);
+      }
+# 575 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      explicit operator bool() const noexcept
+      { return !_M_empty(); }
+# 588 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      _Res
+      operator()(_ArgTypes... __args) const
+      {
+ if (_M_empty())
+   __throw_bad_function_call();
+ return _M_invoker(_M_functor, std::forward<_ArgTypes>(__args)...);
+      }
+# 607 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      const type_info&
+      target_type() const noexcept
+      {
+ if (_M_manager)
+   {
+     _Any_data __typeinfo_result;
+     _M_manager(__typeinfo_result, _M_functor, __get_type_info);
+     if (auto __ti = __typeinfo_result._M_access<const type_info*>())
+       return *__ti;
+   }
+ return typeid(void);
+      }
+# 632 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+      template<typename _Functor>
+ _Functor*
+ target() noexcept
+ {
+   const function* __const_this = this;
+   const _Functor* __func = __const_this->template target<_Functor>();
+
+
+   return *const_cast<_Functor**>(&__func);
+ }
+
+      template<typename _Functor>
+ const _Functor*
+ target() const noexcept
+ {
+   if constexpr (is_object<_Functor>::value)
+     {
+
+
+       using _Handler = _Target_handler<_Res(_ArgTypes...), _Functor>;
+
+       if (_M_manager == &_Handler::_M_manager
+
+    || (_M_manager && typeid(_Functor) == target_type())
+
+   )
+  {
+    _Any_data __ptr;
+    _M_manager(__ptr, _M_functor, __get_functor_ptr);
+    return __ptr._M_access<const _Functor*>();
+  }
+     }
+   return nullptr;
+ }
+
+
+    private:
+      using _Invoker_type = _Res (*)(const _Any_data&, _ArgTypes&&...);
+      _Invoker_type _M_invoker = nullptr;
+    };
+
+
+  template<typename>
+    struct __function_guide_helper
+    { };
+
+  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
+    struct __function_guide_helper<
+      _Res (_Tp::*) (_Args...) noexcept(_Nx)
+    >
+    { using type = _Res(_Args...); };
+
+  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
+    struct __function_guide_helper<
+      _Res (_Tp::*) (_Args...) & noexcept(_Nx)
+    >
+    { using type = _Res(_Args...); };
+
+  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
+    struct __function_guide_helper<
+      _Res (_Tp::*) (_Args...) const noexcept(_Nx)
+    >
+    { using type = _Res(_Args...); };
+
+  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
+    struct __function_guide_helper<
+      _Res (_Tp::*) (_Args...) const & noexcept(_Nx)
+    >
+    { using type = _Res(_Args...); };
+
+
+
+
+  template<typename _Res, typename _Tp, bool _Nx, typename... _Args>
+    struct __function_guide_helper<_Res (*) (_Tp, _Args...) noexcept(_Nx)>
+    { using type = _Res(_Args...); };
+
+
+
+  template<typename _StaticCallOp>
+    struct __function_guide_static_helper
+    { };
+
+  template<typename _Res, bool _Nx, typename... _Args>
+    struct __function_guide_static_helper<_Res (*) (_Args...) noexcept(_Nx)>
+    { using type = _Res(_Args...); };
+
+  template<typename _Fn, typename _Op>
+    using __function_guide_t = typename __conditional_t<
+      requires (_Fn& __f) { (void) __f.operator(); },
+      __function_guide_static_helper<_Op>,
+      __function_guide_helper<_Op>>::type;
+
+
+
+
+
+  template<typename _Res, typename... _ArgTypes>
+    function(_Res(*)(_ArgTypes...)) -> function<_Res(_ArgTypes...)>;
+
+  template<typename _Fn, typename _Signature
+      = __function_guide_t<_Fn, decltype(&_Fn::operator())>>
+    function(_Fn) -> function<_Signature>;
+# 745 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+  template<typename _Res, typename... _Args>
+    inline bool
+    operator==(const function<_Res(_Args...)>& __f, nullptr_t) noexcept
+    { return !static_cast<bool>(__f); }
+# 784 "C:/msys64/ucrt64/include/c++/15.2.0/bits/std_function.h" 3
+  template<typename _Res, typename... _Args>
+    inline void
+    swap(function<_Res(_Args...)>& __x, function<_Res(_Args...)>& __y) noexcept
+    { __x.swap(__y); }
+
+
+  namespace __detail::__variant
+  {
+    template<typename> struct _Never_valueless_alt;
+
+
+
+    template<typename _Signature>
+      struct _Never_valueless_alt<std::function<_Signature>>
+      : std::true_type
+      { };
+  }
+
+
+
+}
+# 62 "C:/msys64/ucrt64/include/c++/15.2.0/functional" 2 3
+
+
+
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 1 3
+# 43 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 3
+# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_map.h" 1 3
+# 41 "C:/msys64/ucrt64/include/c++/15.2.0/bits/unordered_map.h" 3
 namespace std
 {
 
@@ -102919,40 +104467,6 @@ namespace std
 
 }
 # 44 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 2 3
-
-# 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/erase_if.h" 1 3
-# 41 "C:/msys64/ucrt64/include/c++/15.2.0/bits/erase_if.h" 3
-namespace std
-{
-
-
-  namespace __detail
-  {
-    template<typename _Container, typename _UnsafeContainer,
-      typename _Predicate>
-      typename _Container::size_type
-      __erase_nodes_if(_Container& __cont, _UnsafeContainer& __ucont,
-         _Predicate __pred)
-      {
- typename _Container::size_type __num = 0;
- for (auto __iter = __ucont.begin(), __last = __ucont.end();
-      __iter != __last;)
-   {
-     if (__pred(*__iter))
-       {
-  __iter = __cont.erase(__iter);
-  ++__num;
-       }
-     else
-       ++__iter;
-   }
- return __num;
-      }
-  }
-
-
-}
-# 46 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 2 3
 # 59 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 3
 # 1 "C:/msys64/ucrt64/include/c++/15.2.0/bits/version.h" 1 3
 # 60 "C:/msys64/ucrt64/include/c++/15.2.0/unordered_map" 2 3
@@ -105499,7 +107013,7 @@ constexpr auto make_unordered_map(
 }
 
 }
-# 7 "tomatene.cpp" 2
+# 8 "tomatene.cpp" 2
 # 1 "include/frozen/string.h" 1
 # 27 "include/frozen/string.h"
 # 1 "include/frozen/bits/hash_string.h" 1
@@ -105658,7 +107172,7 @@ template <typename _CharT> struct hash<frozen::basic_string<_CharT>> {
   }
 };
 }
-# 8 "tomatene.cpp" 2
+# 9 "tomatene.cpp" 2
 
 # 1 "zobristHashes.h" 1
 
@@ -106056,7 +107570,7 @@ namespace ZobristHashes {
   return PieceHashes[pieceSpecies] ^ FileHashes[file] ^ RankHashes[rank];
  }
 };
-# 10 "tomatene.cpp" 2
+# 11 "tomatene.cpp" 2
 # 1 "transpositionTable.h" 1
        
 
@@ -106090,7 +107604,7 @@ public:
   table[maskedHash] = { hash, bestMove };
  }
 };
-# 11 "tomatene.cpp" 2
+# 12 "tomatene.cpp" 2
 
 
 
@@ -106108,7 +107622,6 @@ constexpr std::vector<std::string> splitString(std::string str, char delimiter) 
  }
  return res;
 }
-int x = 42;
 
 
 constexpr std::vector<std::string_view> splitStringView(const std::string_view str, const char delimeter = ',') {
@@ -106499,316 +108012,671 @@ inline constexpr bool isRangeCapturingPiece(PieceSpecies::Type pieceSpecies) {
  return pieceSpecies == PieceSpecies::GG || pieceSpecies == PieceSpecies::VG || pieceSpecies == PieceSpecies::FLG || pieceSpecies == PieceSpecies::AG || pieceSpecies == PieceSpecies::FID || pieceSpecies == PieceSpecies::FCR;
 }
 
-struct PieceInfo {
- const char* movement;
- PieceSpecies::Type promotion;
+struct Vec2 {
+ int8_t x;
+ int8_t y;
+
+ constexpr Vec2 operator+(const Vec2 &other) const {
+  return { static_cast<int8_t>(x + other.x), static_cast<int8_t>(y + other.y) };
+ }constexpr Vec2 operator+(const int other) const {
+  return { static_cast<int8_t>(x + other), static_cast<int8_t>(y + other) };
+ }
+ constexpr Vec2 operator-(const Vec2 &other) const {
+  return { static_cast<int8_t>(x - other.x), static_cast<int8_t>(y - other.y) };
+ }
+ constexpr Vec2& operator+=(const Vec2 &other) {
+  x += other.x;
+  y += other.y;
+  return *this;
+ }
+ constexpr bool operator==(const Vec2 &other) const noexcept {
+  return x == other.x && y == other.y;
+ }
 };
-inline constexpr PieceInfo PieceTable[] = {
- { "", PieceSpecies::None },
+struct Vec2Hash {
+ size_t operator()(const Vec2& v) const noexcept {
+  return std::hash<int>{}(v.x << 8 | v.y);
+
+ }
+};
+struct Slide {
+ Vec2 dir;
+ int8_t range;
+};
+
+struct CompoundMovementStep1 {
+ std::vector<Slide> slides;
+ bool canContinueAfterCapture;
+};
+struct CompoundMovementStep2 {
+ std::vector<Slide> slides;
+};
+struct Movements {
+ std::vector<Slide> slides;
+ std::vector<Vec2> tripleSlashedArrowDirs;
+ std::vector<std::pair<CompoundMovementStep1, CompoundMovementStep2>> compoundMoves;
+};
+
+struct PieceInfo {
+ PieceSpecies::Type promotion;
+ Movements movements;
+};
+
+PieceInfo PieceTable[] = {
+ { PieceSpecies::None, {} },
 
 # 1 "pieces.inc" 1
-{ "Q2", PieceSpecies::None },
-{ "K", PieceSpecies::K },
-{ "((cQcdQ)-Q)", PieceSpecies::None },
-{ "WfF", PieceSpecies::FCH },
-{ "R", PieceSpecies::DK },
-{ "lFvWlW", PieceSpecies::RA },
-{ "KrQ", PieceSpecies::None },
-{ "rFvWrW", PieceSpecies::LA },
-{ "KlQ", PieceSpecies::None },
-{ "B2R", PieceSpecies::CST },
-{ "B3R", PieceSpecies::FST },
-{ "Q", PieceSpecies::GG },
-{ "vQsR5", PieceSpecies::FK },
-{ "R2BG(G-B2)", PieceSpecies::None },
-{ "R2B", PieceSpecies::None },
-{ "fFbWfR2bB", PieceSpecies::RDM },
-{ "WbsRFbB", PieceSpecies::GDR },
-{ "BvR5sR", PieceSpecies::FK },
-{ "bWbAfQ", PieceSpecies::FDM },
-{ "B2fsR2", PieceSpecies::BO },
-{ "B3sR2fR3", PieceSpecies::BB },
-{ "B(B-sB)", PieceSpecies::None },
-{ "RrAblB2fBbrB", PieceSpecies::FLE },
-{ "QfA", PieceSpecies::GE },
-{ "RlAfBblBbrB2", PieceSpecies::FLE },
-{ "vR2sQ", PieceSpecies::FF },
-{ "sQvR5", PieceSpecies::None },
-{ "vRbB", PieceSpecies::GWH },
-{ "BvR", PieceSpecies::None },
-{ "bKfQ", PieceSpecies::TF },
-{ "BAGvRvDvH(AG-B)(vDvH-R)", PieceSpecies::MC },
-{ "vR2sRflB", PieceSpecies::DTG },
-{ "bR2fsRflB", PieceSpecies::None },
-{ "KfrBblB", PieceSpecies::DT },
-{ "KfrBbB", PieceSpecies::None },
-{ "fR", PieceSpecies::WF },
-{ "vRfB", PieceSpecies::GF },
-{ "vR", PieceSpecies::W },
-{ "Q2", PieceSpecies::EK },
-{ "R2B", PieceSpecies::None },
-{ "Q2", PieceSpecies::EK },
-{ "fB5bsW", PieceSpecies::GD },
-{ "R3B", PieceSpecies::WDV },
-{ "bWfB", PieceSpecies::FCH },
-{ "B3fsR2", PieceSpecies::F },
-{ "BbR2sR3fR", PieceSpecies::None },
-{ "BvR3", PieceSpecies::AD },
-{ "fsR3fBbR", PieceSpecies::TR },
-{ "bsR4fQ", PieceSpecies::None },
-{ "fB3fWsR2bR4", PieceSpecies::GS },
-{ "RfAbB2", PieceSpecies::FSG },
-{ "WvR", PieceSpecies::FL },
-{ "BvR", PieceSpecies::None },
-{ "WvR", PieceSpecies::FSR },
-{ "vRbB", PieceSpecies::None },
-{ "bWfR3sR", PieceSpecies::GSH },
-{ "RbB2fB5", PieceSpecies::None },
-{ "vRsR2", PieceSpecies::FT },
-{ "BbsR", PieceSpecies::None },
-{ "vRsR2", PieceSpecies::FBE },
-{ "BvR", PieceSpecies::None },
-{ "fFbWsR3", PieceSpecies::HT },
-{ "Q4", PieceSpecies::None },
-{ "fB3bsW", PieceSpecies::HT },
-{ "R3", PieceSpecies::HT },
-{ "B3", PieceSpecies::HT },
-{ "FfW", PieceSpecies::VM },
-{ "WvR", PieceSpecies::FLO },
-{ "fsK", PieceSpecies::CP },
-{ "fsK", PieceSpecies::FST },
-{ "B3R", PieceSpecies::GST },
-{ "FsR2vR", PieceSpecies::PP },
-{ "bB2fB3sR5vR", PieceSpecies::None },
-{ "fsR", PieceSpecies::RUD },
-{ "fsQbR5", PieceSpecies::None },
-{ "bR2sRfB", PieceSpecies::FSG },
-{ "Q", PieceSpecies::None },
-{ "fWfBsR", PieceSpecies::FW },
-{ "fBfsR", PieceSpecies::None },
-{ "((cBcdB)-B)", PieceSpecies::RAD },
-{ "fR3sR2bB2bRfB(fA-B)", PieceSpecies::None },
-{ "((cRcdR)-R)", PieceSpecies::FCR },
-{ "bB2fB3((cRcdR)-R)", PieceSpecies::None },
-{ "FlQ", PieceSpecies::WT },
-{ "FrQ", PieceSpecies::TS },
-{ "rR2lQ", PieceSpecies::BDR },
-{ "sR2vRfrB", PieceSpecies::DD },
-{ "lR2rQ", PieceSpecies::VSP },
-{ "KflBbrB", PieceSpecies::DSP },
-{ "BbR2sR3fR", PieceSpecies::None },
-{ "FfBbrBsR", PieceSpecies::FRD },
-{ "BbsR", PieceSpecies::None },
-{ "FsR2vRfB", PieceSpecies::FDG },
-{ "sR2bB2vRfB", PieceSpecies::None },
-{ "FsWfW2", PieceSpecies::FDM },
-{ "B2sW", PieceSpecies::T },
-{ "bB2fB(fB-sB)", PieceSpecies::T },
-{ "RfB2bB4", PieceSpecies::PHM },
-{ "vQfGsR3", PieceSpecies::None },
-{ "RbB2fB4", PieceSpecies::KM },
-{ "vQvHsR3", PieceSpecies::None },
-{ "vWfF", PieceSpecies::SM },
-{ "WsR", PieceSpecies::FBO },
-{ "bFfB2vR", PieceSpecies::GW },
-{ "FsW3vWW", PieceSpecies::None },
-{ "bWsR2fR", PieceSpecies::FBE },
-{ "ffN", PieceSpecies::SS },
-{ "bWfR2sR", PieceSpecies::WO },
-{ "bR2fB4", PieceSpecies::FPI },
-{ "FsR2vRfB", PieceSpecies::None },
-{ "bFfR4", PieceSpecies::FRC },
-{ "sR2bB2vRfB", PieceSpecies::None },
-{ "bFfR4", PieceSpecies::FP },
-{ "fFbWfR3", PieceSpecies::FH },
-{ "FsR2vRfB", PieceSpecies::None },
-{ "fFbWfR3", PieceSpecies::FRO },
-{ "FsR2vRfB", PieceSpecies::None },
-{ "KsR", PieceSpecies::FBO },
-{ "WfsRfB", PieceSpecies::None },
-{ "fB2bB", PieceSpecies::W },
-{ "fBbB2", PieceSpecies::WF },
-{ "KDAN(cK-aK)", PieceSpecies::FFI },
-{ "Q3DAN(cK-aK)", PieceSpecies::None },
-{ "B3fsR3", PieceSpecies::FWO },
-{ "W2((cBcdB)-B)", PieceSpecies::GDR },
-{ "sR2bB2vRfB", PieceSpecies::SP },
-{ "BsR5", PieceSpecies::None },
-{ "D((cBcdB)-B)", PieceSpecies::GG },
-{ "fFsR2vR", PieceSpecies::WH },
-{ "sR2fB2vR", PieceSpecies::None },
-{ "sWfF3vWW", PieceSpecies::SE },
-{ "Q", PieceSpecies::None },
-{ "B", PieceSpecies::DH },
-{ "WB", PieceSpecies::HHW },
-{ "RF", PieceSpecies::FLE },
-{ "flFbrFsR", PieceSpecies::FW },
-{ "bWbFfsHfG", PieceSpecies::FCH },
-{ "fDbB2RfB", PieceSpecies::HHW },
-{ "QfD", PieceSpecies::GH },
-{ "fRbR2", PieceSpecies::FT },
-{ "R", PieceSpecies::CV },
-{ "RfB", PieceSpecies::None },
-{ "RfB2bF", PieceSpecies::RS },
-{ "BWbR", PieceSpecies::GDR },
-{ "fB3vR", PieceSpecies::CE },
-{ "KvR", PieceSpecies::None },
-{ "R", PieceSpecies::CAC },
-{ "WfBvR", PieceSpecies::None },
-{ "bWfB", PieceSpecies::TGS },
-{ "bWfR2fB", PieceSpecies::None },
-{ "vWfB", PieceSpecies::FLO },
-{ "BvR", PieceSpecies::FO },
-{ "B{F,B}>", PieceSpecies::None },
-{ "bF3sbW3vR{FL,FR}>", PieceSpecies::FBI },
-{ "RbB3{FL,FR}>", PieceSpecies::None },
-{ "WfrFbF", PieceSpecies::BS },
-{ "QDAN(cK-aK)", PieceSpecies::None },
-{ "WflFbF", PieceSpecies::KT },
-{ "{F,FR,R,BR,B,BL,L,FL}>", PieceSpecies::None },
-{ "flFbrFvR", PieceSpecies::WST },
-{ "fB2vR", PieceSpecies::None },
-{ "sR2vRfB", PieceSpecies::None },
-{ "bWfR", PieceSpecies::LED },
-{ "bWfRbrB", PieceSpecies::None },
-{ "bWfR", PieceSpecies::RID },
-{ "bWfRblB", PieceSpecies::None },
-{ "vWsW2fF", PieceSpecies::SQM },
-{ "R", PieceSpecies::STC },
-{ "vR2sQ", PieceSpecies::GDE },
-{ "QsH", PieceSpecies::None },
-{ "vK", PieceSpecies::AM },
-{ "B2fsW", PieceSpecies::FLE },
-{ "A", PieceSpecies::DK },
-{ "sfW2bW1fF", PieceSpecies::HM },
-{ "R(R-sR)", PieceSpecies::None },
-{ "vWfF", PieceSpecies::SWW },
-{ "WsR", PieceSpecies::GSW },
-{ "fWbF", PieceSpecies::FHW },
-{ "BfW", PieceSpecies::None },
-{ "fFbsW", PieceSpecies::FIS },
-{ "FfW", PieceSpecies::RSB },
-{ "fB3vW", PieceSpecies::VG },
-{ "fFvR3", PieceSpecies::GG },
-{ "WA", PieceSpecies::GBI },
-{ "FvWsD", PieceSpecies::GBI },
-{ "vQsR2vD", PieceSpecies::TT },
-{ "QD", PieceSpecies::None },
-{ "vQvHsR3", PieceSpecies::ST },
-{ "QH", PieceSpecies::None },
-{ "B(B-sB)", PieceSpecies::HM },
-{ "frFblFvR", PieceSpecies::RT },
-{ "vRsR2", PieceSpecies::None },
-{ "sWbR3fR", PieceSpecies::RW },
-{ "frFblFsR", PieceSpecies::FLO },
-{ "R2", PieceSpecies::CDV },
-{ "B2", PieceSpecies::FK },
-{ "fB2fsW", PieceSpecies::GBE },
-{ "WfQ", PieceSpecies::None },
-{ "sK", PieceSpecies::FBO },
-{ "fFfsW", PieceSpecies::PW },
-{ "K", PieceSpecies::None },
-{ "fFbR2fR", PieceSpecies::HH },
-{ "vNfR", PieceSpecies::None },
-{ "sWfF", PieceSpecies::RHW },
-{ "fFsWfR", PieceSpecies::None },
-{ "FbW", PieceSpecies::MW },
-{ "BbR", PieceSpecies::None },
-{ "fFbsW", PieceSpecies::WS },
-{ "fBsbR", PieceSpecies::None },
-{ "vWsW2fF", PieceSpecies::WDV },
-{ "vWsW2fF", PieceSpecies::GBI },
-{ "sWvW2fF", PieceSpecies::LD },
-{ "QHG", PieceSpecies::GEL },
-{ "sWvW2fF", PieceSpecies::L },
-{ "fsK", PieceSpecies::None },
-{ "WfF", PieceSpecies::BE },
-{ "K", PieceSpecies::None },
-{ "QDAHG(4,0)(4,4)(D-R)(A-B)(H-R)(G-B)((4,0)-R)((4,4)-B)", PieceSpecies::None },
-{ "sR3bB3vDfAvRfB", PieceSpecies::None },
-{ "fGbB5fBsR5vR", PieceSpecies::None },
-{ "WvR", PieceSpecies::RB },
-{ "sR2bB2vR", PieceSpecies::None },
-{ "WfrFflBbB", PieceSpecies::None },
-{ "lR2vrRfrB", PieceSpecies::None },
-{ "R2", PieceSpecies::CDV },
-{ "sR2vRfB", PieceSpecies::CV },
-{ "fWbF", PieceSpecies::CLE },
-{ "vWfF", PieceSpecies::FIS },
-{ "F", PieceSpecies::DH },
-{ "R", PieceSpecies::None },
-{ "sK", PieceSpecies::FLS },
-{ "KvR", PieceSpecies::None },
-{ "FbWsW", PieceSpecies::FLS },
-{ "fR", PieceSpecies::PO },
-{ "FvR", PieceSpecies::None },
-{ "FsR", PieceSpecies::SD },
-{ "sK", PieceSpecies::FLS },
-{ "fWbF", PieceSpecies::MB },
-{ "vRfB", PieceSpecies::None },
-{ "RfB", PieceSpecies::None },
-{ "vWbF", PieceSpecies::CD },
-{ "vRbB", PieceSpecies::None },
-{ "W", PieceSpecies::GDR },
-{ "QDAHGf(4,4)(cK-bK)(D-R)(A-B)(H-R)(G-B)(f(4,4)-B)", PieceSpecies::None },
-{ "WBDAN(cK-aK)", PieceSpecies::None },
-{ "sR2vQ", PieceSpecies::HTK },
-{ "QDA(D-R)(A-B)", PieceSpecies::None },
-{ "bWsR2fR", PieceSpecies::CHS },
-{ "fFbWfR3", PieceSpecies::FWI },
-{ "vQW", PieceSpecies::None },
-{ "fFbWfR3", PieceSpecies::HR },
-{ "WsQ", PieceSpecies::None },
-{ "fB3vW", PieceSpecies::MT },
-{ "BfsR5", PieceSpecies::None },
-{ "RbB3fB", PieceSpecies::None },
-{ "bWsR3fQ", PieceSpecies::RH },
-{ "fB2", PieceSpecies::WE },
-{ "bWsR3fQ", PieceSpecies::RO },
-{ "bR2fsRfB", PieceSpecies::None },
-{ "vW", PieceSpecies::WE },
-{ "bWsR2fQ", PieceSpecies::RBO },
-{ "WvR", PieceSpecies::None },
-{ "fF", PieceSpecies::WE },
-{ "bWsR2fQ", PieceSpecies::RL },
-{ "fBfsR", PieceSpecies::None },
-{ "bWfF", PieceSpecies::WE },
-{ "bWsR2fQ", PieceSpecies::STB },
-{ "bR2fsQ", PieceSpecies::None },
-{ "fWfF", PieceSpecies::WE },
-{ "fGfHbB5sR5fBvR", PieceSpecies::None },
-{ "rWfRflBbrB", PieceSpecies::RIC },
-{ "rWbBflB", PieceSpecies::None },
-{ "lWfRfrBblB", PieceSpecies::LIC },
-{ "lWbBfrB", PieceSpecies::None },
-{ "bWfFsR", PieceSpecies::SS },
-{ "vQW", PieceSpecies::None },
-{ "bWsR2fRfB5", PieceSpecies::LBG },
-{ "fBvRsR5", PieceSpecies::None },
-{ "bFbWfR", PieceSpecies::LK },
-{ "Q5", PieceSpecies::None },
-{ "fFbWfR", PieceSpecies::DH },
-{ "fB5bWsR3fR7", PieceSpecies::CAG },
-{ "bR2sR3fQ", PieceSpecies::None },
-{ "bWfF", PieceSpecies::SWG },
-{ "bWfQ3", PieceSpecies::None },
-{ "QfD(fD-R)", PieceSpecies::None },
-{ "QfA(fA-B)", PieceSpecies::None },
-{ "WfR", PieceSpecies::SPG },
-{ "bR2sR3fR", PieceSpecies::None },
-{ "WfFfR", PieceSpecies::GL },
-{ "bWsR2fRfB3", PieceSpecies::None },
-{ "fR", PieceSpecies::GTG },
-{ "WbsR", PieceSpecies::None },
-{ "fB3bWsR3fR5", PieceSpecies::CBG },
-{ "bR2sR3fRfB5", PieceSpecies::None },
-{ "HfGRbB3fB", PieceSpecies::LD },
-{ "fB3{F,R,BR,B,BL,L}>", PieceSpecies::None },
-{ "fWfF", PieceSpecies::MUG },
-{ "vRfB", PieceSpecies::None },
-{ "vW", PieceSpecies::DE },
-{ "fW", PieceSpecies::GLG },
-# 125 "tomatene.cpp" 2
+{ PieceSpecies::None, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2},{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::K, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FCH, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::DK, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::RA, {{{{-1,1},1},{{-1,-1},1},{{0,1},1},{{0,-1},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},35},{{0,-1},1},{{-1,0},1},{{1,1},35},{{-1,1},1},{{1,-1},35},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::LA, {{{{1,1},1},{{1,-1},1},{{0,1},1},{{0,-1},1},{{1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},35},{{1,1},1},{{-1,1},35},{{1,-1},1},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::CST, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FST, {{{{1,1},3},{{-1,1},3},{{1,-1},3},{{-1,-1},3},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::GG, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FK, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{1,0},5},{{-1,0},5}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{3,3},1},{{3,-3},1},{{-3,3},1},{{-3,-3},1}},{},{{{{{{3,3},1}},false},{{{{1,1},2}}}},{{{{{3,-3},1}},false},{{{{1,-1},2}}}},{{{{{-3,3},1}},false},{{{{-1,1},2}}}},{{{{{-3,-3},1}},false},{{{{-1,-1},2}}}}}} },
+{ PieceSpecies::None, {{{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::RDM, {{{{1,1},1},{{-1,1},1},{{0,-1},1},{{0,1},2},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::GDR, {{{{0,1},1},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},1},{{-1,1},1},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::FK, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},5},{{0,-1},5},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FDM, {{{{0,-1},1},{{1,1},35},{{-1,1},35},{{0,1},35},{{2,-2},1},{{-2,-2},1}},{},{}} },
+{ PieceSpecies::BO, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2},{{0,1},2},{{1,0},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::BB, {{{{1,1},3},{{-1,1},3},{{1,-1},3},{{-1,-1},3},{{1,0},2},{{-1,0},2},{{0,1},3}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{{{{{{1,1},35},{{-1,-1},35}},false},{{{{-1,1},35},{{1,-1},35}}}},{{{{{-1,1},35},{{1,-1},35}},false},{{{{1,1},35},{{-1,-1},35}}}}}} },
+{ PieceSpecies::FLE, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{-1,-1},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{2,2},1},{{2,-2},1}},{},{}} },
+{ PieceSpecies::GE, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{2,2},1},{{-2,2},1}},{},{}} },
+{ PieceSpecies::FLE, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},35},{{-1,1},35},{{-1,-1},35},{{1,-1},2},{{-2,2},1},{{-2,-2},1}},{},{}} },
+{ PieceSpecies::FF, {{{{0,1},2},{{0,-1},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{1,0},35},{{-1,0},35},{{0,1},5},{{0,-1},5}},{},{}} },
+{ PieceSpecies::GWH, {{{{0,1},35},{{0,-1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::TF, {{{{0,-1},1},{{1,1},35},{{-1,1},35},{{1,-1},1},{{-1,-1},1},{{0,1},35}},{},{}} },
+{ PieceSpecies::MC, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1},{{3,3},1},{{3,-3},1},{{-3,3},1},{{-3,-3},1},{{0,2},1},{{0,-2},1},{{0,3},1},{{0,-3},1}},{},{{{{{{2,2},1},{{3,3},1}},false},{{{{1,1},35}}}},{{{{{2,-2},1},{{3,-3},1}},false},{{{{1,-1},35}}}},{{{{{-2,2},1},{{-3,3},1}},false},{{{{-1,1},35}}}},{{{{{-2,-2},1},{{-3,-3},1}},false},{{{{-1,-1},35}}}},{{{{{0,2},1},{{0,3},1}},false},{{{{0,1},35}}}},{{{{{0,-2},1},{{0,-3},1}},false},{{{{0,-1},35}}}}}} },
+{ PieceSpecies::DTG, {{{{0,1},2},{{0,-1},2},{{1,0},35},{{-1,0},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},2},{{0,1},35},{{1,0},35},{{-1,0},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::DT, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},35},{{-1,1},1},{{1,-1},1},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},35},{{-1,1},1},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::WF, {{{{0,1},35}},{},{}} },
+{ PieceSpecies::GF, {{{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::W, {{{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::EK, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2},{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::EK, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2},{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::GD, {{{{1,1},5},{{-1,1},5},{{1,0},1},{{0,-1},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::WDV, {{{{0,1},3},{{1,0},3},{{0,-1},3},{{-1,0},3},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::FCH, {{{{0,-1},1},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::F, {{{{1,1},3},{{-1,1},3},{{1,-1},3},{{-1,-1},3},{{0,1},2},{{1,0},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,-1},2},{{1,0},3},{{-1,0},3},{{0,1},35}},{},{}} },
+{ PieceSpecies::AD, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},3},{{0,-1},3}},{},{}} },
+{ PieceSpecies::TR, {{{{0,1},3},{{1,0},3},{{-1,0},3},{{1,1},35},{{-1,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,0},4},{{0,-1},4},{{-1,0},4},{{1,1},35},{{-1,1},35},{{0,1},35}},{},{}} },
+{ PieceSpecies::GS, {{{{1,1},3},{{-1,1},3},{{0,1},1},{{1,0},2},{{-1,0},2},{{0,-1},4}},{},{}} },
+{ PieceSpecies::FSG, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,-1},2},{{-1,-1},2},{{2,2},1},{{-2,2},1}},{},{}} },
+{ PieceSpecies::FL, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::FSR, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{0,-1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::GSH, {{{{0,-1},1},{{0,1},3},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,-1},2},{{-1,-1},2},{{1,1},5},{{-1,1},5}},{},{}} },
+{ PieceSpecies::FT, {{{{0,1},35},{{0,-1},35},{{1,0},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FBE, {{{{0,1},35},{{0,-1},35},{{1,0},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::HT, {{{{1,1},1},{{-1,1},1},{{0,-1},1},{{1,0},3},{{-1,0},3}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},4},{{-1,1},4},{{1,-1},4},{{-1,-1},4},{{0,1},4},{{1,0},4},{{0,-1},4},{{-1,0},4}},{},{}} },
+{ PieceSpecies::HT, {{{{1,1},3},{{-1,1},3},{{1,0},1},{{0,-1},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::HT, {{{{0,1},3},{{1,0},3},{{0,-1},3},{{-1,0},3}},{},{}} },
+{ PieceSpecies::HT, {{{{1,1},3},{{-1,1},3},{{1,-1},3},{{-1,-1},3}},{},{}} },
+{ PieceSpecies::VM, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{0,1},1}},{},{}} },
+{ PieceSpecies::FLO, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1}},{},{}} },
+{ PieceSpecies::CP, {{{{0,1},1},{{1,0},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::FST, {{{{0,1},1},{{1,0},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::GST, {{{{1,1},3},{{-1,1},3},{{1,-1},3},{{-1,-1},3},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::PP, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,-1},2},{{-1,-1},2},{{1,1},3},{{-1,1},3},{{1,0},5},{{-1,0},5},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::RUD, {{{{0,1},35},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{-1,0},35},{{0,-1},5}},{},{}} },
+{ PieceSpecies::FSG, {{{{0,-1},2},{{1,0},35},{{-1,0},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FW, {{{{0,1},1},{{1,1},35},{{-1,1},35},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{0,1},35},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::RAD, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},3},{{1,0},2},{{-1,0},2},{{1,-1},2},{{-1,-1},2},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{{{{{{2,2},1}},false},{{{{1,1},35}}}},{{{{{-2,2},1}},false},{{{{-1,1},35}}}}}} },
+{ PieceSpecies::FCR, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,-1},2},{{-1,-1},2},{{1,1},3},{{-1,1},3},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::WT, {{{{1,1},1},{{-1,1},35},{{1,-1},1},{{-1,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::TS, {{{{1,1},35},{{-1,1},1},{{1,-1},35},{{-1,-1},1},{{1,0},35}},{},{}} },
+{ PieceSpecies::BDR, {{{{1,0},2},{{-1,1},35},{{-1,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::DD, {{{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35},{{1,1},35}},{},{}} },
+{ PieceSpecies::VSP, {{{{-1,0},2},{{1,1},35},{{1,-1},35},{{1,0},35}},{},{}} },
+{ PieceSpecies::DSP, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},35},{{1,-1},35},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,-1},2},{{1,0},3},{{-1,0},3},{{0,1},35}},{},{}} },
+{ PieceSpecies::FRD, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},1},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FDG, {{{{1,1},35},{{-1,1},35},{{1,-1},1},{{-1,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,0},2},{{-1,0},2},{{1,-1},2},{{-1,-1},2},{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::FDM, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{1,0},1},{{-1,0},1},{{0,1},2}},{},{}} },
+{ PieceSpecies::T, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2},{{1,0},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::T, {{{{1,-1},2},{{-1,-1},2},{{1,1},35},{{-1,1},35}},{},{{{{{{1,1},35}},false},{{{{-1,1},35},{{1,-1},35}}}},{{{{{-1,1},35}},false},{{{{1,1},35},{{-1,-1},35}}}}}} },
+{ PieceSpecies::PHM, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},2},{{-1,1},2},{{1,-1},4},{{-1,-1},4}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{1,0},3},{{-1,0},3},{{3,3},1},{{-3,3},1}},{},{}} },
+{ PieceSpecies::KM, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,-1},2},{{-1,-1},2},{{1,1},4},{{-1,1},4}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{1,0},3},{{-1,0},3},{{0,3},1},{{0,-3},1}},{},{}} },
+{ PieceSpecies::SM, {{{{0,1},1},{{0,-1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::FBO, {{{{0,1},1},{{1,0},35},{{0,-1},1},{{-1,0},35}},{},{}} },
+{ PieceSpecies::GW, {{{{1,-1},1},{{-1,-1},1},{{1,1},2},{{-1,1},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{1,0},3},{{-1,0},3},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::FBE, {{{{0,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35}},{},{}} },
+{ PieceSpecies::SS, {{{{1,2},1},{{-1,2},1}},{},{}} },
+{ PieceSpecies::WO, {{{{0,-1},1},{{0,1},2},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FPI, {{{{0,-1},2},{{1,1},4},{{-1,1},4}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},1},{{-1,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::FRC, {{{{1,-1},1},{{-1,-1},1},{{0,1},4}},{},{}} },
+{ PieceSpecies::None, {{{{1,0},2},{{-1,0},2},{{1,-1},2},{{-1,-1},2},{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::FP, {{{{1,-1},1},{{-1,-1},1},{{0,1},4}},{},{}} },
+{ PieceSpecies::FH, {{{{1,1},1},{{-1,1},1},{{0,-1},1},{{0,1},3}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},1},{{-1,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::FRO, {{{{1,1},1},{{-1,1},1},{{0,-1},1},{{0,1},3}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},1},{{-1,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::FBO, {{{{0,1},1},{{1,0},35},{{0,-1},1},{{-1,0},35},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},1},{{-1,0},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::W, {{{{1,1},2},{{-1,1},2},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::WF, {{{{1,1},35},{{-1,1},35},{{1,-1},2},{{-1,-1},2}},{},{}} },
+{ PieceSpecies::FFI, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1},{{2,1},1},{{2,-1},1},{{-2,1},1},{{-2,-1},1},{{1,2},1},{{1,-2},1},{{-1,2},1},{{-1,-2},1}},{},{{{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},true},{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}}}}}} },
+{ PieceSpecies::None, {{{{1,1},3},{{-1,1},3},{{1,-1},3},{{-1,-1},3},{{0,1},3},{{1,0},3},{{0,-1},3},{{-1,0},3},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1},{{2,1},1},{{2,-1},1},{{-2,1},1},{{-2,-1},1},{{1,2},1},{{1,-2},1},{{-1,2},1},{{-1,-2},1}},{},{{{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},true},{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}}}}}} },
+{ PieceSpecies::FWO, {{{{1,1},3},{{-1,1},3},{{1,-1},3},{{-1,-1},3},{{0,1},3},{{1,0},3},{{-1,0},3}},{},{}} },
+{ PieceSpecies::GDR, {{{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::SP, {{{{1,0},2},{{-1,0},2},{{1,-1},2},{{-1,-1},2},{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{1,0},5},{{-1,0},5}},{},{}} },
+{ PieceSpecies::GG, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1}},{},{}} },
+{ PieceSpecies::WH, {{{{1,1},1},{{-1,1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,0},2},{{-1,0},2},{{1,1},2},{{-1,1},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::SE, {{{{1,0},1},{{-1,0},1},{{1,1},3},{{-1,1},3},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::DH, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::HHW, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::FLE, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::FW, {{{{-1,1},1},{{1,-1},1},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FCH, {{{{0,-1},1},{{1,-1},1},{{-1,-1},1},{{3,0},1},{{-3,0},1},{{0,3},1},{{3,3},1},{{-3,3},1}},{},{}} },
+{ PieceSpecies::HHW, {{{{1,-1},2},{{-1,-1},2},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},35},{{-1,1},35},{{0,2},1}},{},{}} },
+{ PieceSpecies::GH, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{0,2},1}},{},{}} },
+{ PieceSpecies::FT, {{{{0,1},35},{{0,-1},2}},{},{}} },
+{ PieceSpecies::CV, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::RS, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},2},{{-1,1},2},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::GDR, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},1},{{1,0},1},{{0,-1},35},{{-1,0},1}},{},{}} },
+{ PieceSpecies::CE, {{{{1,1},3},{{-1,1},3},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::CAC, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::TGS, {{{{0,-1},1},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},1},{{0,1},2},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::FLO, {{{{0,1},1},{{0,-1},1},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::FO, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{{0,1},{0,-1}},{}} },
+{ PieceSpecies::FBI, {{{{1,-1},3},{{-1,-1},3},{{1,0},3},{{0,-1},35},{{-1,0},3},{{0,1},35}},{{-1,1},{1,1}},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,-1},3},{{-1,-1},3}},{{-1,1},{1,1}},{}} },
+{ PieceSpecies::BS, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1},{{2,1},1},{{2,-1},1},{{-2,1},1},{{-2,-1},1},{{1,2},1},{{1,-2},1},{{-1,2},1},{{-1,-2},1}},{},{{{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},true},{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}}}}}} },
+{ PieceSpecies::KT, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{},{{0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1}},{}} },
+{ PieceSpecies::WST, {{{{-1,1},1},{{1,-1},1},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},2},{{-1,1},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::LED, {{{{0,-1},1},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},1},{{0,1},35},{{1,-1},35}},{},{}} },
+{ PieceSpecies::RID, {{{{0,-1},1},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},1},{{0,1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::SQM, {{{{0,1},1},{{0,-1},1},{{1,0},2},{{-1,0},2},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::STC, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::GDE, {{{{0,1},2},{{0,-1},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{3,0},1},{{-3,0},1}},{},{}} },
+{ PieceSpecies::AM, {{{{0,1},1},{{0,-1},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::FLE, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2},{{0,1},1},{{1,0},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::DK, {{{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1}},{},{}} },
+{ PieceSpecies::HM, {{{{0,1},2},{{1,0},2},{{-1,0},2},{{0,-1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{{{{{{0,1},35},{{0,-1},35}},false},{{{{1,0},35},{{-1,0},35}}}},{{{{{1,0},35},{{-1,0},35}},false},{{{{0,1},35},{{0,-1},35}}}}}} },
+{ PieceSpecies::SWW, {{{{0,1},1},{{0,-1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::GSW, {{{{0,1},1},{{1,0},35},{{0,-1},1},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FHW, {{{{0,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},1}},{},{}} },
+{ PieceSpecies::FIS, {{{{1,1},1},{{-1,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::RSB, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{0,1},1}},{},{}} },
+{ PieceSpecies::VG, {{{{1,1},3},{{-1,1},3},{{0,1},1},{{0,-1},1}},{},{}} },
+{ PieceSpecies::GG, {{{{1,1},1},{{-1,1},1},{{0,1},3},{{0,-1},3}},{},{}} },
+{ PieceSpecies::GBI, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1}},{},{}} },
+{ PieceSpecies::GBI, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{0,1},1},{{0,-1},1},{{2,0},1},{{-2,0},1}},{},{}} },
+{ PieceSpecies::TT, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{1,0},2},{{-1,0},2},{{0,2},1},{{0,-2},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1}},{},{}} },
+{ PieceSpecies::ST, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{1,0},3},{{-1,0},3},{{0,3},1},{{0,-3},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{3,0},1},{{-3,0},1},{{0,3},1},{{0,-3},1}},{},{}} },
+{ PieceSpecies::HM, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{{{{{{1,1},35},{{-1,-1},35}},false},{{{{-1,1},35},{{1,-1},35}}}},{{{{{-1,1},35},{{1,-1},35}},false},{{{{1,1},35},{{-1,-1},35}}}}}} },
+{ PieceSpecies::RT, {{{{1,1},1},{{-1,-1},1},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{0,-1},35},{{1,0},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::RW, {{{{1,0},1},{{-1,0},1},{{0,-1},3},{{0,1},35}},{},{}} },
+{ PieceSpecies::FLO, {{{{1,1},1},{{-1,-1},1},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::CDV, {{{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::FK, {{{{1,1},2},{{-1,1},2},{{1,-1},2},{{-1,-1},2}},{},{}} },
+{ PieceSpecies::GBE, {{{{1,1},2},{{-1,1},2},{{0,1},1},{{1,0},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::FBO, {{{{1,0},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::PW, {{{{1,1},1},{{-1,1},1},{{0,1},1},{{1,0},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::HH, {{{{1,1},1},{{-1,1},1},{{0,-1},2},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,2},1},{{1,-2},1},{{-1,2},1},{{-1,-2},1}},{},{}} },
+{ PieceSpecies::RHW, {{{{1,0},1},{{-1,0},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},1},{{-1,1},1},{{1,0},1},{{-1,0},1},{{0,1},35}},{},{}} },
+{ PieceSpecies::MW, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{0,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::WS, {{{{1,1},1},{{-1,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::WDV, {{{{0,1},1},{{0,-1},1},{{1,0},2},{{-1,0},2},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::GBI, {{{{0,1},1},{{0,-1},1},{{1,0},2},{{-1,0},2},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::LD, {{{{1,0},1},{{-1,0},1},{{0,1},2},{{0,-1},2},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::GEL, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{3,0},1},{{-3,0},1},{{0,3},1},{{0,-3},1},{{3,3},1},{{3,-3},1},{{-3,3},1},{{-3,-3},1}},{},{}} },
+{ PieceSpecies::L, {{{{1,0},1},{{-1,0},1},{{0,1},2},{{0,-1},2},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::BE, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1},{{3,0},1},{{-3,0},1},{{0,3},1},{{0,-3},1},{{3,3},1},{{3,-3},1},{{-3,3},1},{{-3,-3},1},{{4,0},1},{{-4,0},1},{{0,4},1},{{0,-4},1},{{4,4},1},{{4,-4},1},{{-4,4},1},{{-4,-4},1}},{},{{{{{{2,0},1},{{3,0},1},{{4,0},1}},false},{{{{1,0},35}}}},{{{{{-2,0},1},{{-3,0},1},{{-4,0},1}},false},{{{{-1,0},35}}}},{{{{{0,2},1},{{0,3},1},{{0,4},1}},false},{{{{0,1},35}}}},{{{{{0,-2},1},{{0,-3},1},{{0,-4},1}},false},{{{{0,-1},35}}}},{{{{{2,2},1},{{3,3},1},{{4,4},1}},false},{{{{1,1},35}}}},{{{{{2,-2},1},{{3,-3},1},{{4,-4},1}},false},{{{{1,-1},35}}}},{{{{{-2,2},1},{{-3,3},1},{{-4,4},1}},false},{{{{-1,1},35}}}},{{{{{-2,-2},1},{{-3,-3},1},{{-4,-4},1}},false},{{{{-1,-1},35}}}}}} },
+{ PieceSpecies::None, {{{{1,0},3},{{-1,0},3},{{1,-1},3},{{-1,-1},3},{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35},{{0,2},1},{{0,-2},1},{{2,2},1},{{-2,2},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,-1},5},{{-1,-1},5},{{1,1},35},{{-1,1},35},{{1,0},5},{{-1,0},5},{{0,1},35},{{0,-1},35},{{3,3},1},{{-3,3},1}},{},{}} },
+{ PieceSpecies::RB, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,0},2},{{-1,0},2},{{1,-1},2},{{-1,-1},2},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{-1,0},2},{{0,1},35},{{1,0},35},{{0,-1},35},{{1,1},35}},{},{}} },
+{ PieceSpecies::CDV, {{{{0,1},2},{{1,0},2},{{0,-1},2},{{-1,0},2}},{},{}} },
+{ PieceSpecies::CV, {{{{1,0},2},{{-1,0},2},{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::CLE, {{{{0,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::FIS, {{{{0,1},1},{{0,-1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::DH, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FLS, {{{{1,0},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::FLS, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{0,-1},1},{{1,0},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::PO, {{{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::SD, {{{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::FLS, {{{{1,0},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::MB, {{{{0,1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::CD, {{{{0,1},1},{{0,-1},1},{{1,-1},1},{{-1,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{0,-1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::GDR, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1},{{3,0},1},{{-3,0},1},{{0,3},1},{{0,-3},1},{{3,3},1},{{3,-3},1},{{-3,3},1},{{-3,-3},1},{{4,4},1},{{-4,4},1}},{},{{{{{{0,1},1}},true},{{{{0,-1},1}}}},{{{{{1,0},1}},true},{{{{-1,0},1}}}},{{{{{0,-1},1}},true},{{{{0,1},1}}}},{{{{{-1,0},1}},true},{{{{1,0},1}}}},{{{{{1,1},1}},true},{{{{-1,-1},1}}}},{{{{{-1,1},1}},true},{{{{1,-1},1}}}},{{{{{1,-1},1}},true},{{{{-1,1},1}}}},{{{{{-1,-1},1}},true},{{{{1,1},1}}}},{{{{{2,0},1},{{3,0},1}},false},{{{{1,0},35}}}},{{{{{-2,0},1},{{-3,0},1}},false},{{{{-1,0},35}}}},{{{{{0,2},1},{{0,3},1}},false},{{{{0,1},35}}}},{{{{{0,-2},1},{{0,-3},1}},false},{{{{0,-1},35}}}},{{{{{2,2},1},{{3,3},1},{{4,4},1}},false},{{{{1,1},35}}}},{{{{{2,-2},1},{{3,-3},1}},false},{{{{1,-1},35}}}},{{{{{-2,2},1},{{-3,3},1},{{-4,4},1}},false},{{{{-1,1},35}}}},{{{{{-2,-2},1},{{-3,-3},1}},false},{{{{-1,-1},35}}}}}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1},{{2,1},1},{{2,-1},1},{{-2,1},1},{{-2,-1},1},{{1,2},1},{{1,-2},1},{{-1,2},1},{{-1,-2},1}},{},{{{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}},true},{{{{0,1},1},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1},{{1,-1},1},{{-1,-1},1}}}}}} },
+{ PieceSpecies::HTK, {{{{1,0},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{2,0},1},{{-2,0},1},{{0,2},1},{{0,-2},1},{{2,2},1},{{2,-2},1},{{-2,2},1},{{-2,-2},1}},{},{{{{{{2,0},1}},false},{{{{1,0},35}}}},{{{{{-2,0},1}},false},{{{{-1,0},35}}}},{{{{{0,2},1}},false},{{{{0,1},35}}}},{{{{{0,-2},1}},false},{{{{0,-1},35}}}},{{{{{2,2},1}},false},{{{{1,1},35}}}},{{{{{2,-2},1}},false},{{{{1,-1},35}}}},{{{{{-2,2},1}},false},{{{{-1,1},35}}}},{{{{{-2,-2},1}},false},{{{{-1,-1},35}}}}}} },
+{ PieceSpecies::CHS, {{{{0,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35}},{},{}} },
+{ PieceSpecies::FWI, {{{{1,1},1},{{-1,1},1},{{0,-1},1},{{0,1},3}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{1,0},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::HR, {{{{1,1},1},{{-1,1},1},{{0,-1},1},{{0,1},3}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},35},{{0,-1},1},{{-1,0},35},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::MT, {{{{1,1},3},{{-1,1},3},{{0,1},1},{{0,-1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},5},{{1,0},5},{{-1,0},5}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,-1},3},{{-1,-1},3},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::RH, {{{{0,-1},1},{{1,0},3},{{-1,0},3},{{1,1},35},{{-1,1},35},{{0,1},35}},{},{}} },
+{ PieceSpecies::WE, {{{{1,1},2},{{-1,1},2}},{},{}} },
+{ PieceSpecies::RO, {{{{0,-1},1},{{1,0},3},{{-1,0},3},{{1,1},35},{{-1,1},35},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},2},{{0,1},35},{{1,0},35},{{-1,0},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::WE, {{{{0,1},1},{{0,-1},1}},{},{}} },
+{ PieceSpecies::RBO, {{{{0,-1},1},{{1,0},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{1,0},1},{{0,-1},35},{{-1,0},1}},{},{}} },
+{ PieceSpecies::WE, {{{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::RL, {{{{0,-1},1},{{1,0},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{0,1},35},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::WE, {{{{0,-1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::STB, {{{{0,-1},1},{{1,0},2},{{-1,0},2},{{1,1},35},{{-1,1},35},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},2},{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::WE, {{{{0,1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,-1},5},{{-1,-1},5},{{1,0},5},{{-1,0},5},{{1,1},35},{{-1,1},35},{{0,1},35},{{0,-1},35},{{3,3},1},{{-3,3},1},{{0,3},1}},{},{}} },
+{ PieceSpecies::RIC, {{{{1,0},1},{{0,1},35},{{-1,1},35},{{1,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,0},1},{{1,-1},35},{{-1,-1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::LIC, {{{{-1,0},1},{{0,1},35},{{1,1},35},{{-1,-1},35}},{},{}} },
+{ PieceSpecies::None, {{{{-1,0},1},{{1,-1},35},{{-1,-1},35},{{1,1},35}},{},{}} },
+{ PieceSpecies::SS, {{{{0,-1},1},{{1,1},1},{{-1,1},1},{{1,0},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{0,-1},35},{{1,0},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::LBG, {{{{0,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{1,1},5},{{-1,1},5}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{0,1},35},{{0,-1},35},{{1,0},5},{{-1,0},5}},{},{}} },
+{ PieceSpecies::LK, {{{{1,-1},1},{{-1,-1},1},{{0,-1},1},{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},5},{{-1,1},5},{{1,-1},5},{{-1,-1},5},{{0,1},5},{{1,0},5},{{0,-1},5},{{-1,0},5}},{},{}} },
+{ PieceSpecies::DH, {{{{1,1},1},{{-1,1},1},{{0,-1},1},{{0,1},35}},{},{}} },
+{ PieceSpecies::CAG, {{{{1,1},5},{{-1,1},5},{{0,-1},1},{{1,0},3},{{-1,0},3},{{0,1},7}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},2},{{1,0},3},{{-1,0},3},{{1,1},35},{{-1,1},35},{{0,1},35}},{},{}} },
+{ PieceSpecies::SWG, {{{{0,-1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},1},{{1,1},3},{{-1,1},3},{{0,1},3}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{0,2},1}},{},{{{{{{0,2},1}},false},{{{{0,1},35}}}}}} },
+{ PieceSpecies::None, {{{{1,1},35},{{-1,1},35},{{1,-1},35},{{-1,-1},35},{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{2,2},1},{{-2,2},1}},{},{{{{{{2,2},1}},false},{{{{1,1},35}}}},{{{{{-2,2},1}},false},{{{{-1,1},35}}}}}} },
+{ PieceSpecies::SPG, {{{{0,1},35},{{1,0},1},{{0,-1},1},{{-1,0},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},2},{{1,0},3},{{-1,0},3},{{0,1},35}},{},{}} },
+{ PieceSpecies::GL, {{{{0,1},35},{{1,0},1},{{0,-1},1},{{-1,0},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},1},{{1,0},2},{{-1,0},2},{{0,1},35},{{1,1},3},{{-1,1},3}},{},{}} },
+{ PieceSpecies::GTG, {{{{0,1},35}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},1},{{1,0},35},{{0,-1},35},{{-1,0},35}},{},{}} },
+{ PieceSpecies::CBG, {{{{1,1},3},{{-1,1},3},{{0,-1},1},{{1,0},3},{{-1,0},3},{{0,1},5}},{},{}} },
+{ PieceSpecies::None, {{{{0,-1},2},{{1,0},3},{{-1,0},3},{{0,1},35},{{1,1},5},{{-1,1},5}},{},{}} },
+{ PieceSpecies::LD, {{{{0,1},35},{{1,0},35},{{0,-1},35},{{-1,0},35},{{1,-1},3},{{-1,-1},3},{{1,1},35},{{-1,1},35},{{3,0},1},{{-3,0},1},{{0,3},1},{{0,-3},1},{{3,3},1},{{-3,3},1}},{},{}} },
+{ PieceSpecies::None, {{{{1,1},3},{{-1,1},3}},{{0,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0}},{}} },
+{ PieceSpecies::MUG, {{{{0,1},1},{{1,1},1},{{-1,1},1}},{},{}} },
+{ PieceSpecies::None, {{{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
+{ PieceSpecies::DE, {{{{0,1},1},{{0,-1},1}},{},{}} },
+{ PieceSpecies::GLG, {{{{0,1},1}},{},{}} },
+# 171 "tomatene.cpp" 2
+
+};
+
+inline constexpr std::array<eval_t, 302> BasePieceValues = {
+ 0,
+
+# 1 "pieces.inc" 1
+{ PieceSpecies::K },
+{ PieceSpecies::CP },
+{ PieceSpecies::GG },
+{ PieceSpecies::GLG },
+{ PieceSpecies::FCH },
+{ PieceSpecies::RIG },
+{ PieceSpecies::RA },
+{ PieceSpecies::LG },
+{ PieceSpecies::LA },
+{ PieceSpecies::RS },
+{ PieceSpecies::CST },
+{ PieceSpecies::FK },
+{ PieceSpecies::FDE },
+{ PieceSpecies::WDV },
+{ PieceSpecies::CDV },
+{ PieceSpecies::ED },
+{ PieceSpecies::RDM },
+{ PieceSpecies::FDM },
+{ PieceSpecies::RH },
+{ PieceSpecies::BC },
+{ PieceSpecies::BO },
+{ PieceSpecies::T },
+{ PieceSpecies::RME },
+{ PieceSpecies::FLE },
+{ PieceSpecies::LME },
+{ PieceSpecies::FD },
+{ PieceSpecies::FF },
+{ PieceSpecies::W },
+{ PieceSpecies::GWH },
+{ PieceSpecies::RR },
+{ PieceSpecies::TF },
+{ PieceSpecies::WT },
+{ PieceSpecies::DTG },
+{ PieceSpecies::TS },
+{ PieceSpecies::DT },
+{ PieceSpecies::IC },
+{ PieceSpecies::WF },
+{ PieceSpecies::RVC },
+{ PieceSpecies::FEL },
+{ PieceSpecies::EK },
+{ PieceSpecies::WE },
+{ PieceSpecies::TD },
+{ PieceSpecies::GD },
+{ PieceSpecies::FSW },
+{ PieceSpecies::FWO },
+{ PieceSpecies::F },
+{ PieceSpecies::GDR },
+{ PieceSpecies::FOD },
+{ PieceSpecies::TR },
+{ PieceSpecies::MS },
+{ PieceSpecies::GS },
+{ PieceSpecies::RP },
+{ PieceSpecies::FL },
+{ PieceSpecies::RSR },
+{ PieceSpecies::FSR },
+{ PieceSpecies::SSP },
+{ PieceSpecies::GSH },
+{ PieceSpecies::RTG },
+{ PieceSpecies::FT },
+{ PieceSpecies::RBE },
+{ PieceSpecies::FBE },
+{ PieceSpecies::NS },
+{ PieceSpecies::HT },
+{ PieceSpecies::BD },
+{ PieceSpecies::GOG },
+{ PieceSpecies::SWR },
+{ PieceSpecies::SVG },
+{ PieceSpecies::VM },
+{ PieceSpecies::DE },
+{ PieceSpecies::NK },
+{ PieceSpecies::FST },
+{ PieceSpecies::GCH },
+{ PieceSpecies::PP },
+{ PieceSpecies::SD },
+{ PieceSpecies::RUD },
+{ PieceSpecies::RUS },
+{ PieceSpecies::FSG },
+{ PieceSpecies::RW },
+{ PieceSpecies::FW },
+{ PieceSpecies::AG },
+{ PieceSpecies::RAD },
+{ PieceSpecies::FLG },
+{ PieceSpecies::FCR },
+{ PieceSpecies::RIT },
+{ PieceSpecies::LTG },
+{ PieceSpecies::RDR },
+{ PieceSpecies::BDR },
+{ PieceSpecies::LDR },
+{ PieceSpecies::VSP },
+{ PieceSpecies::BB },
+{ PieceSpecies::WID },
+{ PieceSpecies::FRD },
+{ PieceSpecies::FP },
+{ PieceSpecies::FDG },
+{ PieceSpecies::RBI },
+{ PieceSpecies::OK },
+{ PieceSpecies::PCK },
+{ PieceSpecies::WD },
+{ PieceSpecies::PHM },
+{ PieceSpecies::FDR },
+{ PieceSpecies::KM },
+{ PieceSpecies::COG },
+{ PieceSpecies::SM },
+{ PieceSpecies::SVC },
+{ PieceSpecies::GW },
+{ PieceSpecies::VB },
+{ PieceSpecies::CH },
+{ PieceSpecies::SS },
+{ PieceSpecies::PIG },
+{ PieceSpecies::FPI },
+{ PieceSpecies::CG },
+{ PieceSpecies::FRC },
+{ PieceSpecies::PG },
+{ PieceSpecies::HG },
+{ PieceSpecies::FH },
+{ PieceSpecies::OG },
+{ PieceSpecies::FRO },
+{ PieceSpecies::SBO },
+{ PieceSpecies::FBO },
+{ PieceSpecies::SR },
+{ PieceSpecies::GOS },
+{ PieceSpecies::L },
+{ PieceSpecies::FFI },
+{ PieceSpecies::FWC },
+{ PieceSpecies::FID },
+{ PieceSpecies::WDM },
+{ PieceSpecies::SP },
+{ PieceSpecies::VG },
+{ PieceSpecies::SC },
+{ PieceSpecies::WH },
+{ PieceSpecies::CLE },
+{ PieceSpecies::SE },
+{ PieceSpecies::AM },
+{ PieceSpecies::DH },
+{ PieceSpecies::DK },
+{ PieceSpecies::SW },
+{ PieceSpecies::FLC },
+{ PieceSpecies::MH },
+{ PieceSpecies::HHW },
+{ PieceSpecies::VT },
+{ PieceSpecies::S },
+{ PieceSpecies::CV },
+{ PieceSpecies::LS },
+{ PieceSpecies::CLD },
+{ PieceSpecies::CPC },
+{ PieceSpecies::CE },
+{ PieceSpecies::RC },
+{ PieceSpecies::CAC },
+{ PieceSpecies::RHS },
+{ PieceSpecies::TGS },
+{ PieceSpecies::FIO },
+{ PieceSpecies::FLO },
+{ PieceSpecies::AD },
+{ PieceSpecies::GBI },
+{ PieceSpecies::FBI },
+{ PieceSpecies::DS },
+{ PieceSpecies::BS },
+{ PieceSpecies::DV },
+{ PieceSpecies::KT },
+{ PieceSpecies::WC },
+{ PieceSpecies::WST },
+{ PieceSpecies::GF },
+{ PieceSpecies::LHD },
+{ PieceSpecies::LED },
+{ PieceSpecies::RHD },
+{ PieceSpecies::RID },
+{ PieceSpecies::PS },
+{ PieceSpecies::SQM },
+{ PieceSpecies::WO },
+{ PieceSpecies::GDE },
+{ PieceSpecies::FIL },
+{ PieceSpecies::FIE },
+{ PieceSpecies::FLD },
+{ PieceSpecies::PSR },
+{ PieceSpecies::HM },
+{ PieceSpecies::FGO },
+{ PieceSpecies::SWW },
+{ PieceSpecies::SCR },
+{ PieceSpecies::FHW },
+{ PieceSpecies::BDG },
+{ PieceSpecies::FIS },
+{ PieceSpecies::WG },
+{ PieceSpecies::FG },
+{ PieceSpecies::PH },
+{ PieceSpecies::KR },
+{ PieceSpecies::LT },
+{ PieceSpecies::TT },
+{ PieceSpecies::GT },
+{ PieceSpecies::ST },
+{ PieceSpecies::C },
+{ PieceSpecies::TC },
+{ PieceSpecies::RT },
+{ PieceSpecies::VW },
+{ PieceSpecies::SO },
+{ PieceSpecies::DO },
+{ PieceSpecies::FLH },
+{ PieceSpecies::FB },
+{ PieceSpecies::GBE },
+{ PieceSpecies::AB },
+{ PieceSpecies::EW },
+{ PieceSpecies::PW },
+{ PieceSpecies::WIH },
+{ PieceSpecies::HH },
+{ PieceSpecies::FC },
+{ PieceSpecies::RHW },
+{ PieceSpecies::OM },
+{ PieceSpecies::MW },
+{ PieceSpecies::HC },
+{ PieceSpecies::WS },
+{ PieceSpecies::NB },
+{ PieceSpecies::SB },
+{ PieceSpecies::WB },
+{ PieceSpecies::LD },
+{ PieceSpecies::EB },
+{ PieceSpecies::RSB },
+{ PieceSpecies::FIW },
+{ PieceSpecies::BE },
+{ PieceSpecies::MC },
+{ PieceSpecies::CM },
+{ PieceSpecies::PM },
+{ PieceSpecies::EC },
+{ PieceSpecies::RB },
+{ PieceSpecies::DSP },
+{ PieceSpecies::DD },
+{ PieceSpecies::EBG },
+{ PieceSpecies::H },
+{ PieceSpecies::SWO },
+{ PieceSpecies::CMK },
+{ PieceSpecies::CSW },
+{ PieceSpecies::GSW },
+{ PieceSpecies::BM },
+{ PieceSpecies::FLS },
+{ PieceSpecies::BT },
+{ PieceSpecies::OC },
+{ PieceSpecies::PO },
+{ PieceSpecies::SF },
+{ PieceSpecies::BBE },
+{ PieceSpecies::OR },
+{ PieceSpecies::MB },
+{ PieceSpecies::STC },
+{ PieceSpecies::CS },
+{ PieceSpecies::CD },
+{ PieceSpecies::RD },
+{ PieceSpecies::FE },
+{ PieceSpecies::LH },
+{ PieceSpecies::CHS },
+{ PieceSpecies::HTK },
+{ PieceSpecies::VS },
+{ PieceSpecies::WIG },
+{ PieceSpecies::FWI },
+{ PieceSpecies::RG },
+{ PieceSpecies::HR },
+{ PieceSpecies::MG },
+{ PieceSpecies::MT },
+{ PieceSpecies::GST },
+{ PieceSpecies::HS },
+{ PieceSpecies::WOG },
+{ PieceSpecies::OS },
+{ PieceSpecies::RO },
+{ PieceSpecies::EG },
+{ PieceSpecies::BOS },
+{ PieceSpecies::RBO },
+{ PieceSpecies::SG },
+{ PieceSpecies::LPS },
+{ PieceSpecies::RL },
+{ PieceSpecies::TG },
+{ PieceSpecies::BES },
+{ PieceSpecies::STB },
+{ PieceSpecies::IG },
+{ PieceSpecies::GM },
+{ PieceSpecies::RCH },
+{ PieceSpecies::RIC },
+{ PieceSpecies::LC },
+{ PieceSpecies::LIC },
+{ PieceSpecies::SMK },
+{ PieceSpecies::FO },
+{ PieceSpecies::LBS },
+{ PieceSpecies::LBG },
+{ PieceSpecies::VP },
+{ PieceSpecies::LK },
+{ PieceSpecies::VH },
+{ PieceSpecies::CAS },
+{ PieceSpecies::CAG },
+{ PieceSpecies::SWS },
+{ PieceSpecies::SWG },
+{ PieceSpecies::GH },
+{ PieceSpecies::GE },
+{ PieceSpecies::SPS },
+{ PieceSpecies::SPG },
+{ PieceSpecies::VL },
+{ PieceSpecies::GL },
+{ PieceSpecies::FIT },
+{ PieceSpecies::GTG },
+{ PieceSpecies::CBS },
+{ PieceSpecies::CBG },
+{ PieceSpecies::RDG },
+{ PieceSpecies::GEL },
+{ PieceSpecies::D },
+{ PieceSpecies::MUG },
+{ PieceSpecies::GB },
+{ PieceSpecies::P },
+# 178 "tomatene.cpp" 2
 
 };
 
@@ -107116,7 +108984,7 @@ inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::T
 { "MUG", PieceSpecies::MUG },
 { "GB", PieceSpecies::GB },
 { "P", PieceSpecies::P },
-# 131 "tomatene.cpp" 2
+# 184 "tomatene.cpp" 2
 
 };
 struct PieceIdsWrapper {
@@ -107134,9 +109002,9 @@ uint8_t player = 0;
 float startingTime = 0;
 float timeIncrement = 0;
 
-constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY) {
+constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY, bool rangeCaptures = false, bool didLionStep = false, Vec2 lionStepPos = Vec2{ 0, 0 }) {
 
- return srcX << 18 | srcY << 12 | destX << 6 | destY;
+ return didLionStep << 28 | lionStepPos.x << 26 | lionStepPos.y << 24 | rangeCaptures << 24 | srcX << 18 | srcY << 12 | destX << 6 | destY;
 }
 
 
@@ -107169,12 +109037,23 @@ struct Piece {
   uint16_t pieceSpecies = getSpecies();
   return pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP;
  }
+ constexpr inline bool getRank() const {
+  if(isRoyal()) return 4;
+  uint16_t pieceSpecies = getSpecies();
+  if(pieceSpecies == PieceSpecies::GG) return 3;
+  if(pieceSpecies == PieceSpecies::VG) return 2;
+  if(pieceSpecies == PieceSpecies::FLG) return 1;
+  if(pieceSpecies == PieceSpecies::AG) return 1;
+  if(pieceSpecies == PieceSpecies::FID) return 1;
+  if(pieceSpecies == PieceSpecies::FCR) return 1;
+  return 0;
+ }
  constexpr inline bool isInPromotionZone(int8_t y) const {
   return getOwner()? y > 24 : y < 11;
  }
 };
 
-constexpr eval_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
+constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
  if(!piece) return 0;
  uint8_t owner = piece.getOwner();
 
@@ -107185,10 +109064,18 @@ constexpr eval_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
  }
 
  eval_t pieceBaseEval = 100;
- eval_t horizontalCenterBonus = 18 - std::abs(x - 18);
- eval_t verticalCenterBonus = std::min(y, static_cast<uint8_t>(25));
+ eval_t horizontalCenterBonus = 18 - std::abs(x - 17.5f);
+ eval_t verticalCenterBonus = std::min(y, static_cast<int8_t>(25));
 
- return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus;
+ return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2;
+}
+
+inline constexpr bool isPosWithinBounds(Vec2 pos) {
+ return pos.x >= 0 && pos.x < 36 && pos.y >= 0 && pos.y < 36;
+}
+
+inline constexpr Vec2 movementDirToBoardDir(Vec2 movementDir, uint8_t pieceOwner) {
+ return pieceOwner? Vec2{ static_cast<int8_t>(-movementDir.x), movementDir.y } : Vec2{ movementDir.x, static_cast<int8_t>(-movementDir.y) };
 }
 
 class GameState {
@@ -107218,11 +109105,11 @@ public:
   return absEval;
  }
 
- Piece getSquare(uint8_t x, uint8_t y) const {
+ inline constexpr Piece getSquare(int8_t x, int8_t y) const {
 
   return board[x + 36 * y];
  }
- void setSquare(uint8_t x, uint8_t y, Piece piece) {
+ void setSquare(int8_t x, int8_t y, Piece piece) {
   if(getSquare(x, y)) {
 
    clearSquare(x, y);
@@ -107241,7 +109128,7 @@ public:
   }
   hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
  }
- void clearSquare(uint8_t x, uint8_t y) {
+ void clearSquare(int8_t x, int8_t y) {
   Piece oldPiece = getSquare(x, y);
   if(oldPiece) {
    absEval -= evalPiece(oldPiece, x, y) * (oldPiece.getOwner()? -1 : 1);
@@ -107256,19 +109143,51 @@ public:
 
  void generateMoves() {
   size_t i = 0;
-  for(int y = 0; y < 36; y++) {
-   for(int x = 0; x < 36; x++) {
+  for(int8_t y = 0; y < 36; y++) {
+   for(int8_t x = 0; x < 36; x++) {
     movesPerSquarePerPlayer[0][i].clear();
     movesPerSquarePerPlayer[1][i].clear();
     Piece piece = getSquare(x, y);
-    if(piece && piece.getSpecies() == PieceSpecies::P) {
-     uint8_t destY = y + (piece.getOwner()? 1 : -1);
-     if(destY > 35) return;
-     Piece forwardPiece = getSquare(x, destY);
-     if(!forwardPiece || forwardPiece.getOwner() != piece.getOwner()) {
-      auto move = createMove(x, y, x, destY);
-      movesPerSquarePerPlayer[piece.getOwner()][i].push_back(move);
+    auto pieceOwner = piece.getOwner();
+    bool pieceIsRangeCapturing = isRangeCapturingPiece(piece.getSpecies());
+    auto pieceRank = piece.getRank();
+    if(piece) {
+     auto &movements = PieceTable[piece.getSpecies()].movements;
+     std::unordered_set<Vec2, Vec2Hash> attackingSquares;
+     std::unordered_set<Vec2, Vec2Hash> validMoveLocations;
+     std::unordered_set<Vec2, Vec2Hash> rangeCapturingMoveLocations;
+     for(const auto &slide : movements.slides) {
+      bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
+      Vec2 target{ x, y };
+      Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
+      for(int8_t dist = 0; dist < slide.range; dist++) {
+       target += slideDir;
+       if(!isPosWithinBounds(target)) {
+        break;
+       }
+       attackingSquares.insert(target);
+       Piece attackingPiece = getSquare(target.x, target.y);
+       bool isBlocked = attackingPiece && (slideIsRangeCapturing? attackingPiece.getRank() >= pieceRank : attackingPiece.getOwner() == pieceOwner);
+       if(isBlocked) {
+        break;
+       }
+       if(slideIsRangeCapturing) {
+        rangeCapturingMoveLocations.insert(target);
+       } else {
+        validMoveLocations.insert(target);
+        if(attackingPiece) {
+         break;
+        }
+       }
+      }
      }
+     movesPerSquarePerPlayer[pieceOwner][i].reserve(validMoveLocations.size() + rangeCapturingMoveLocations.size());
+     std::transform(validMoveLocations.begin(), validMoveLocations.end(), std::back_inserter(movesPerSquarePerPlayer[pieceOwner][i]), [x, y](const Vec2 &target) {
+      return createMove(x, y, target.x, target.y);
+     });
+     std::transform(rangeCapturingMoveLocations.begin(), rangeCapturingMoveLocations.end(), std::back_inserter(movesPerSquarePerPlayer[pieceOwner][i]), [x, y](const Vec2 &target) {
+      return createMove(x, y, target.x, target.y, true);
+     });
     }
     i++;
    }
@@ -107348,25 +109267,25 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 361 "tomatene.cpp" 2
+# 465 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
-inline bool inPromotionZone(uint8_t owner, uint8_t y) {
+inline bool inPromotionZone(uint8_t owner, int8_t y) {
  return owner? y > 24 : y < 11;
 }
-void makeMove(GameState &gameState, uint32_t move) {
+void makeMove(GameState &gameState, uint32_t move, bool regenerateMoves = true) {
 
 
 
 
 
 
- uint8_t srcX = (move >> 18) & 0b111111;
- uint8_t srcY = (move >> 12) & 0b111111;
+ int8_t srcX = (move >> 18) & 0b111111;
+ int8_t srcY = (move >> 12) & 0b111111;
  Piece piece = gameState.getSquare(srcX, srcY);
- uint8_t destX = (move >> 6) & 0b111111;
- uint8_t destY = move & 0b111111;
+ int8_t destX = (move >> 6) & 0b111111;
+ int8_t destY = move & 0b111111;
  PieceSpecies::Type pieceSpecies = piece.getSpecies();
  uint8_t pieceOwner = piece.getOwner();
  bool middleStepShouldPromote = false;
@@ -107376,7 +109295,7 @@ void makeMove(GameState &gameState, uint32_t move) {
   if(doesMiddleStep) {
    int8_t middleStepX = ((move >> 26) & 0b11) - 1;
    int8_t middleStepY = ((move >> 24) & 0b11) - 1;
-   uint8_t middleY = srcY + middleStepY;
+   int8_t middleY = srcY + middleStepY;
    gameState.clearSquare(srcX + middleStepX, middleY);
    middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
   }
@@ -107386,8 +109305,8 @@ void makeMove(GameState &gameState, uint32_t move) {
   if(captureAllFlag) {
    int8_t dirX = sign(destX - srcX);
    int8_t dirY = sign(destY - srcY);
-   uint8_t x = srcX + dirX;
-   uint8_t y = srcY + dirY;
+   int8_t x = srcX + dirX;
+   int8_t y = srcY + dirY;
    int i = 0;
    while(x != destX || y != destY) {
     gameState.clearSquare(x, y);
@@ -107408,30 +109327,32 @@ void makeMove(GameState &gameState, uint32_t move) {
 
  gameState.clearSquare(srcX, srcY);
  gameState.setSquare(destX, destY, piece);
- gameState.generateMoves();
  gameState.currentPlayer = 1 - gameState.currentPlayer;
+ if(regenerateMoves) {
+  gameState.generateMoves();
+ }
 }
 
-std::string stringifyBoardPos(uint8_t x, uint8_t y) {
- uint8_t file = 36 - x;
+std::string stringifyBoardPos(int8_t x, int8_t y) {
+ int8_t file = 36 - x;
  std::string rank(1, 'a' + (y % 26));
  if(y >= 26) {
   rank += rank;
  }
  return std::to_string(file) + rank;
 }
-std::pair<uint8_t, uint8_t> parseBoardPos(std::string boardPos) {
- uint8_t file = isNumber(boardPos.at(1))? (boardPos.at(0) - '0') * 10 + (boardPos.at(1) - '0') : boardPos.at(0) - '0';
- uint8_t x = 36 - file;
+Vec2 parseBoardPos(std::string boardPos) {
+ int8_t file = isNumber(boardPos.at(1))? (boardPos.at(0) - '0') * 10 + (boardPos.at(1) - '0') : boardPos.at(0) - '0';
+ int8_t x = 36 - file;
  std::string rank = boardPos.substr(1 + isNumber(boardPos.at(1)));
- uint8_t y = rank.at(0) - 'a' + (rank.length() > 1) * 26;
+ int8_t y = rank.at(0) - 'a' + (rank.length() > 1) * 26;
  return { x, y };
 }
 std::string stringifyMove(GameState &gameState, uint32_t move) {
- uint8_t srcX = (move >> 18) & 0b111111;
- uint8_t srcY = (move >> 12) & 0b111111;
- uint8_t destX = (move >> 6) & 0b111111;
- uint8_t destY = move & 0b111111;
+ int8_t srcX = (move >> 18) & 0b111111;
+ int8_t srcY = (move >> 12) & 0b111111;
+ int8_t destX = (move >> 6) & 0b111111;
+ int8_t destY = move & 0b111111;
 
 
  std::string moveStr = stringifyBoardPos(srcX, srcY) + " " + stringifyBoardPos(destX, destY);
@@ -107442,9 +109363,9 @@ std::string stringifyMove(GameState &gameState, uint32_t move) {
   int8_t doesMiddleStep = move >> 28;
   if(doesMiddleStep) {
    int8_t middleStepX = ((move >> 26) & 0b11) - 1;
-   uint8_t middleX = srcX + middleStepX;
+   int8_t middleX = srcX + middleStepX;
    int8_t middleStepY = ((move >> 24) & 0b11) - 1;
-   uint8_t middleY = srcY + middleStepY;
+   int8_t middleY = srcY + middleStepY;
    moveStr += " " + stringifyBoardPos(middleX, middleY);
   }
  }
@@ -107453,12 +109374,29 @@ std::string stringifyMove(GameState &gameState, uint32_t move) {
 }
 uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
  auto srcPos = parseBoardPos(arguments[1]);
- auto destPos = parseBoardPos(arguments[arguments.size() - 3]);
- std::cout << "log Parsed move: " << std::to_string(srcPos.first) << " "<< std::to_string(srcPos.second) << " "<< std::to_string(destPos.first) << " "<< std::to_string(destPos.second) << std::endl;
+ auto destPos = parseBoardPos(arguments[2]);
+ Piece movingPiece = gameState.getSquare(srcPos.x, srcPos.y);
+ bool isRangeCapturingMove = false;
+ if(isRangeCapturingPiece(movingPiece.getSpecies())) {
+  auto &slides = PieceTable[movingPiece.getSpecies()].movements.slides;
+  Vec2 deltaPos = destPos - srcPos;
+  Vec2 slideDir = Vec2{ sign(deltaPos.x), sign(deltaPos.y) };
+  for(const auto &slide : slides) {
+   if(slide.range == 35 && movementDirToBoardDir(slide.dir, movingPiece.getOwner()) == slideDir) {
+    isRangeCapturingMove = true;
+   }
+  }
+ }
+ bool didLionStep = false;
+ Vec2 lionStepPos;
+ if(arguments.size() > 3) {
 
-
-
- return createMove(srcPos.first, srcPos.second, destPos.first, destPos.second);
+  didLionStep = true;
+  Vec2 stepPos = parseBoardPos(arguments[3]);
+  Vec2 stepDeltaPos = stepPos - srcPos;
+  lionStepPos = stepDeltaPos + 1;
+ }
+ return createMove(srcPos.x, srcPos.y, destPos.x, destPos.y, isRangeCapturingMove);
 }
 
 
@@ -107497,7 +109435,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
  for(uint32_t move : moves) {
 
   GameState newGameState = gameState;
-  makeMove(newGameState, move);
+  makeMove(newGameState, move, depth > 1);
   int32_t score = -search(newGameState, -beta, -alpha, depth - 1);
 
   if(score > alpha) {
@@ -107513,6 +109451,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 }
 
 void makeBestMove(GameState &gameState) {
+# 656 "tomatene.cpp"
  const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 
  using clock = std::chrono::steady_clock;

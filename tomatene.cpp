@@ -2,6 +2,7 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
+#include <unordered_set>
 
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
@@ -25,7 +26,6 @@ constexpr std::vector<std::string> splitString(std::string str, char delimiter) 
 	}
 	return res;
 }
-int x = 42;
 
 // adapted from https://stackoverflow.com/a/58048821
 constexpr std::vector<std::string_view> splitStringView(const std::string_view str, const char delimeter = ',') {
@@ -100,7 +100,7 @@ typedef int32_t eval_t;
 struct PieceSpecies {
 	enum Type : uint16_t {
 		None,
-		#define Piece(code, move, promo) code,
+		#define Piece(code, promo, move) code,
 			#include "pieces.inc"
 		#undef Piece
 		TotalCount
@@ -114,19 +114,87 @@ inline constexpr bool isRangeCapturingPiece(PieceSpecies::Type pieceSpecies) {
 	return pieceSpecies == PieceSpecies::GG || pieceSpecies == PieceSpecies::VG || pieceSpecies == PieceSpecies::FLG || pieceSpecies == PieceSpecies::AG || pieceSpecies == PieceSpecies::FID || pieceSpecies == PieceSpecies::FCR;
 }
 
-struct PieceInfo {
-	const char* movement;
-	PieceSpecies::Type promotion;
+struct Vec2 {
+	int8_t x;
+	int8_t y;
+	
+	constexpr Vec2 operator+(const Vec2 &other) const {
+		return { static_cast<int8_t>(x + other.x), static_cast<int8_t>(y + other.y) };
+	}constexpr Vec2 operator+(const int other) const {
+		return { static_cast<int8_t>(x + other), static_cast<int8_t>(y + other) };
+	}
+	constexpr Vec2 operator-(const Vec2 &other) const {
+		return { static_cast<int8_t>(x - other.x), static_cast<int8_t>(y - other.y) };
+	}
+	constexpr Vec2& operator+=(const Vec2 &other) {
+		x += other.x;
+		y += other.y;
+		return *this;
+	}
+	constexpr bool operator==(const Vec2 &other) const noexcept {
+		return x == other.x && y == other.y;
+	}
 };
-inline constexpr PieceInfo PieceTable[] = {
-	{ "", PieceSpecies::None },
-	#define Piece(code, move, promo) { move, PieceSpecies::promo },
+struct Vec2Hash {
+	size_t operator()(const Vec2& v) const noexcept {
+		return std::hash<int>{}(v.x << 8 | v.y);
+		// return std::hash<int>{}(v.x) ^ std::hash<int>{}(v.y);
+	}
+};
+struct Slide {
+	Vec2 dir;
+	int8_t range;
+};
+// these could be simplified
+struct CompoundMovementStep1 {
+	std::vector<Slide> slides;
+	bool canContinueAfterCapture;
+};
+struct CompoundMovementStep2 {
+	std::vector<Slide> slides;
+};
+struct Movements {
+	std::vector<Slide> slides;
+	std::vector<Vec2> tripleSlashedArrowDirs;
+	std::vector<std::pair<CompoundMovementStep1, CompoundMovementStep2>> compoundMoves;
+};
+
+struct PieceInfo {
+	PieceSpecies::Type promotion;
+	Movements movements;
+};
+#define UNPAREN(...) __VA_ARGS__
+PieceInfo PieceTable[] = {
+	{ PieceSpecies::None, {} },
+	#define Piece(code, promo, move) { PieceSpecies::promo, UNPAREN move },
 		#include "pieces.inc"
 	#undef Piece
 };
 
+inline std::array<eval_t, 302> calculateBasePieceValues() {
+	std::array<eval_t, 302> values;
+	values[0] = 0;
+	for(int pieceSpecies = 1; pieceSpecies < 302; pieceSpecies++) {
+		Movements &movements = PieceTable[pieceSpecies].movements;
+		eval_t value = 95; // centipawns
+		for(const auto &slide : movements.slides) {
+			value += slide.range * (isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies))? 50 : 5);
+		}
+		if(pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP) {
+			value += 100000;
+		}
+		values[pieceSpecies] = value;
+	}
+	for(int pieceSpecies = 1; pieceSpecies < 302; pieceSpecies++) {
+		auto promotion = PieceTable[pieceSpecies].promotion;
+		values[pieceSpecies] += values[promotion] / 10;
+	}
+	return values;
+}
+const std::array<eval_t, 302> basePieceValues = calculateBasePieceValues();
+
 inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::TotalCount - 1> PieceSpeciesToId = {
-	#define Piece(code, move, promo) { #code, PieceSpecies::code },
+	#define Piece(code, promo, move) { #code, PieceSpecies::code },
 		#include "pieces.inc"
 	#undef Piece
 };
@@ -145,9 +213,9 @@ uint8_t player = 0;
 float startingTime = 0;
 float timeIncrement = 0;
 
-constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY) {
+constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY, bool rangeCaptures = false, bool didLionStep = false, Vec2 lionStepPos = Vec2{ 0, 0 }) {
 	// std::cout << "log Creating move: "<< std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
-	return srcX << 18 | srcY << 12 | destX << 6 | destY;
+	return didLionStep << 28 | lionStepPos.x << 26 | lionStepPos.y << 24 | rangeCaptures << 24 | srcX << 18 | srcY << 12 | destX << 6 | destY;
 }
 
 // hacky wrapper around a uint16_t lol
@@ -180,12 +248,23 @@ struct Piece {
 		uint16_t pieceSpecies = getSpecies();
 		return pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP;
 	}
+	constexpr inline bool getRank() const {
+		if(isRoyal()) return 4;
+		uint16_t pieceSpecies = getSpecies();
+		if(pieceSpecies == PieceSpecies::GG) return 3;
+		if(pieceSpecies == PieceSpecies::VG) return 2;
+		if(pieceSpecies == PieceSpecies::FLG) return 1;
+		if(pieceSpecies == PieceSpecies::AG) return 1;
+		if(pieceSpecies == PieceSpecies::FID) return 1;
+		if(pieceSpecies == PieceSpecies::FCR) return 1;
+		return 0;
+	}
 	constexpr inline bool isInPromotionZone(int8_t y) const {
 		return getOwner()? y > 24 : y < 11;
 	}
 };
 
-constexpr eval_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
+constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
 	if(!piece) return 0;
 	uint8_t owner = piece.getOwner();
 	// flip x and y to be relative to the piece. 0 means to the left of the piece or the back of the board behind the piece.
@@ -195,11 +274,19 @@ constexpr eval_t evalPiece(Piece piece, uint8_t x, uint8_t y) {
 		y = 35 - y;
 	}
 	
-	eval_t pieceBaseEval = 100; // AAAAAAHHH
-	eval_t horizontalCenterBonus = 18 - std::abs(x - 18);
-	eval_t verticalCenterBonus = std::min(y, static_cast<uint8_t>(25));
+	eval_t pieceBaseEval = basePieceValues[piece.getSpecies()];
+	eval_t horizontalCenterBonus = 18 - std::abs(x - 17.5f);
+	eval_t verticalCenterBonus = std::min(y, static_cast<int8_t>(25));
 	
-	return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus;
+	return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2;
+}
+
+inline constexpr bool isPosWithinBounds(Vec2 pos) {
+	return pos.x >= 0 && pos.x < 36 && pos.y >= 0 && pos.y < 36;
+}
+
+inline constexpr Vec2 movementDirToBoardDir(Vec2 movementDir, uint8_t pieceOwner) {
+	return pieceOwner? Vec2{ static_cast<int8_t>(-movementDir.x), movementDir.y } : Vec2{ movementDir.x, static_cast<int8_t>(-movementDir.y) };
 }
 
 class GameState {
@@ -229,11 +316,11 @@ public:
 		return absEval;
 	}
 	
-	Piece getSquare(uint8_t x, uint8_t y) const {
+	inline constexpr Piece getSquare(int8_t x, int8_t y) const {
 		// std::cout << std::to_string(x) << "," << std::to_string(y) << std::endl;
 		return board[x + 36 * y];
 	}
-	void setSquare(uint8_t x, uint8_t y, Piece piece) {
+	void setSquare(int8_t x, int8_t y, Piece piece) {
 		if(getSquare(x, y)) {
 			// clearing before setting makes it a bit easier
 			clearSquare(x, y);
@@ -252,7 +339,7 @@ public:
 		}
 		hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
 	}
-	void clearSquare(uint8_t x, uint8_t y) {
+	void clearSquare(int8_t x, int8_t y) {
 		Piece oldPiece = getSquare(x, y);
 		if(oldPiece) {
 			absEval -= evalPiece(oldPiece, x, y) * (oldPiece.getOwner()? -1 : 1);
@@ -267,19 +354,51 @@ public:
 	
 	void generateMoves() {
 		size_t i = 0;
-		for(int y = 0; y < 36; y++) {
-			for(int x = 0; x < 36; x++) {
+		for(int8_t y = 0; y < 36; y++) {
+			for(int8_t x = 0; x < 36; x++) {
 				movesPerSquarePerPlayer[0][i].clear();
 				movesPerSquarePerPlayer[1][i].clear();
 				Piece piece = getSquare(x, y);
-				if(piece && piece.getSpecies() == PieceSpecies::P) {
-					uint8_t destY = y + (piece.getOwner()? 1 : -1);
-					if(destY > 35) return;
-					Piece forwardPiece = getSquare(x, destY);
-					if(!forwardPiece || forwardPiece.getOwner() != piece.getOwner()) {
-						auto move = createMove(x, y, x, destY);
-						movesPerSquarePerPlayer[piece.getOwner()][i].push_back(move);
+				auto pieceOwner = piece.getOwner();
+				bool pieceIsRangeCapturing = isRangeCapturingPiece(piece.getSpecies());
+				auto pieceRank = piece.getRank();
+				if(piece) {
+					auto &movements = PieceTable[piece.getSpecies()].movements;
+					std::unordered_set<Vec2, Vec2Hash> attackingSquares;
+					std::unordered_set<Vec2, Vec2Hash> validMoveLocations;
+					std::unordered_set<Vec2, Vec2Hash> rangeCapturingMoveLocations;
+					for(const auto &slide : movements.slides) {
+						bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
+						Vec2 target{ x, y };
+						Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
+						for(int8_t dist = 0; dist < slide.range; dist++) {
+							target += slideDir;
+							if(!isPosWithinBounds(target)) {
+								break;
+							}
+							attackingSquares.insert(target);
+							Piece attackingPiece = getSquare(target.x, target.y);
+							bool isBlocked = attackingPiece && (slideIsRangeCapturing? attackingPiece.getRank() >= pieceRank : attackingPiece.getOwner() == pieceOwner);
+							if(isBlocked) {
+								break;
+							}
+							if(slideIsRangeCapturing) {
+								rangeCapturingMoveLocations.insert(target);
+							} else {
+								validMoveLocations.insert(target);
+								if(attackingPiece) {
+									break;
+								}
+							}
+						}
 					}
+					movesPerSquarePerPlayer[pieceOwner][i].reserve(validMoveLocations.size() + rangeCapturingMoveLocations.size());
+					std::transform(validMoveLocations.begin(), validMoveLocations.end(), std::back_inserter(movesPerSquarePerPlayer[pieceOwner][i]), [x, y](const Vec2 &target) {
+						return createMove(x, y, target.x, target.y);
+					});
+					std::transform(rangeCapturingMoveLocations.begin(), rangeCapturingMoveLocations.end(), std::back_inserter(movesPerSquarePerPlayer[pieceOwner][i]), [x, y](const Vec2 &target) {
+						return createMove(x, y, target.x, target.y, true);
+					});
 				}
 				i++;
 			}
@@ -288,12 +407,6 @@ public:
 	
 	std::vector<uint32_t> getAllMovesForPlayer(uint8_t player) {
 		size_t totalSpace = 0;
-		// for(size_t i = 0; i < 1296; i++) {
-		// 	if(board[i] && board[i].getOwner() == player) {
-		// 		std::vector<uint32_t> &moves = movesPerSquarePerPlayer[i];
-		// 		totalSpace += moves.size();
-		// 	}
-		// }
 		for(const std::vector<uint32_t> &moves : movesPerSquarePerPlayer[player]) {
 			totalSpace += moves.size();
 		}
@@ -304,12 +417,6 @@ public:
 		for(const std::vector<uint32_t> &moves : movesPerSquarePerPlayer[player]) {
 			allMoves.insert(allMoves.end(), moves.begin(), moves.end());
 		}
-		// for(size_t i = 0; i < 1296; i++) {
-		// 	if(board[i] && board[i].getOwner() == player) {
-		// 		std::vector<uint32_t> &moves = movesPerSquarePerPlayer[i];
-		// 		allMoves.insert(allMoves.end(), moves.begin(), moves.end());
-		// 	}
-		// }
 		
 		return allMoves;
 	}
@@ -361,21 +468,21 @@ inline constexpr std::string_view INITIAL_TSFEN = {
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
-inline bool inPromotionZone(uint8_t owner, uint8_t y) {
+inline bool inPromotionZone(uint8_t owner, int8_t y) {
 	return owner? y > 24 : y < 11;
 }
-void makeMove(GameState &gameState, uint32_t move) {
+void makeMove(GameState &gameState, uint32_t move, bool regenerateMoves = true) {
 	// move layout:
 	// 6 bits: src x, 6 bits: src y
 	// 6 bits: dst x, 6 bits: dst y
 	// for range capturing pieces, 1 bit extra: capture all
 	// for lion-like pieces, extra 1 bit: does middle step, extra 2 bits: middle step x offset, extra 2 bits: middle step y offset
 	
-	uint8_t srcX = (move >> 18) & 0b111111;
-	uint8_t srcY = (move >> 12) & 0b111111;
+	int8_t srcX = (move >> 18) & 0b111111;
+	int8_t srcY = (move >> 12) & 0b111111;
 	Piece piece = gameState.getSquare(srcX, srcY);
-	uint8_t destX = (move >> 6) & 0b111111;
-	uint8_t destY = move & 0b111111;
+	int8_t destX = (move >> 6) & 0b111111;
+	int8_t destY = move & 0b111111;
 	PieceSpecies::Type pieceSpecies = piece.getSpecies();
 	uint8_t pieceOwner = piece.getOwner();
 	bool middleStepShouldPromote = false;
@@ -385,7 +492,7 @@ void makeMove(GameState &gameState, uint32_t move) {
 		if(doesMiddleStep) {
 			int8_t middleStepX = ((move >> 26) & 0b11) - 1;
 			int8_t middleStepY = ((move >> 24) & 0b11) - 1;
-			uint8_t middleY = srcY + middleStepY;
+			int8_t middleY = srcY + middleStepY;
 			gameState.clearSquare(srcX + middleStepX, middleY);
 			middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
 		}
@@ -395,8 +502,8 @@ void makeMove(GameState &gameState, uint32_t move) {
 		if(captureAllFlag) {
 			int8_t dirX = sign(destX - srcX);
 			int8_t dirY = sign(destY - srcY);
-			uint8_t x = srcX + dirX;
-			uint8_t y = srcY + dirY;
+			int8_t x = srcX + dirX;
+			int8_t y = srcY + dirY;
 			int i = 0;
 			while(x != destX || y != destY) {
 				gameState.clearSquare(x, y);
@@ -417,30 +524,32 @@ void makeMove(GameState &gameState, uint32_t move) {
 	
 	gameState.clearSquare(srcX, srcY);
 	gameState.setSquare(destX, destY, piece);
-	gameState.generateMoves();
 	gameState.currentPlayer = 1 - gameState.currentPlayer;
+	if(regenerateMoves) {
+		gameState.generateMoves();
+	}
 }
 
-std::string stringifyBoardPos(uint8_t x, uint8_t y) {
-	uint8_t file = 36 - x;
+std::string stringifyBoardPos(int8_t x, int8_t y) {
+	int8_t file = 36 - x;
 	std::string rank(1, 'a' + (y % 26)); // I love c++
 	if(y >= 26) {
 		rank += rank;
 	}
 	return std::to_string(file) + rank;
 }
-std::pair<uint8_t, uint8_t> parseBoardPos(std::string boardPos) {
-	uint8_t file = isNumber(boardPos.at(1))? (boardPos.at(0) - '0') * 10 + (boardPos.at(1) - '0') : boardPos.at(0) - '0';
-	uint8_t x = 36 - file;
+Vec2 parseBoardPos(std::string boardPos) {
+	int8_t file = isNumber(boardPos.at(1))? (boardPos.at(0) - '0') * 10 + (boardPos.at(1) - '0') : boardPos.at(0) - '0';
+	int8_t x = 36 - file;
 	std::string rank = boardPos.substr(1 + isNumber(boardPos.at(1)));
-	uint8_t y = rank.at(0) - 'a' + (rank.length() > 1) * 26;
+	int8_t y = rank.at(0) - 'a' + (rank.length() > 1) * 26;
 	return { x, y };
 }
 std::string stringifyMove(GameState &gameState, uint32_t move) {
-	uint8_t srcX = (move >> 18) & 0b111111;
-	uint8_t srcY = (move >> 12) & 0b111111;
-	uint8_t destX = (move >> 6) & 0b111111;
-	uint8_t destY = move & 0b111111;
+	int8_t srcX = (move >> 18) & 0b111111;
+	int8_t srcY = (move >> 12) & 0b111111;
+	int8_t destX = (move >> 6) & 0b111111;
+	int8_t destY = move & 0b111111;
 	
 	// std::cout << "log stringifyMove = " << std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
 	std::string moveStr = stringifyBoardPos(srcX, srcY) + " " + stringifyBoardPos(destX, destY);
@@ -451,9 +560,9 @@ std::string stringifyMove(GameState &gameState, uint32_t move) {
 		int8_t doesMiddleStep = move >> 28;
 		if(doesMiddleStep) {
 			int8_t middleStepX = ((move >> 26) & 0b11) - 1;
-			uint8_t middleX = srcX + middleStepX;
+			int8_t middleX = srcX + middleStepX;
 			int8_t middleStepY = ((move >> 24) & 0b11) - 1;
-			uint8_t middleY = srcY + middleStepY;
+			int8_t middleY = srcY + middleStepY;
 			moveStr += " " + stringifyBoardPos(middleX, middleY);
 		}
 	}
@@ -462,15 +571,32 @@ std::string stringifyMove(GameState &gameState, uint32_t move) {
 }
 uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 	auto srcPos = parseBoardPos(arguments[1]);
-	auto destPos = parseBoardPos(arguments[arguments.size() - 3]);
-	std::cout << "log Parsed move: " << std::to_string(srcPos.first) << " "<< std::to_string(srcPos.second) << " "<< std::to_string(destPos.first) << " "<< std::to_string(destPos.second) << std::endl;
-	// if(arguments.size() > 3) {
-		
-	// }
-	return createMove(srcPos.first, srcPos.second, destPos.first, destPos.second);
+	auto destPos = parseBoardPos(arguments[2]);
+	Piece movingPiece = gameState.getSquare(srcPos.x, srcPos.y);
+	bool isRangeCapturingMove = false;
+	if(isRangeCapturingPiece(movingPiece.getSpecies())) {
+		auto &slides = PieceTable[movingPiece.getSpecies()].movements.slides;
+		Vec2 deltaPos = destPos - srcPos;
+		Vec2 slideDir = Vec2{ sign(deltaPos.x), sign(deltaPos.y) };
+		for(const auto &slide : slides) {
+			if(slide.range == 35 && movementDirToBoardDir(slide.dir, movingPiece.getOwner()) == slideDir) {
+				isRangeCapturingMove = true;
+			}
+		}
+	}
+	bool didLionStep = false;
+	Vec2 lionStepPos;
+	if(arguments.size() > 3) {
+		// must be a lion-like piece
+		didLionStep = true;
+		Vec2 stepPos = parseBoardPos(arguments[3]);
+		Vec2 stepDeltaPos = stepPos - srcPos;
+		lionStepPos = stepDeltaPos + 1; // 1 is subtracted in makeMove() so the range [-1, 1] is mapped to [0, 2] to work better as a 2-bit int
+	}
+	return createMove(srcPos.x, srcPos.y, destPos.x, destPos.y, isRangeCapturingMove);
 }
 
-#define INF_SCORE 1000000
+#define INF_SCORE 100000000
 
 unsigned int nodesSearched = 0;
 
@@ -506,7 +632,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 	for(uint32_t move : moves) {
 		// std::cout << "log trying move " << stringifyMove(gameState, move) << std::endl;
 		GameState newGameState = gameState;
-		makeMove(newGameState, move);
+		makeMove(newGameState, move, depth > 1);
 		int32_t score = -search(newGameState, -beta, -alpha, depth - 1);
 		// unmakeMove(gameState, move);
 		if(score > alpha) {
@@ -522,6 +648,14 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 }
 
 void makeBestMove(GameState &gameState) {
+	// Piece piece = gameState.getSquare(18, 25);
+	// uint8_t x, y;
+	// while(true) {
+	// 	std::cin >> x >> y;
+	// 	std::cout << std::to_string(evalPiece(piece, x, y)) << std::endl;
+	// }
+	
+	
 	const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 	// std::cout << "log Time to move: " << std::to_string(timeToMove) << " seconds" << std::endl;
 	using clock = std::chrono::steady_clock;

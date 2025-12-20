@@ -1,6 +1,6 @@
 .PHONY: all fast preprocess dist clean
 CXX = g++
-CXXFLAGS = -std=c++23 -Iinclude -Wall -Wextra -Wpedantic
+CXXFLAGS = -std=c++23 -Iinclude
 SRC = tomatene.cpp
 TARGET_DIR = dist
 TARGET = tomatene
