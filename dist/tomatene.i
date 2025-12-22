@@ -107192,6 +107192,10 @@ inline constexpr PieceIdsWrapper pieceIds;
 
 TranspositionTable transpositionTable;
 
+std::array<uint32_t, 4 + 1> killerMoves1{};
+std::array<uint32_t, 4 + 1> killerMoves2{};
+std::array<uint32_t, 4 + 1> killerMoves3{};
+
 bool atsiInitialised = false;
 bool inGame = false;
 uint8_t player = 0;
@@ -107728,7 +107732,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 748 "tomatene.cpp" 2
+# 752 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -107814,19 +107818,18 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
  std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
 
  TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
- if(ttEntry) {
-  std::vector<uint32_t>::iterator it = std::find(moves.begin(), moves.end(), ttEntry->bestMove);
-  if(it != moves.end()) {
-
-
-   for(size_t i = 0; i < moves.size(); i++) {
-    if(moves[i] == ttEntry->bestMove) {
-     moves[i] = moves[0];
-     moves[0] = ttEntry->bestMove;
-
-     break;
-    }
-   }
+ bool hasTtMove = ttEntry && std::find(moves.begin(), moves.end(), ttEntry->bestMove) != moves.end();
+ uint32_t ttMove = hasTtMove? ttEntry->bestMove : 0;
+ for(size_t i = 0; i < moves.size(); i++) {
+  if(moves[i] == ttMove) {
+   moves[i] = moves[0];
+   moves[0] = ttMove;
+  } else if(moves[i] == killerMoves1[depth]) {
+   moves[i] = moves[hasTtMove];
+   moves[hasTtMove] = killerMoves1[depth];
+  } else if(moves[i] == killerMoves2[depth]) {
+   moves[i] = moves[hasTtMove + 1];
+   moves[hasTtMove + 1] = killerMoves2[depth];
   }
  }
  uint32_t bestMove = 0;
@@ -107839,6 +107842,8 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
    alpha = score;
    bestMove = move;
    if(alpha >= beta) {
+    killerMoves2[depth] = killerMoves1[depth];
+    killerMoves1[depth] = move;
     break;
    }
   }
@@ -107865,7 +107870,7 @@ uint32_t perft(GameState &gameState, uint8_t depth) {
 }
 
 void makeBestMove(GameState &gameState) {
-# 892 "tomatene.cpp"
+# 897 "tomatene.cpp"
  const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 
  using clock = std::chrono::steady_clock;

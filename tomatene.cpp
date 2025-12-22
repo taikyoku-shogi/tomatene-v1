@@ -210,6 +210,10 @@ inline constexpr PieceIdsWrapper pieceIds;
 
 TranspositionTable transpositionTable;
 
+std::array<uint32_t, MAX_DEPTH + 1> killerMoves1{};
+std::array<uint32_t, MAX_DEPTH + 1> killerMoves2{};
+std::array<uint32_t, MAX_DEPTH + 1> killerMoves3{};
+
 bool atsiInitialised = false;
 bool inGame = false; // i sthis needed?
 uint8_t player = 0;
@@ -830,19 +834,18 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 	std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
 	// std::cout << "log Found " << moves.size() << " moves" << std::endl;
 	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
-	if(ttEntry) {
-		std::vector<uint32_t>::iterator it = std::find(moves.begin(), moves.end(), ttEntry->bestMove);
-		if(it != moves.end()) {
-			// std::rotate(moves.begin(), it, it + 1);
-			// std::swap(*moves.begin(), *it);
-			for(size_t i = 0; i < moves.size(); i++) {
-				if(moves[i] == ttEntry->bestMove) {
-					moves[i] = moves[0];
-					moves[0] = ttEntry->bestMove;
-					// std::cout << "log Found TT move " << std::to_string(ttEntry->bestMove) << std::endl;
-					break;
-				}
-			}
+	bool hasTtMove = ttEntry && std::find(moves.begin(), moves.end(), ttEntry->bestMove) != moves.end();
+	uint32_t ttMove = hasTtMove? ttEntry->bestMove : 0;
+	for(size_t i = 0; i < moves.size(); i++) {
+		if(moves[i] == ttMove) {
+			moves[i] = moves[0];
+			moves[0] = ttMove;
+		} else if(moves[i] == killerMoves1[depth]) {
+			moves[i] = moves[hasTtMove];
+			moves[hasTtMove] = killerMoves1[depth];
+		} else if(moves[i] == killerMoves2[depth]) {
+			moves[i] = moves[hasTtMove + 1];
+			moves[hasTtMove + 1] = killerMoves2[depth];
 		}
 	}
 	uint32_t bestMove = 0;
@@ -855,6 +858,8 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 			alpha = score;
 			bestMove = move;
 			if(alpha >= beta) {
+				killerMoves2[depth] = killerMoves1[depth];
+				killerMoves1[depth] = move;
 				break;
 			}
 		}
