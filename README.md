@@ -6,6 +6,7 @@ It uses compiler macros and constexpr spam to implement the pieces whilst avoidi
 Features:
 - Alpha-beta minimax search
 - Iterative deepening
+- Principal variation search
 - Move ordering:
   - Transposition table
   - Killer heuristic

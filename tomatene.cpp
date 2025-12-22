@@ -17,6 +17,10 @@
 
 #define MAX_DEPTH 4
 
+// Centipawns
+typedef int32_t eval_t;
+
+inline constexpr eval_t PVS_WINDOW_SIZE = 10;
 inline constexpr float ESTIMATED_GAME_LENGTH = 900;
 
 constexpr std::vector<std::string> splitString(std::string str, char delimiter) {
@@ -95,9 +99,6 @@ template <typename T>
 T sign(T x) {
 	return (x > 0) - (x < 0);
 }
-
-// Centipawns
-typedef int32_t eval_t;
 
 struct PieceSpecies {
 	enum Type : uint16_t {
@@ -181,16 +182,12 @@ inline std::array<eval_t, 302> calculateBasePieceValues() {
 		Movements &movements = PieceTable[pieceSpecies].movements;
 		eval_t value = 95; // centipawns
 		for(const auto &slide : movements.slides) {
-			value += slide.range * (isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies))? 50 : 5);
+			value += slide.range * (isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies)) && slide.range == 35? 50 : 5);
 		}
 		if(pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP) {
 			value += 100000;
 		}
 		values[pieceSpecies] = value;
-	}
-	for(int pieceSpecies = 1; pieceSpecies < 302; pieceSpecies++) {
-		auto promotion = PieceTable[pieceSpecies].promotion;
-		values[pieceSpecies] += values[promotion] / 10;
 	}
 	return values;
 }
@@ -212,7 +209,6 @@ TranspositionTable transpositionTable;
 
 std::array<uint32_t, MAX_DEPTH + 1> killerMoves1{};
 std::array<uint32_t, MAX_DEPTH + 1> killerMoves2{};
-std::array<uint32_t, MAX_DEPTH + 1> killerMoves3{};
 
 bool atsiInitialised = false;
 bool inGame = false; // i sthis needed?
@@ -281,7 +277,11 @@ constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
 		y = 35 - y;
 	}
 	
-	eval_t pieceBaseEval = basePieceValues[piece.getSpecies()];
+	uint16_t species = piece.getSpecies();
+	eval_t pieceBaseEval = basePieceValues[species];
+	if(piece.canPromote()) {
+		pieceBaseEval += basePieceValues[PieceTable[species].promotion] / 10;
+	}
 	eval_t horizontalCenterBonus = 18 - std::abs(x - 17.5f);
 	eval_t verticalCenterBonus = std::min(y, static_cast<int8_t>(25));
 	
@@ -678,6 +678,27 @@ public:
 						}
 					}
 				}
+				for(const Vec2 &tripleSlashedArrowDir : movements.tripleSlashedArrowDirs) {
+					Vec2 dir = movementDirToBoardDir(tripleSlashedArrowDir, pieceOwner);
+					uint8_t jumpsRemaining = 4; // it will be decremented first before being checked, so this will make it trigger on the fourth jump
+					Vec2 target{ x, y };
+					while(isPosWithinBounds(target)) {
+						target += dir;
+						attackingSquares.insert(target);
+						Piece attackingPiece = getSquare(target.x, target.y);
+						bool isBlocked = attackingPiece && attackingPiece.getOwner() == pieceOwner;
+						if(!isBlocked) {
+							validMoveLocations.insert(target);
+						}
+						if(attackingPiece && !--jumpsRemaining) {
+							break;
+						}
+					}
+				}
+				// TODO: implement compound moves!!
+				// for(const auto &compoundMove : movements.compoundMoves) {
+					
+				// }
 				bidirectionalAttackMap.setAttacks(srcVec, attackingSquares);
 				validMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [x, y](const Vec2 &target) {
 					return createMove(x, y, target.x, target.y);
@@ -849,19 +870,29 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 		}
 	}
 	uint32_t bestMove = 0;
+	bool foundPvNode = 0;
 	for(uint32_t move : moves) {
 		// std::cout << "log trying move " << stringifyMove(gameState, move) << std::endl;
 		gameState.makeMove(move, depth > 1, true);
-		int32_t score = -search(gameState, -beta, -alpha, depth - 1);
+		int32_t score;
+		if(!foundPvNode) {
+			score = -search(gameState, -beta, -alpha, depth - 1);
+		} else {
+			score = -search(gameState, -alpha - PVS_WINDOW_SIZE, -alpha, depth - 1);
+			if(score > alpha && score < beta) {
+				score = -search(gameState, -beta, -alpha, depth - 1);
+			}
+		}
 		gameState.unmakeMove();
 		if(score > alpha) {
 			alpha = score;
 			bestMove = move;
 			if(alpha >= beta) {
 				killerMoves2[depth] = killerMoves1[depth];
-				killerMoves1[depth] = move;
+				killerMoves1[depth] = bestMove;
 				break;
 			}
+			foundPvNode = true;
 		}
 	}
 	transpositionTable.put(gameState.hash, bestMove);
@@ -886,14 +917,6 @@ uint32_t perft(GameState &gameState, uint8_t depth) {
 }
 
 void makeBestMove(GameState &gameState) {
-	// Piece piece = gameState.getSquare(18, 25);
-	// uint8_t x, y;
-	// while(true) {
-	// 	std::cin >> x >> y;
-	// 	std::cout << std::to_string(evalPiece(piece, x, y)) << std::endl;
-	// }
-	
-	
 	const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 	// std::cout << "log Time to move: " << std::to_string(timeToMove) << " seconds" << std::endl;
 	using clock = std::chrono::steady_clock;
@@ -921,7 +944,6 @@ void makeBestMove(GameState &gameState) {
 	std::cout << "move " << stringifyMove(gameState, bestMove) << std::endl;
 	gameState.makeMove(bestMove, true, false);
 	std::cout << "eval " << gameState.absEval << std::endl;
-	std::cout << "log Zobrist hash: " << gameState.hash << std::endl;
 }
 
 int main() {
@@ -1000,7 +1022,7 @@ int main() {
 					uint32_t nodesSearched = perft(gameState, depth);
 					auto end = clock::now();
 					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-					std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes in " << elapsed << std::endl;
+					std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
 				}
 			} else if(command == "search") {
 				uint32_t depth = std::stoi(getItem(arguments, 1));
@@ -1011,7 +1033,7 @@ int main() {
 				eval = search(gameState, -INF_SCORE, INF_SCORE, depth);
 				auto end = clock::now();
 				auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-				std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << std::endl;
+				std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
 			}
 		}
 	}
