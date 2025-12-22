@@ -107467,10 +107467,10 @@ private:
 
  StaticVector<StaticVector<UndoSquare, 36>, 4> undoStack;
 
- void setSquare(int8_t x, int8_t y, Piece piece, bool saveToUndoStack = false) {
+ void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
   if(getSquare(x, y)) {
 
-   clearSquare(x, y, saveToUndoStack);
+   clearSquare(x, y, regenerateMoves, saveToUndoStack);
   } else if(saveToUndoStack) {
    UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, Piece{ 0 } };
    undoStack.back().push_back(undoSquare);
@@ -107488,10 +107488,12 @@ private:
    royalsLeft[piece.getOwner()]++;
   }
   hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
-  squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-  squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+  if(regenerateMoves) {
+   squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
+   squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+  }
  }
- void clearSquare(int8_t x, int8_t y, bool saveToUndoStack = false) {
+ void clearSquare(int8_t x, int8_t y, bool regenerateMoves = true, bool saveToUndoStack = false) {
   Piece oldPiece = getSquare(x, y);
   if(oldPiece) {
    if(saveToUndoStack) {
@@ -107505,8 +107507,10 @@ private:
   }
   board[x + 36 * y] = Piece{ 0 };
   hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
-  squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-  squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+  if(regenerateMoves) {
+   squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
+   squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+  }
  }
 public:
  uint8_t currentPlayer = 0;
@@ -107562,7 +107566,7 @@ public:
     int8_t middleStepX = ((move >> 26) & 0b11) - 1;
     int8_t middleStepY = ((move >> 24) & 0b11) - 1;
     int8_t middleY = srcY + middleStepY;
-    clearSquare(srcX + middleStepX, middleY, saveState);
+    clearSquare(srcX + middleStepX, middleY, regenerateMoves, saveState);
     middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
    }
   } else if(isRangeCapturingPiece(pieceSpecies)) {
@@ -107575,7 +107579,7 @@ public:
     int8_t y = srcY + dirY;
     int i = 0;
     while(x != destX || y != destY) {
-     clearSquare(x, y, saveState);
+     clearSquare(x, y, regenerateMoves, saveState);
      x += dirX;
      y += dirY;
      if(i++ > 100) {
@@ -107591,8 +107595,8 @@ public:
    piece = Piece::create(PieceTable[piece.getSpecies()].promotion, 0, pieceOwner);
   }
 
-  clearSquare(srcX, srcY, saveState);
-  setSquare(destX, destY, piece, saveState);
+  clearSquare(srcX, srcY, regenerateMoves, saveState);
+  setSquare(destX, destY, piece, regenerateMoves, saveState);
   currentPlayer = 1 - currentPlayer;
   if(regenerateMoves) {
    generateMoves();
@@ -107724,7 +107728,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 744 "tomatene.cpp" 2
+# 748 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -107861,7 +107865,7 @@ uint32_t perft(GameState &gameState, uint8_t depth) {
 }
 
 void makeBestMove(GameState &gameState) {
-# 888 "tomatene.cpp"
+# 892 "tomatene.cpp"
  const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 
  using clock = std::chrono::steady_clock;

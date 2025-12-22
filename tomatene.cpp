@@ -485,10 +485,10 @@ private:
 	// Keeps track of all the squares changed during a move, so that it can quickly unmake the move.
 	StaticVector<StaticVector<UndoSquare, 36>, MAX_DEPTH> undoStack;
 	
-	void setSquare(int8_t x, int8_t y, Piece piece, bool saveToUndoStack = false) {
+	void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
 		if(getSquare(x, y)) {
 			// clearing before setting makes it a bit easier
-			clearSquare(x, y, saveToUndoStack);
+			clearSquare(x, y, regenerateMoves, saveToUndoStack);
 		} else if(saveToUndoStack) {
 			UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, Piece{ 0 } };
 			undoStack.back().push_back(undoSquare);
@@ -506,10 +506,12 @@ private:
 			royalsLeft[piece.getOwner()]++;
 		}
 		hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
-		squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-		squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+		if(regenerateMoves) {
+			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
+			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+		}
 	}
-	void clearSquare(int8_t x, int8_t y, bool saveToUndoStack = false) {
+	void clearSquare(int8_t x, int8_t y, bool regenerateMoves = true, bool saveToUndoStack = false) {
 		Piece oldPiece = getSquare(x, y);
 		if(oldPiece) {
 			if(saveToUndoStack) {
@@ -523,8 +525,10 @@ private:
 		}
 		board[x + 36 * y] = Piece{ 0 };
 		hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
-		squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-		squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+		if(regenerateMoves) {
+			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
+			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+		}
 	}
 public:
 	uint8_t currentPlayer = 0;
@@ -580,7 +584,7 @@ public:
 				int8_t middleStepX = ((move >> 26) & 0b11) - 1;
 				int8_t middleStepY = ((move >> 24) & 0b11) - 1;
 				int8_t middleY = srcY + middleStepY;
-				clearSquare(srcX + middleStepX, middleY, saveState);
+				clearSquare(srcX + middleStepX, middleY, regenerateMoves, saveState);
 				middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
 			}
 		} else if(isRangeCapturingPiece(pieceSpecies)) {
@@ -593,7 +597,7 @@ public:
 				int8_t y = srcY + dirY;
 				int i = 0;
 				while(x != destX || y != destY) {
-					clearSquare(x, y, saveState);
+					clearSquare(x, y, regenerateMoves, saveState);
 					x += dirX;
 					y += dirY;
 					if(i++ > 100) {
@@ -609,8 +613,8 @@ public:
 			piece = Piece::create(PieceTable[piece.getSpecies()].promotion, 0, pieceOwner);
 		}
 		
-		clearSquare(srcX, srcY, saveState);
-		setSquare(destX, destY, piece, saveState);
+		clearSquare(srcX, srcY, regenerateMoves, saveState);
+		setSquare(destX, destY, piece, regenerateMoves, saveState);
 		currentPlayer = 1 - currentPlayer;
 		if(regenerateMoves) {
 			generateMoves();
@@ -1008,3 +1012,4 @@ int main() {
 	}
 	
 	return 0;
+}
