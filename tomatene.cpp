@@ -297,6 +297,9 @@ inline bool inPromotionZone(uint8_t owner, int8_t y) {
 inline constexpr Vec2 movementDirToBoardDir(Vec2 movementDir, uint8_t pieceOwner) {
 	return pieceOwner? Vec2{ static_cast<int8_t>(-movementDir.x), movementDir.y } : Vec2{ movementDir.x, static_cast<int8_t>(-movementDir.y) };
 }
+inline constexpr Vec2 getMoveSrcPos(uint32_t move) {
+	return Vec2{ static_cast<int8_t>((move >> 18) & 0b111111), static_cast<int8_t>((move >> 12) & 0b111111) };
+}
 
 // A bitset for storing board positions.
 class BoardPosBitset {
@@ -320,11 +323,11 @@ public:
 	constexpr void erase(const size_t i) {
 		words[i >> 6] &= ~(1ULL << (i & 63));
 	}
-	constexpr bool has(const Vec2 pos) const {
+	constexpr bool contains(const Vec2 pos) const {
 		size_t i = pos.toIndex();
-		return has(i);
+		return contains(i);
 	}
-	constexpr bool has(const size_t i) const {
+	constexpr bool contains(const size_t i) const {
 		return words[i >> 6] & 1ULL << (i & 63);
 	}
 	constexpr void clear() {
@@ -419,7 +422,7 @@ public:
 			// doing a single xor operation rather than two & ~ operations is a bit faster
 			return oldW ^ newW;
 		}, [this, srcI, &attacks](size_t targetI) {
-			if(attacks.has(targetI)) {
+			if(attacks.contains(targetI)) {
 				insertReverse(srcI, targetI);
 			} else {
 				eraseReverse(srcI, targetI);
@@ -484,6 +487,8 @@ struct UndoSquare {
 class GameState {
 private:
 	std::array<Piece, 1296> board{};
+	BoardPosBitset occupancyBitset{};
+	std::array<BoardPosBitset, 2> playerOccupancyBitsets{};
 	BidirectionalAttackMap bidirectionalAttackMap;
 	BoardPosBitset squaresNeedingMoveRecalculation;
 	// Keeps track of all the squares changed during a move, so that it can quickly unmake the move.
@@ -510,6 +515,8 @@ private:
 			royalsLeft[piece.getOwner()]++;
 		}
 		hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
+		occupancyBitset.insert(Vec2{ x, y });
+		playerOccupancyBitsets[piece.getOwner()].insert(Vec2{ x, y });
 		if(regenerateMoves) {
 			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
 			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
@@ -529,6 +536,9 @@ private:
 		}
 		board[x + 36 * y] = Piece{ 0 };
 		hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+		occupancyBitset.erase(Vec2{ x, y });
+		playerOccupancyBitsets[0].erase(Vec2{ x, y });
+		playerOccupancyBitsets[1].erase(Vec2{ x, y });
 		if(regenerateMoves) {
 			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
 			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
@@ -573,8 +583,7 @@ public:
 		// for range capturing pieces, 1 bit extra: capture all
 		// for lion-like pieces, extra 1 bit: does middle step, extra 2 bits: middle step x offset, extra 2 bits: middle step y offset
 		
-		int8_t srcX = (move >> 18) & 0b111111;
-		int8_t srcY = (move >> 12) & 0b111111;
+		auto [srcX, srcY] = getMoveSrcPos(move);
 		Piece piece = getSquare(srcX, srcY);
 		int8_t destX = (move >> 6) & 0b111111;
 		int8_t destY = move & 0b111111;
@@ -655,7 +664,7 @@ public:
 				BoardPosBitset rangeCapturingMoveLocations;
 				for(const auto &slide : movements.slides) {
 					bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
-					Vec2 target{ x, y };
+					Vec2 target = srcVec;
 					Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
 					for(int8_t dist = 0; dist < slide.range; dist++) {
 						target += slideDir;
@@ -663,17 +672,22 @@ public:
 							break;
 						}
 						attackingSquares.insert(target);
-						Piece attackingPiece = getSquare(target.x, target.y);
-						bool isBlocked = attackingPiece && (slideIsRangeCapturing? attackingPiece.getRank() >= pieceRank : attackingPiece.getOwner() == pieceOwner);
-						if(isBlocked) {
-							break;
-						}
-						if(slideIsRangeCapturing) {
-							rangeCapturingMoveLocations.insert(target);
-						} else {
-							validMoveLocations.insert(target);
-							if(attackingPiece) {
+						if(occupancyBitset.contains(target)) {
+							bool isBlocked = slideIsRangeCapturing? getSquare(target.x, target.y).getRank() >= pieceRank : playerOccupancyBitsets[pieceOwner].contains(target);
+							if(isBlocked) {
 								break;
+							}
+							if(slideIsRangeCapturing) {
+								rangeCapturingMoveLocations.insert(target);
+							} else {
+								validMoveLocations.insert(target);
+								break;
+							}
+						} else {
+							if(slideIsRangeCapturing) {
+								rangeCapturingMoveLocations.insert(target);
+							} else {
+								validMoveLocations.insert(target);
 							}
 						}
 					}
@@ -683,13 +697,16 @@ public:
 					uint8_t jumpsRemaining = 4; // it will be decremented first before being checked, so this will make it trigger on the fourth jump
 					for(Vec2 target = srcVec + dir; isPosWithinBounds(target); target += dir) {
 						attackingSquares.insert(target);
-						Piece attackingPiece = getSquare(target.x, target.y);
-						bool isBlocked = attackingPiece && attackingPiece.getOwner() == pieceOwner;
-						if(!isBlocked) {
+						if(occupancyBitset.contains(target)) {
+							bool isBlocked = playerOccupancyBitsets[pieceOwner].contains(target);
+							if(!isBlocked) {
+								validMoveLocations.insert(target);
+							}
+							if(!--jumpsRemaining) {
+								break;
+							}
+						} else {
 							validMoveLocations.insert(target);
-						}
-						if(attackingPiece && !--jumpsRemaining) {
-							break;
 						}
 					}
 				}
@@ -787,8 +804,7 @@ Vec2 parseBoardPos(std::string boardPos) {
 	return { x, y };
 }
 std::string stringifyMove(GameState &gameState, uint32_t move) {
-	int8_t srcX = (move >> 18) & 0b111111;
-	int8_t srcY = (move >> 12) & 0b111111;
+	auto [srcX, srcY] = getMoveSrcPos(move);
 	int8_t destX = (move >> 6) & 0b111111;
 	int8_t destY = move & 0b111111;
 	
@@ -873,11 +889,11 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 		}
 	}
 	
+	eval_t originalAlpha = alpha;
 	eval_t bestScore = -INF_SCORE;
 	uint32_t bestMove = 0;
 	bool foundPvNode = 0;
 	for(uint32_t move : moves) {
-		// std::cout << "log trying move " << stringifyMove(gameState, move) << std::endl;
 		gameState.makeMove(move, depth > 1, true);
 		eval_t score;
 		if(!foundPvNode) {
@@ -903,7 +919,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 			}
 		}
 	}
-	NodeType nodeType = bestScore < alpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
+	NodeType nodeType = bestScore <= originalAlpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
 	transpositionTable.put(gameState.hash, bestMove, depth, bestScore, nodeType);
 	return bestScore;
 }

@@ -106106,10 +106106,6 @@ public:
   }
   return nullptr;
  }
-
-
-
-
  void put(hash_t hash, uint32_t bestMove, depth_t depth, eval_t eval, NodeType nodeType) {
   hash_t maskedHash = hash & HASH_MASK;
   if(depth >= table[maskedHash].depth) {
@@ -107302,6 +107298,9 @@ inline bool inPromotionZone(uint8_t owner, int8_t y) {
 inline constexpr Vec2 movementDirToBoardDir(Vec2 movementDir, uint8_t pieceOwner) {
  return pieceOwner? Vec2{ static_cast<int8_t>(-movementDir.x), movementDir.y } : Vec2{ movementDir.x, static_cast<int8_t>(-movementDir.y) };
 }
+inline constexpr Vec2 getMoveSrcPos(uint32_t move) {
+ return Vec2{ static_cast<int8_t>((move >> 18) & 0b111111), static_cast<int8_t>((move >> 12) & 0b111111) };
+}
 
 
 class BoardPosBitset {
@@ -107325,11 +107324,11 @@ public:
  constexpr void erase(const size_t i) {
   words[i >> 6] &= ~(1ULL << (i & 63));
  }
- constexpr bool has(const Vec2 pos) const {
+ constexpr bool contains(const Vec2 pos) const {
   size_t i = pos.toIndex();
-  return has(i);
+  return contains(i);
  }
- constexpr bool has(const size_t i) const {
+ constexpr bool contains(const size_t i) const {
   return words[i >> 6] & 1ULL << (i & 63);
  }
  constexpr void clear() {
@@ -107424,7 +107423,7 @@ public:
 
    return oldW ^ newW;
   }, [this, srcI, &attacks](size_t targetI) {
-   if(attacks.has(targetI)) {
+   if(attacks.contains(targetI)) {
     insertReverse(srcI, targetI);
    } else {
     eraseReverse(srcI, targetI);
@@ -107489,6 +107488,8 @@ struct UndoSquare {
 class GameState {
 private:
  std::array<Piece, 1296> board{};
+ BoardPosBitset occupancyBitset{};
+ std::array<BoardPosBitset, 2> playerOccupancyBitsets{};
  BidirectionalAttackMap bidirectionalAttackMap;
  BoardPosBitset squaresNeedingMoveRecalculation;
 
@@ -107515,6 +107516,8 @@ private:
    royalsLeft[piece.getOwner()]++;
   }
   hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
+  occupancyBitset.insert(Vec2{ x, y });
+  playerOccupancyBitsets[piece.getOwner()].insert(Vec2{ x, y });
   if(regenerateMoves) {
    squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
    squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
@@ -107534,6 +107537,9 @@ private:
   }
   board[x + 36 * y] = Piece{ 0 };
   hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+  occupancyBitset.erase(Vec2{ x, y });
+  playerOccupancyBitsets[0].erase(Vec2{ x, y });
+  playerOccupancyBitsets[1].erase(Vec2{ x, y });
   if(regenerateMoves) {
    squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
    squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
@@ -107578,8 +107584,7 @@ public:
 
 
 
-  int8_t srcX = (move >> 18) & 0b111111;
-  int8_t srcY = (move >> 12) & 0b111111;
+  auto [srcX, srcY] = getMoveSrcPos(move);
   Piece piece = getSquare(srcX, srcY);
   int8_t destX = (move >> 6) & 0b111111;
   int8_t destY = move & 0b111111;
@@ -107660,7 +107665,7 @@ public:
     BoardPosBitset rangeCapturingMoveLocations;
     for(const auto &slide : movements.slides) {
      bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
-     Vec2 target{ x, y };
+     Vec2 target = srcVec;
      Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
      for(int8_t dist = 0; dist < slide.range; dist++) {
       target += slideDir;
@@ -107668,17 +107673,22 @@ public:
        break;
       }
       attackingSquares.insert(target);
-      Piece attackingPiece = getSquare(target.x, target.y);
-      bool isBlocked = attackingPiece && (slideIsRangeCapturing? attackingPiece.getRank() >= pieceRank : attackingPiece.getOwner() == pieceOwner);
-      if(isBlocked) {
-       break;
-      }
-      if(slideIsRangeCapturing) {
-       rangeCapturingMoveLocations.insert(target);
-      } else {
-       validMoveLocations.insert(target);
-       if(attackingPiece) {
+      if(occupancyBitset.contains(target)) {
+       bool isBlocked = slideIsRangeCapturing? getSquare(target.x, target.y).getRank() >= pieceRank : playerOccupancyBitsets[pieceOwner].contains(target);
+       if(isBlocked) {
         break;
+       }
+       if(slideIsRangeCapturing) {
+        rangeCapturingMoveLocations.insert(target);
+       } else {
+        validMoveLocations.insert(target);
+        break;
+       }
+      } else {
+       if(slideIsRangeCapturing) {
+        rangeCapturingMoveLocations.insert(target);
+       } else {
+        validMoveLocations.insert(target);
        }
       }
      }
@@ -107688,13 +107698,16 @@ public:
      uint8_t jumpsRemaining = 4;
      for(Vec2 target = srcVec + dir; isPosWithinBounds(target); target += dir) {
       attackingSquares.insert(target);
-      Piece attackingPiece = getSquare(target.x, target.y);
-      bool isBlocked = attackingPiece && attackingPiece.getOwner() == pieceOwner;
-      if(!isBlocked) {
+      if(occupancyBitset.contains(target)) {
+       bool isBlocked = playerOccupancyBitsets[pieceOwner].contains(target);
+       if(!isBlocked) {
+        validMoveLocations.insert(target);
+       }
+       if(!--jumpsRemaining) {
+        break;
+       }
+      } else {
        validMoveLocations.insert(target);
-      }
-      if(attackingPiece && !--jumpsRemaining) {
-       break;
       }
      }
     }
@@ -107774,7 +107787,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 771 "tomatene.cpp" 2
+# 788 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -107794,8 +107807,7 @@ Vec2 parseBoardPos(std::string boardPos) {
  return { x, y };
 }
 std::string stringifyMove(GameState &gameState, uint32_t move) {
- int8_t srcX = (move >> 18) & 0b111111;
- int8_t srcY = (move >> 12) & 0b111111;
+ auto [srcX, srcY] = getMoveSrcPos(move);
  int8_t destX = (move >> 6) & 0b111111;
  int8_t destY = move & 0b111111;
 
@@ -107880,11 +107892,11 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
   }
  }
 
+ eval_t originalAlpha = alpha;
  eval_t bestScore = -100000000;
  uint32_t bestMove = 0;
  bool foundPvNode = 0;
  for(uint32_t move : moves) {
-
   gameState.makeMove(move, depth > 1, true);
   eval_t score;
   if(!foundPvNode) {
@@ -107910,7 +107922,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
    }
   }
  }
- NodeType nodeType = bestScore < alpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
+ NodeType nodeType = bestScore <= originalAlpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
  transpositionTable.put(gameState.hash, bestMove, depth, bestScore, nodeType);
  return bestScore;
 }
@@ -107934,17 +107946,17 @@ uint32_t perft(GameState &gameState, depth_t depth) {
 
 uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
  
-# 929 "tomatene.cpp" 3
+# 945 "tomatene.cpp" 3
 (void) ((!!(
-# 929 "tomatene.cpp"
+# 945 "tomatene.cpp"
 maxDepth <= MAX_DEPTH
-# 929 "tomatene.cpp" 3
+# 945 "tomatene.cpp" 3
 )) || (_assert(
-# 929 "tomatene.cpp"
+# 945 "tomatene.cpp"
 "maxDepth <= MAX_DEPTH"
-# 929 "tomatene.cpp" 3
-,"tomatene.cpp",929),0))
-# 929 "tomatene.cpp"
+# 945 "tomatene.cpp" 3
+,"tomatene.cpp",945),0))
+# 945 "tomatene.cpp"
                              ;
  using clock = std::chrono::steady_clock;
  auto startTime = clock::now();
