@@ -911,8 +911,10 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 			if(bestScore > alpha) {
 				alpha = bestScore;
 				if(alpha >= beta) {
-					killerMoves2[depth] = killerMoves1[depth];
-					killerMoves1[depth] = bestMove;
+					if(bestMove != killerMoves1[depth]) {
+						killerMoves2[depth] = killerMoves1[depth];
+						killerMoves1[depth] = bestMove;
+					}
 					break;
 				}
 				foundPvNode = true;

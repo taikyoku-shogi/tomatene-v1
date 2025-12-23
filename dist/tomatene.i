@@ -107914,8 +107914,10 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
    if(bestScore > alpha) {
     alpha = bestScore;
     if(alpha >= beta) {
-     killerMoves2[depth] = killerMoves1[depth];
-     killerMoves1[depth] = bestMove;
+     if(bestMove != killerMoves1[depth]) {
+      killerMoves2[depth] = killerMoves1[depth];
+      killerMoves1[depth] = bestMove;
+     }
      break;
     }
     foundPvNode = true;
@@ -107946,17 +107948,17 @@ uint32_t perft(GameState &gameState, depth_t depth) {
 
 uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
  
-# 945 "tomatene.cpp" 3
+# 947 "tomatene.cpp" 3
 (void) ((!!(
-# 945 "tomatene.cpp"
+# 947 "tomatene.cpp"
 maxDepth <= MAX_DEPTH
-# 945 "tomatene.cpp" 3
+# 947 "tomatene.cpp" 3
 )) || (_assert(
-# 945 "tomatene.cpp"
+# 947 "tomatene.cpp"
 "maxDepth <= MAX_DEPTH"
-# 945 "tomatene.cpp" 3
-,"tomatene.cpp",945),0))
-# 945 "tomatene.cpp"
+# 947 "tomatene.cpp" 3
+,"tomatene.cpp",947),0))
+# 947 "tomatene.cpp"
                              ;
  using clock = std::chrono::steady_clock;
  auto startTime = clock::now();
