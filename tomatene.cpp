@@ -7,20 +7,20 @@
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
 
-#include "zobristHashes.h"
-#include "transpositionTable.h"
-
 #define ENGINE_NAME "Tomatene"
 #define ENGINE_DESC "Experimental taikyoku shogi engine"
 #define ENGINE_AUTHOR "s1050613"
 #define ENGINE_VERSION "v0"
 
-#define MAX_DEPTH 4
-
 // Centipawns
 typedef int32_t eval_t;
+typedef uint8_t depth_t;
+typedef uint64_t hash_t;
 
-inline constexpr eval_t PVS_WINDOW_SIZE = 10;
+#include "zobristHashes.h"
+#include "transpositionTable.h"
+
+inline constexpr depth_t MAX_DEPTH = 4;
 inline constexpr float ESTIMATED_GAME_LENGTH = 900;
 
 constexpr std::vector<std::string> splitString(std::string str, char delimiter) {
@@ -540,7 +540,7 @@ public:
 	std::array<std::array<std::vector<uint32_t>, 1296>, 2> movesPerSquarePerPlayer;
 	// this could be made unsigned, but we'll be converting it to signed all the time
 	eval_t absEval = 0;
-	int32_t hash = 0;
+	hash_t hash = 0;
 	
 	std::string toString() const {
 		std::ostringstream oss;
@@ -625,7 +625,7 @@ public:
 		}
 	}
 	void unmakeMove() {
-		StaticVector<UndoSquare, 36ULL> &undoSquares = undoStack.back();
+		StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
 		for(const UndoSquare &undoSquare : undoSquares) {
 			if(undoSquare.oldPiece) {
 				setSquare(undoSquare.pos.x, undoSquare.pos.y, undoSquare.oldPiece);
@@ -681,9 +681,7 @@ public:
 				for(const Vec2 &tripleSlashedArrowDir : movements.tripleSlashedArrowDirs) {
 					Vec2 dir = movementDirToBoardDir(tripleSlashedArrowDir, pieceOwner);
 					uint8_t jumpsRemaining = 4; // it will be decremented first before being checked, so this will make it trigger on the fourth jump
-					Vec2 target{ x, y };
-					while(isPosWithinBounds(target)) {
-						target += dir;
+					for(Vec2 target = srcVec + dir; isPosWithinBounds(target); target += dir) {
 						attackingSquares.insert(target);
 						Piece attackingPiece = getSquare(target.x, target.y);
 						bool isBlocked = attackingPiece && attackingPiece.getOwner() == pieceOwner;
@@ -843,7 +841,7 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 
 unsigned int nodesSearched = 0;
 
-eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
+eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	nodesSearched++;
 	// checking royal pieces only needs to be done for the current player - no point checking the player who just moved
 	if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
@@ -852,10 +850,15 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 	if(depth == 0) {
 		return gameState.eval();
 	}
+	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
+	if(ttEntry && ttEntry->depth >= depth) {
+		if(ttEntry->nodeType == NodeType::EXACT || (ttEntry->nodeType == NodeType::LOWER_BOUND && ttEntry->eval >= beta) || (ttEntry->nodeType == NodeType::UPPER_BOUND && ttEntry->eval <= alpha)) {
+			return ttEntry->eval;
+		}
+	}
 	std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
 	// std::cout << "log Found " << moves.size() << " moves" << std::endl;
-	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
-	bool hasTtMove = ttEntry && std::find(moves.begin(), moves.end(), ttEntry->bestMove) != moves.end();
+	bool hasTtMove = ttEntry;
 	uint32_t ttMove = hasTtMove? ttEntry->bestMove : 0;
 	for(size_t i = 0; i < moves.size(); i++) {
 		if(moves[i] == ttMove) {
@@ -869,36 +872,42 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
 			moves[hasTtMove + 1] = killerMoves2[depth];
 		}
 	}
+	
+	eval_t bestScore = -INF_SCORE;
 	uint32_t bestMove = 0;
 	bool foundPvNode = 0;
 	for(uint32_t move : moves) {
 		// std::cout << "log trying move " << stringifyMove(gameState, move) << std::endl;
 		gameState.makeMove(move, depth > 1, true);
-		int32_t score;
+		eval_t score;
 		if(!foundPvNode) {
 			score = -search(gameState, -beta, -alpha, depth - 1);
 		} else {
-			score = -search(gameState, -alpha - PVS_WINDOW_SIZE, -alpha, depth - 1);
+			score = -search(gameState, -alpha - 1, -alpha, depth - 1);
 			if(score > alpha && score < beta) {
 				score = -search(gameState, -beta, -alpha, depth - 1);
 			}
 		}
 		gameState.unmakeMove();
-		if(score > alpha) {
-			alpha = score;
+		if(score > bestScore) {
+			bestScore = score;
 			bestMove = move;
-			if(alpha >= beta) {
-				killerMoves2[depth] = killerMoves1[depth];
-				killerMoves1[depth] = bestMove;
-				break;
+			if(bestScore > alpha) {
+				alpha = bestScore;
+				if(alpha >= beta) {
+					killerMoves2[depth] = killerMoves1[depth];
+					killerMoves1[depth] = bestMove;
+					break;
+				}
+				foundPvNode = true;
 			}
-			foundPvNode = true;
 		}
 	}
-	transpositionTable.put(gameState.hash, bestMove);
-	return alpha;
+	NodeType nodeType = bestScore < alpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
+	transpositionTable.put(gameState.hash, bestMove, depth, bestScore, nodeType);
+	return bestScore;
 }
-uint32_t perft(GameState &gameState, uint8_t depth) {
+uint32_t perft(GameState &gameState, depth_t depth) {
 	// checking royal pieces only needs to be done for the current player - no point checking the player who just moved
 	if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
 		return 1;
@@ -916,19 +925,17 @@ uint32_t perft(GameState &gameState, uint8_t depth) {
 	return nodesSearched;
 }
 
-void makeBestMove(GameState &gameState) {
-	const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
-	// std::cout << "log Time to move: " << std::to_string(timeToMove) << " seconds" << std::endl;
+uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
+	assert(maxDepth <= MAX_DEPTH);
 	using clock = std::chrono::steady_clock;
 	auto startTime = clock::now();
 	auto stopTime = startTime + std::chrono::duration<float>(timeToMove);
 	
 	eval_t eval;
-	for(int depth = 1; depth <= MAX_DEPTH; depth++) {
-		std::cout << "log Searching to depth " << depth << "..." << std::endl;
+	for(depth_t depth = 1; depth <= maxDepth; depth++) {
 		nodesSearched = 0;
 		eval = search(gameState, -INF_SCORE, INF_SCORE, depth);
-		std::cout << "log Score for us after depth " << depth << " and " << nodesSearched << " nodes: " << eval << std::endl;
+		std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
 		if(clock::now() >= stopTime) {
 			break;
 		}
@@ -939,10 +946,15 @@ void makeBestMove(GameState &gameState) {
 		std::cout << "log Fatal error: No TT entry found for gameState hash " << gameState.hash << std::endl;
 		throw std::runtime_error("No TT entry found!!!!!!");
 	}
+	return ttEntry->bestMove;
+}
+void makeBestMove(GameState &gameState) {
+	const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
+	// std::cout << "log Time to move: " << std::to_string(timeToMove) << " seconds" << std::endl;
 	
-	uint32_t bestMove = ttEntry->bestMove;
+	uint32_t bestMove = findBestMove(gameState, MAX_DEPTH, timeToMove);
 	std::cout << "move " << stringifyMove(gameState, bestMove) << std::endl;
-	gameState.makeMove(bestMove, true, false);
+	gameState.makeMove(bestMove);
 	std::cout << "eval " << gameState.absEval << std::endl;
 }
 
@@ -958,7 +970,7 @@ int main() {
 		if(atsiInitialised) {
 			if(command == "opmove") {
 				uint32_t opponentMove = parseMove(gameState, arguments);
-				gameState.makeMove(opponentMove, true, false);
+				gameState.makeMove(opponentMove);
 				makeBestMove(gameState);
 			} else if(command == "identify") {
 				std::cout << "info \"" << ENGINE_NAME << "\" \"" << ENGINE_DESC << "\" \"" << ENGINE_AUTHOR << "\" \"" << ENGINE_VERSION << "\"" << std::endl;
@@ -1011,21 +1023,21 @@ int main() {
 					std::cerr << "Unknown ATSI version: " << version << std::endl;
 				}
 			} else if(command == "perft") {
-				uint32_t maxDepth = std::stoi(getItem(arguments, 1));
+				depth_t maxDepth = std::stoi(getItem(arguments, 1));
 				if(maxDepth > MAX_DEPTH) {
 					std::cout << "Depth is greater than MAX_DEPTH = " << MAX_DEPTH << "; will only go to depth " << MAX_DEPTH << std::endl;
 					maxDepth = MAX_DEPTH;
 				}
-				for(uint32_t depth = 1; depth <= maxDepth; depth++) {
+				for(depth_t depth = 1; depth <= maxDepth; depth++) {
 					using clock = std::chrono::steady_clock;
 					auto start = clock::now();
 					uint32_t nodesSearched = perft(gameState, depth);
 					auto end = clock::now();
 					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-					std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
+					std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
 				}
 			} else if(command == "search") {
-				uint32_t depth = std::stoi(getItem(arguments, 1));
+				depth_t depth = std::stoi(getItem(arguments, 1));
 				using clock = std::chrono::steady_clock;
 				auto start = clock::now();
 				eval_t eval = 0;
@@ -1033,7 +1045,18 @@ int main() {
 				eval = search(gameState, -INF_SCORE, INF_SCORE, depth);
 				auto end = clock::now();
 				auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-				std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
+				std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+			} else if(command == "bestmove") {
+				depth_t depth = std::stoi(getItem(arguments, 1));
+				using clock = std::chrono::steady_clock;
+				auto start = clock::now();
+				nodesSearched = 0;
+				uint32_t bestMove = findBestMove(gameState, depth);
+				auto end = clock::now();
+				auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				gameState.makeMove(bestMove, true, true);
+				std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+				gameState.unmakeMove();
 			}
 		}
 	}

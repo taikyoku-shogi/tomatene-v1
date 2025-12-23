@@ -26,10 +26,6 @@ struct xoroshiro128plus {
 
         return result;
     }
-
-    uint32_t next32() {
-        return static_cast<uint32_t>(next64());
-    }
 };
 
 int main() {
@@ -38,17 +34,17 @@ int main() {
     constexpr int num_files  = 36;
     constexpr int total_keys = num_pieces + num_ranks + num_files;
 
-    xoroshiro128plus rng{{0x1234567F0ULL, 0x0FE654321ULL}};
+    xoroshiro128plus rng{{0x12345123467F0ULL, 0x0FE65BBBBB4321ULL}};
 
-    std::vector<uint32_t> best_set(total_keys);
+    std::vector<uint64_t> best_set(total_keys);
     int best_min_distance = -1;
     double best_avg_distance = -1.0;
 
     while (true) {
         // Generate candidate set
-        std::vector<uint32_t> candidate(total_keys);
+        std::vector<uint64_t> candidate(total_keys);
         for (int i = 0; i < total_keys; ++i) {
-            candidate[i] = rng.next32();
+            candidate[i] = rng.next64();
         }
 
         // Compute pairwise Hamming distances
@@ -88,12 +84,12 @@ int main() {
             best_avg_distance = avg_dist;
             best_set = candidate;
 
-            std::ofstream out("zobrist_keys_32.hpp");
+            std::ofstream out("zobrist_keys_64.hpp");
             out << "#pragma once\n#include <array>\n#include <cstdint>\n\n";
-            out << "constexpr std::array<uint32_t, " << total_keys
+            out << "constexpr std::array<uint64_t, " << total_keys
                 << "> ZOBRIST_KEYS = {\n";
 
-            for (uint32_t k : best_set) {
+            for (uint64_t k : best_set) {
                 out << k << ",\n";
             }
 

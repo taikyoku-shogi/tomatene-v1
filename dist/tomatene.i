@@ -105661,8 +105661,17 @@ template <typename _CharT> struct hash<frozen::basic_string<_CharT>> {
 }
 # 9 "tomatene.cpp" 2
 
-# 1 "zobristHashes.h" 1
 
+
+
+
+
+
+typedef int32_t eval_t;
+typedef uint8_t depth_t;
+typedef uint64_t hash_t;
+
+# 1 "zobristHashes.h" 1
 
 
 
@@ -105673,391 +105682,393 @@ template <typename _CharT> struct hash<frozen::basic_string<_CharT>> {
 namespace ZobristHashes {
 
  namespace {
-  constexpr std::array<uint32_t, 302> PieceHashes = {
-   123579602,
-   648459187,
-   1970420082,
-   759182243,
-   3611009177,
-   336130861,
-   1918179343,
-   3633572384,
-   548423606,
-   1363993877,
-   2913522624,
-   2954559436,
-   3245381075,
-   4086763413,
-   3348940620,
-   2214446059,
-   4246390825,
-   2733652765,
-   3444390270,
-   154472922,
-   3052338093,
-   854185503,
-   1446878975,
-   3138829191,
-   784948917,
-   870067109,
-   2810687093,
-   609698558,
-   1125902818,
-   3497592264,
-   640389685,
-   2933746763,
-   2356446446,
-   1935554368,
-   1939232237,
-   3677818328,
-   2324989161,
-   121468291,
-   2485489074,
-   3725645244,
-   3110208344,
-   947597592,
-   2556293495,
-   2418708561,
-   1316720506,
-   2305933142,
-   2866764143,
-   418904078,
-   2350882372,
-   2529372332,
-   2163904904,
-   256562436,
-   3713203636,
-   2649410840,
-   2271788333,
-   2152209580,
-   3416821722,
-   887888970,
-   3943848786,
-   4112266759,
-   795122394,
-   1765758261,
-   935051428,
-   365872892,
-   3440700034,
-   2473961022,
-   1836082418,
-   2996505607,
-   1099815718,
-   3604028649,
-   1691695686,
-   3277488480,
-   3631987058,
-   28615479,
-   427082219,
-   347300483,
-   1305169584,
-   3113183906,
-   3898572921,
-   4289708867,
-   2892582922,
-   2039295232,
-   1152158787,
-   1385967803,
-   1453974094,
-   3749559274,
-   3778271611,
-   3287482952,
-   3046956470,
-   3636158397,
-   3637011154,
-   637923560,
-   775360493,
-   3465175596,
-   1559126352,
-   3454284021,
-   3999731824,
-   1319814303,
-   1075574858,
-   724704595,
-   2620863071,
-   1633343376,
-   113281491,
-   2911356756,
-   1542978561,
-   2213968491,
-   1933716117,
-   2002341778,
-   368656270,
-   135987360,
-   626592890,
-   44113599,
-   1199511792,
-   992517094,
-   2642601893,
-   3289462790,
-   849291035,
-   2744619163,
-   4224046730,
-   3171355701,
-   1315550935,
-   1897259374,
-   2720254570,
-   1741836863,
-   3284621056,
-   1080005660,
-   370517329,
-   2163680459,
-   3221373212,
-   4122909143,
-   3906393610,
-   3727189562,
-   699012306,
-   3854118635,
-   260540899,
-   246255555,
-   378740687,
-   3390263235,
-   1845839334,
-   717229405,
-   575586945,
-   3489275687,
-   3533751384,
-   1764839381,
-   3337410238,
-   3383230148,
-   3781817135,
-   781794952,
-   2144768113,
-   1677861126,
-   2412300386,
-   1952296421,
-   619868686,
-   2291704302,
-   4176882718,
-   3733268934,
-   897573302,
-   2577818973,
-   1351378005,
-   688040557,
-   1482843245,
-   2256817287,
-   3511008206,
-   2692331310,
-   1273228482,
-   2517552194,
-   616387642,
-   3549882934,
-   1777499088,
-   3881410418,
-   1249519141,
-   4060345904,
-   2282997214,
-   2609455953,
-   677838596,
-   3715636251,
-   2852890281,
-   2060469320,
-   208458074,
-   3073503164,
-   3015430108,
-   3720959892,
-   3165337276,
-   1907150091,
-   3621279140,
-   1350505791,
-   1485044864,
-   1881671195,
-   95529589,
-   49400321,
-   3952839513,
-   3568586450,
-   4041689712,
-   404203778,
-   3691085049,
-   30627515,
-   1619661459,
-   867870330,
-   781852806,
-   639403440,
-   3658658740,
-   1105598794,
-   3907024507,
-   113820295,
-   1723750400,
-   2730763018,
-   951763762,
-   1919728691,
-   1047671922,
-   2254752474,
-   3957038667,
-   4212650937,
-   1460162731,
-   1657330353,
-   2552283009,
-   2425672777,
-   3356531741,
-   607648240,
-   1128801459,
-   1017316239,
-   210069854,
-   506814909,
-   1363095462,
-   1756654964,
-   1627434349,
-   1766757773,
-   2053544196,
-   29523323,
-   3773564957,
-   57313174,
-   2095508745,
-   2868818367,
-   1117430530,
-   3351662952,
-   2639198751,
-   946782914,
-   2956815353,
-   1362929666,
-   3700274599,
-   663980925,
-   1898720210,
-   222475814,
-   706913229,
-   1993568637,
-   3703169620,
-   3395034937,
-   2147447521,
-   2054503020,
-   2711686009,
-   3203144500,
-   928189860,
-   2626910860,
-   1112484215,
-   4013582599,
-   3575519862,
-   2653001925,
-   1510418861,
-   2643286191,
-   2587983342,
-   3283428915,
-   1537785633,
-   2017319019,
-   907109998,
-   557272005,
-   754292188,
-   2740660065,
-   2867751647,
-   1846834460,
-   3350817627,
-   1634961077,
-   1633682999,
-   2991377463,
-   4183234971,
-   1324344581,
-   2610812534,
-   1864532824,
-   331532807,
-   513571563,
-   1308551737,
-   4258193565,
-   244303333,
-   20257900,
-   2740943224,
-   2962169544,
-   1407141881,
-   1257010570,
-   1321782136,
-   3731037203,
-   2771808764,
-   1004408222,
-   2696418570,
-   3870182471,
-   4024554328,
-   3314266923,
-   2726831743,
-   3455231304,
-   1722555069,
-   1437101567,
-   479706768,
-   3371473249,
-   2942823439,
-   2588478128
+  constexpr std::array<hash_t, 302> PieceHashes = {
+   0ULL,
+   2730226060588179675ULL,
+   4301660182550268777ULL,
+   10806292143925507243ULL,
+   12749803583236526400ULL,
+   2960735812660883808ULL,
+   8603763018843544753ULL,
+   9115273830126386625ULL,
+   18380522441443667204ULL,
+   10637154516735361883ULL,
+   10959122493204709803ULL,
+   11687718542247112142ULL,
+   18373982550478160601ULL,
+   13542436709001304210ULL,
+   5564028365241990822ULL,
+   16604986138423072288ULL,
+   3207964776452849778ULL,
+   18160028281596563349ULL,
+   9284792128932888775ULL,
+   6790275245353464449ULL,
+   12183816256580977514ULL,
+   18188073081328090313ULL,
+   10645653559346843544ULL,
+   12347983151003116397ULL,
+   15147325772760549137ULL,
+   11827435741943567418ULL,
+   1431216217776747012ULL,
+   13574869074064337048ULL,
+   9926053196390565261ULL,
+   15398678753997170677ULL,
+   16391151018846280156ULL,
+   16530134920166441483ULL,
+   6846839940601736315ULL,
+   13053832092164247543ULL,
+   72962997635707219ULL,
+   3402060387810900533ULL,
+   9694082631405314636ULL,
+   17249259083254156010ULL,
+   8948129323822934675ULL,
+   2589336791507822359ULL,
+   18313844170376219961ULL,
+   5798958319089624382ULL,
+   9545935524259259526ULL,
+   342614550815016140ULL,
+   5872387677003081632ULL,
+   13007746802186839037ULL,
+   14820834748073703001ULL,
+   2040745974623614477ULL,
+   2659424404003173675ULL,
+   14551509661001075564ULL,
+   3881248044232940774ULL,
+   14808699128745068846ULL,
+   14352121563698063336ULL,
+   15742873411524151891ULL,
+   7862523915756813851ULL,
+   4638932385987618903ULL,
+   14852880374408095419ULL,
+   12183726830735099363ULL,
+   1825986594365040473ULL,
+   16919873149116920174ULL,
+   15087612027925288604ULL,
+   2743688598811736ULL,
+   16055871218672780926ULL,
+   15574109820789367343ULL,
+   10873583537126415077ULL,
+   12333028087415395656ULL,
+   14682808584264992681ULL,
+   8153455248825353650ULL,
+   11721704067259019123ULL,
+   13238482584775270527ULL,
+   11044473204836531256ULL,
+   16791107308933401731ULL,
+   15629444959990291027ULL,
+   4045932735263338811ULL,
+   8564362910930581138ULL,
+   18218493868371134584ULL,
+   810224198528021891ULL,
+   17783683760189223337ULL,
+   9769851407187641205ULL,
+   9069091413342941116ULL,
+   4260792892987323573ULL,
+   17464994134427530957ULL,
+   12594099154017497738ULL,
+   11411643116250787912ULL,
+   5928818155863637773ULL,
+   11108715051967477998ULL,
+   14654479531232442515ULL,
+   1593817887737492140ULL,
+   6208551275941677529ULL,
+   18289945860007495645ULL,
+   15515568871384906532ULL,
+   617869504014814139ULL,
+   6520035627482522474ULL,
+   137668482862995336ULL,
+   4598965720456984957ULL,
+   11380873159792776985ULL,
+   11681250558033758123ULL,
+   13468094980194557611ULL,
+   12897318426010254287ULL,
+   18289927532545893247ULL,
+   4877460172521316558ULL,
+   11742982006799831806ULL,
+   16908026360433324612ULL,
+   13750501803293991607ULL,
+   1182323342423864917ULL,
+   2319462958881871584ULL,
+   9412533007857420651ULL,
+   2869376014158995761ULL,
+   10614544296080672289ULL,
+   6857448474756763539ULL,
+   11542110075050414845ULL,
+   7186670471907941516ULL,
+   7929096919393788727ULL,
+   14866729164537833746ULL,
+   3412549826567492096ULL,
+   11130297908609317535ULL,
+   10088879573407918591ULL,
+   1045216716830116828ULL,
+   17853848220472792074ULL,
+   16115983323643641174ULL,
+   4742708473430040960ULL,
+   15167401573492344618ULL,
+   8395521781116854798ULL,
+   7441664445295624543ULL,
+   11094214124715997364ULL,
+   6275695045470646332ULL,
+   755935653822695890ULL,
+   558800626446108294ULL,
+   5930704182344396964ULL,
+   4331094060636088909ULL,
+   2870993855377827457ULL,
+   7838129626600207821ULL,
+   3538319205255130342ULL,
+   8456320765251573850ULL,
+   10388317445569445078ULL,
+   7886689829638263158ULL,
+   7852613996503978277ULL,
+   8327077413289598399ULL,
+   2336341050099012756ULL,
+   1681705134726467046ULL,
+   10398129389238050139ULL,
+   15707533663581832713ULL,
+   7100865996382627760ULL,
+   2501385490514578483ULL,
+   16456528368790786825ULL,
+   4847095203289404503ULL,
+   12743551648126895069ULL,
+   11456495696746709082ULL,
+   2436534387276314820ULL,
+   16871965710973146660ULL,
+   13842545038154680110ULL,
+   12522041323503368500ULL,
+   15618515517516681455ULL,
+   5429841795674777314ULL,
+   18322707600796320324ULL,
+   5894862316388214605ULL,
+   511664382917205454ULL,
+   13266194378960507476ULL,
+   5566417008613155188ULL,
+   3144789749884417335ULL,
+   12817652400617341526ULL,
+   11257135823241904720ULL,
+   15740486121002418333ULL,
+   15545345466998230743ULL,
+   10085111487125220372ULL,
+   5270024974998427753ULL,
+   18440728426663275176ULL,
+   2225198834381938512ULL,
+   9197986579269136373ULL,
+   4601717946083337669ULL,
+   1047011985679707643ULL,
+   6047751838210290866ULL,
+   10190115244654592026ULL,
+   10247092805207617680ULL,
+   10470637582870075133ULL,
+   4775402153418169252ULL,
+   283181200143178033ULL,
+   10174120573921565574ULL,
+   13020231522692509074ULL,
+   9256582629482608583ULL,
+   1220018165247465549ULL,
+   15109274973766678556ULL,
+   11111165605588682284ULL,
+   14547919358264931992ULL,
+   535992771690710202ULL,
+   9288146224637965705ULL,
+   2670299676132521023ULL,
+   17120989288950936339ULL,
+   6224660983002762022ULL,
+   1894515615353933168ULL,
+   10580416227137465449ULL,
+   11833508123640618962ULL,
+   278685243504557304ULL,
+   1629215708014390947ULL,
+   14490996197904321902ULL,
+   8147524656851514831ULL,
+   148209120565259565ULL,
+   2837962466600394313ULL,
+   15886585961613872905ULL,
+   15987005650154879871ULL,
+   1101680018335275664ULL,
+   11130008005834029523ULL,
+   8554590353686330586ULL,
+   6881665414090595492ULL,
+   11451315943367101731ULL,
+   3598168618451747722ULL,
+   4535430551597817333ULL,
+   16479377774066939878ULL,
+   13822789108417991878ULL,
+   4972795900879424239ULL,
+   16661448171621460430ULL,
+   6768628582049143855ULL,
+   13531033975708269203ULL,
+   481846273212060793ULL,
+   6701710608579495505ULL,
+   3687394166385822885ULL,
+   4072226230678665789ULL,
+   2078967596900891536ULL,
+   7943849104652520514ULL,
+   10762223575583803399ULL,
+   3606404458579245625ULL,
+   2069855518684265696ULL,
+   16899679176494766714ULL,
+   17454857109033468841ULL,
+   2834354709831969958ULL,
+   3699701718777502613ULL,
+   8051264616556452341ULL,
+   13021688572695644589ULL,
+   10506470762241972498ULL,
+   17337741588153272081ULL,
+   17535583024894083922ULL,
+   8048236737083705117ULL,
+   12356391339788145879ULL,
+   10329793382023478201ULL,
+   3208306841878560312ULL,
+   11198592763659622420ULL,
+   6001974516470374711ULL,
+   1525188324240505798ULL,
+   340083016175179325ULL,
+   14100033826676650870ULL,
+   9602172413049836891ULL,
+   8850344581350122297ULL,
+   8977319920280652281ULL,
+   5529518331127376528ULL,
+   2170542467702735635ULL,
+   7740179343377569115ULL,
+   17771269329179638063ULL,
+   8873814172872390936ULL,
+   18355259638298350303ULL,
+   2775800699471602813ULL,
+   6505183026912487228ULL,
+   409177407311554350ULL,
+   15940069340514337208ULL,
+   11074755634649249923ULL,
+   4920301885249512278ULL,
+   2398084878483015988ULL,
+   1079524697480207804ULL,
+   12589029734116276851ULL,
+   13080529872088419916ULL,
+   5166057690650125487ULL,
+   1230941309581242251ULL,
+   14737869871043923876ULL,
+   15392916851680631846ULL,
+   13802015618008688344ULL,
+   2873402149884327347ULL,
+   15389091372499930001ULL,
+   6038906895515217527ULL,
+   16814207317985054862ULL,
+   7713276782512845301ULL,
+   5064934022228259399ULL,
+   17937184143497872305ULL,
+   10528843170501720832ULL,
+   1041762683003965137ULL,
+   2748581685439692689ULL,
+   8696218629365229823ULL,
+   2203240784782176628ULL,
+   5962387632448351573ULL,
+   3677113867366886546ULL,
+   5412498500751524137ULL,
+   13870834282558455243ULL,
+   1786179199600274928ULL,
+   14740955100443416316ULL,
+   8536157178041295090ULL,
+   2242075984661061756ULL,
+   12553358621836118689ULL,
+   7531337299541337544ULL,
+   12364680798152664263ULL,
+   3795967108841789986ULL,
+   13458948782014974964ULL,
+   17973502359161090743ULL,
+   6724704909763323984ULL,
+   5215345024794641531ULL,
+   10349962647811950028ULL,
+   116412061372550628ULL,
+   18024569275210285670ULL,
+   12825318214388622965ULL,
+   7055063431388336226ULL,
+   14724237673046928349ULL,
+   10238441476511471856ULL,
+   15688658464994654604ULL,
+   10461687216771103784ULL,
+   8421944988895447247ULL
   };
-  constexpr std::array<uint32_t, 36> FileHashes = {
-   2659573901,
-   2661237597,
-   1167138716,
-   1612288999,
-   4007825825,
-   1350644080,
-   106881895,
-   3656079041,
-   3994623876,
-   706892174,
-   3516676301,
-   1224204044,
-   4158176990,
-   2943576987,
-   1121588509,
-   3695471924,
-   1288350458,
-   1144454421,
-   158860785,
-   3126339564,
-   1404925690,
-   2887029369,
-   112834010,
-   2502592018,
-   208965536,
-   2452613310,
-   3103453285,
-   2121169288,
-   3442501790,
-   118094836,
-   2720092136,
-   3617239938,
-   3064232876,
-   3211726908,
-   1037152161,
-   3032884165
+  constexpr std::array<hash_t, 36> FileHashes = {
+   17401646313710308810ULL,
+   17260915720187174283ULL,
+   11681960333160400406ULL,
+   4975544556831937181ULL,
+   6093860551484327120ULL,
+   12917355981495208292ULL,
+   18207450966034898755ULL,
+   521407526298420148ULL,
+   11419066755680456375ULL,
+   2574467159362908790ULL,
+   3678453535515316439ULL,
+   10052676115172459901ULL,
+   1203564119089256419ULL,
+   17240230908952724033ULL,
+   5646945572284632949ULL,
+   10957751896355203971ULL,
+   5643047715609591211ULL,
+   17006068632931140845ULL,
+   1744365652210512285ULL,
+   12254265285275675468ULL,
+   13973704735751096213ULL,
+   9574414339102194497ULL,
+   5884802497123290527ULL,
+   6638874906414359392ULL,
+   9414741112834346430ULL,
+   1372203263834831772ULL,
+   13979605583697771004ULL,
+   2517983421312647356ULL,
+   8786786588120811035ULL,
+   10785124844984733956ULL,
+   12744328489750790119ULL,
+   8480399709436139047ULL,
+   12057606573598667038ULL,
+   13574762268894204930ULL,
+   3143586433680054016ULL,
+   3223202370209838809ULL
   };
-  constexpr std::array<uint32_t, 36> RankHashes = {
-   131655686,
-   772683177,
-   202378237,
-   2594671670,
-   2438616519,
-   3668431665,
-   4073013564,
-   3947659855,
-   3938479415,
-   2233823804,
-   457550544,
-   3044073578,
-   153954645,
-   850764878,
-   2146594896,
-   1791599262,
-   1244616375,
-   3311131687,
-   689005792,
-   3763391989,
-   956626832,
-   1032471499,
-   3459667347,
-   2091839667,
-   3095925888,
-   2868938817,
-   2981443635,
-   4072745953,
-   4236587847,
-   1264420048,
-   2233348979,
-   1341092194,
-   1900871030,
-   4056381105
+  constexpr std::array<hash_t, 36> RankHashes = {
+   8535667374868396458ULL,
+   4609524026062671870ULL,
+   3362867448148572306ULL,
+   8137846861696319279ULL,
+   12704669078983021296ULL,
+   13635002881261356717ULL,
+   7315607495596377694ULL,
+   7598353724772055489ULL,
+   1930981505560754667ULL,
+   6725003941975738484ULL,
+   2348943090924444929ULL,
+   437055855792495891ULL,
+   6382537851285120954ULL,
+   11767446828220357365ULL,
+   7295306995949492169ULL,
+   4596801948984898368ULL,
+   3126902891293835349ULL,
+   14837188377099521219ULL,
+   17408718539488607343ULL,
+   17330598425441081234ULL,
+   6517068796451376260ULL,
+   7801514890506187646ULL,
+   9166077119333294726ULL,
+   6994824609827697202ULL,
+   4794916269167439126ULL,
+   5342609381364749011ULL,
+   17357484834029973264ULL,
+   9311779426312897381ULL,
+   7986067354486427297ULL,
+   15513415835142282367ULL,
+   4222054295763607642ULL,
+   17205098686733473057ULL,
+   3811657374259129227ULL,
+   14206629839698733572ULL,
+   17088343654121319142ULL,
+   2940212843208481074ULL
   };
  }
 
- constexpr inline uint32_t getHash(uint16_t pieceSpecies, uint8_t file, uint8_t rank) {
+ constexpr inline hash_t getHash(uint16_t pieceSpecies, uint8_t file, uint8_t rank) {
   return PieceHashes[pieceSpecies] ^ FileHashes[file] ^ RankHashes[rank];
  }
 };
-# 11 "tomatene.cpp" 2
+# 21 "tomatene.cpp" 2
 # 1 "transpositionTable.h" 1
        
 
@@ -106065,37 +106076,50 @@ namespace ZobristHashes {
 
 
 
-constexpr inline uint32_t TRANSPOSITION_TABLE_BITS = 20;
+constexpr inline uint32_t TRANSPOSITION_TABLE_BITS = 22;
 constexpr inline uint32_t TRANSPOSITION_TABLE_SIZE = 1u << TRANSPOSITION_TABLE_BITS;
-constexpr inline uint32_t HASH_MASK = (1 << TRANSPOSITION_TABLE_BITS) - 1;
+constexpr inline hash_t HASH_MASK = (1 << TRANSPOSITION_TABLE_BITS) - 1;
 
+enum class NodeType {
+ EXACT,
+ LOWER_BOUND,
+ UPPER_BOUND
+};
 struct TranspositionTableEntry {
- uint32_t hash;
+ hash_t hash;
  uint32_t bestMove;
+
+ depth_t depth = 0;
+ eval_t eval;
+ NodeType nodeType;
 };
 
 class TranspositionTable {
 private:
- std::array<TranspositionTableEntry, TRANSPOSITION_TABLE_SIZE>table;
+ std::array<TranspositionTableEntry, TRANSPOSITION_TABLE_SIZE>table{};
 public:
- TranspositionTableEntry* get(uint32_t hash) {
-  uint32_t maskedHash = hash & HASH_MASK;
+ TranspositionTableEntry* get(hash_t hash) {
+  hash_t maskedHash = hash & HASH_MASK;
   TranspositionTableEntry& entry = table[maskedHash];
   if(entry.hash == hash) {
    return &entry;
   }
   return nullptr;
  }
- void put(uint32_t hash, uint32_t bestMove) {
-  uint32_t maskedHash = hash & HASH_MASK;
-  table[maskedHash] = { hash, bestMove };
+
+
+
+
+ void put(hash_t hash, uint32_t bestMove, depth_t depth, eval_t eval, NodeType nodeType) {
+  hash_t maskedHash = hash & HASH_MASK;
+  if(depth >= table[maskedHash].depth) {
+   table[maskedHash] = { hash, bestMove, depth, eval, nodeType };
+  }
  }
 };
-# 12 "tomatene.cpp" 2
-# 21 "tomatene.cpp"
-typedef int32_t eval_t;
+# 22 "tomatene.cpp" 2
 
-inline constexpr eval_t PVS_WINDOW_SIZE = 10;
+inline constexpr depth_t MAX_DEPTH = 4;
 inline constexpr float ESTIMATED_GAME_LENGTH = 900;
 
 constexpr std::vector<std::string> splitString(std::string str, char delimiter) {
@@ -107188,8 +107212,8 @@ inline constexpr PieceIdsWrapper pieceIds;
 
 TranspositionTable transpositionTable;
 
-std::array<uint32_t, 4 + 1> killerMoves1{};
-std::array<uint32_t, 4 + 1> killerMoves2{};
+std::array<uint32_t, MAX_DEPTH + 1> killerMoves1{};
+std::array<uint32_t, MAX_DEPTH + 1> killerMoves2{};
 
 bool atsiInitialised = false;
 bool inGame = false;
@@ -107258,9 +107282,10 @@ constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
   y = 35 - y;
  }
 
- eval_t pieceBaseEval = basePieceValues[piece.getSpecies()];
+ uint16_t species = piece.getSpecies();
+ eval_t pieceBaseEval = basePieceValues[species];
  if(piece.canPromote()) {
-  pieceBaseEval += basePieceValues[PieceTable[piece.getSpecies()].promotion] / 10;
+  pieceBaseEval += basePieceValues[PieceTable[species].promotion] / 10;
  }
  eval_t horizontalCenterBonus = 18 - std::abs(x - 17.5f);
  eval_t verticalCenterBonus = std::min(y, static_cast<int8_t>(25));
@@ -107467,7 +107492,7 @@ private:
  BidirectionalAttackMap bidirectionalAttackMap;
  BoardPosBitset squaresNeedingMoveRecalculation;
 
- StaticVector<StaticVector<UndoSquare, 36>, 4> undoStack;
+ StaticVector<StaticVector<UndoSquare, 36>, MAX_DEPTH> undoStack;
 
  void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
   if(getSquare(x, y)) {
@@ -107520,7 +107545,7 @@ public:
  std::array<std::array<std::vector<uint32_t>, 1296>, 2> movesPerSquarePerPlayer;
 
  eval_t absEval = 0;
- int32_t hash = 0;
+ hash_t hash = 0;
 
  std::string toString() const {
   std::ostringstream oss;
@@ -107605,7 +107630,7 @@ public:
   }
  }
  void unmakeMove() {
-  StaticVector<UndoSquare, 36ULL> &undoSquares = undoStack.back();
+  StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
   for(const UndoSquare &undoSquare : undoSquares) {
    if(undoSquare.oldPiece) {
     setSquare(undoSquare.pos.x, undoSquare.pos.y, undoSquare.oldPiece);
@@ -107661,9 +107686,7 @@ public:
     for(const Vec2 &tripleSlashedArrowDir : movements.tripleSlashedArrowDirs) {
      Vec2 dir = movementDirToBoardDir(tripleSlashedArrowDir, pieceOwner);
      uint8_t jumpsRemaining = 4;
-     Vec2 target{ x, y };
-     while(isPosWithinBounds(target)) {
-      target += dir;
+     for(Vec2 target = srcVec + dir; isPosWithinBounds(target); target += dir) {
       attackingSquares.insert(target);
       Piece attackingPiece = getSquare(target.x, target.y);
       bool isBlocked = attackingPiece && attackingPiece.getOwner() == pieceOwner;
@@ -107751,7 +107774,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 772 "tomatene.cpp" 2
+# 771 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -107825,7 +107848,7 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 
 unsigned int nodesSearched = 0;
 
-eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
+eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
  nodesSearched++;
 
  if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
@@ -107834,10 +107857,15 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
  if(depth == 0) {
   return gameState.eval();
  }
+ TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
+ if(ttEntry && ttEntry->depth >= depth) {
+  if(ttEntry->nodeType == NodeType::EXACT || (ttEntry->nodeType == NodeType::LOWER_BOUND && ttEntry->eval >= beta) || (ttEntry->nodeType == NodeType::UPPER_BOUND && ttEntry->eval <= alpha)) {
+   return ttEntry->eval;
+  }
+ }
  std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
 
- TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
- bool hasTtMove = ttEntry && std::find(moves.begin(), moves.end(), ttEntry->bestMove) != moves.end();
+ bool hasTtMove = ttEntry;
  uint32_t ttMove = hasTtMove? ttEntry->bestMove : 0;
  for(size_t i = 0; i < moves.size(); i++) {
   if(moves[i] == ttMove) {
@@ -107851,36 +107879,42 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, uint8_t depth) {
    moves[hasTtMove + 1] = killerMoves2[depth];
   }
  }
+
+ eval_t bestScore = -100000000;
  uint32_t bestMove = 0;
  bool foundPvNode = 0;
  for(uint32_t move : moves) {
 
   gameState.makeMove(move, depth > 1, true);
-  int32_t score;
+  eval_t score;
   if(!foundPvNode) {
    score = -search(gameState, -beta, -alpha, depth - 1);
   } else {
-   score = -search(gameState, -alpha - PVS_WINDOW_SIZE, -alpha, depth - 1);
+   score = -search(gameState, -alpha - 1, -alpha, depth - 1);
    if(score > alpha && score < beta) {
     score = -search(gameState, -beta, -alpha, depth - 1);
    }
   }
   gameState.unmakeMove();
-  if(score > alpha) {
-   alpha = score;
+  if(score > bestScore) {
+   bestScore = score;
    bestMove = move;
-   if(alpha >= beta) {
-    killerMoves2[depth] = killerMoves1[depth];
-    killerMoves1[depth] = bestMove;
-    break;
+   if(bestScore > alpha) {
+    alpha = bestScore;
+    if(alpha >= beta) {
+     killerMoves2[depth] = killerMoves1[depth];
+     killerMoves1[depth] = bestMove;
+     break;
+    }
+    foundPvNode = true;
    }
-   foundPvNode = true;
   }
  }
- transpositionTable.put(gameState.hash, bestMove);
- return alpha;
+ NodeType nodeType = bestScore < alpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
+ transpositionTable.put(gameState.hash, bestMove, depth, bestScore, nodeType);
+ return bestScore;
 }
-uint32_t perft(GameState &gameState, uint8_t depth) {
+uint32_t perft(GameState &gameState, depth_t depth) {
 
  if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
   return 1;
@@ -107898,19 +107932,29 @@ uint32_t perft(GameState &gameState, uint8_t depth) {
  return nodesSearched;
 }
 
-void makeBestMove(GameState &gameState) {
- const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
-
+uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
+ 
+# 929 "tomatene.cpp" 3
+(void) ((!!(
+# 929 "tomatene.cpp"
+maxDepth <= MAX_DEPTH
+# 929 "tomatene.cpp" 3
+)) || (_assert(
+# 929 "tomatene.cpp"
+"maxDepth <= MAX_DEPTH"
+# 929 "tomatene.cpp" 3
+,"tomatene.cpp",929),0))
+# 929 "tomatene.cpp"
+                             ;
  using clock = std::chrono::steady_clock;
  auto startTime = clock::now();
  auto stopTime = startTime + std::chrono::duration<float>(timeToMove);
 
  eval_t eval;
- for(int depth = 1; depth <= 4; depth++) {
-  std::cout << "log Searching to depth " << depth << "..." << std::endl;
+ for(depth_t depth = 1; depth <= maxDepth; depth++) {
   nodesSearched = 0;
   eval = search(gameState, -100000000, 100000000, depth);
-  std::cout << "log Score for us after depth " << depth << " and " << nodesSearched << " nodes: " << eval << std::endl;
+  std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
   if(clock::now() >= stopTime) {
    break;
   }
@@ -107921,10 +107965,15 @@ void makeBestMove(GameState &gameState) {
   std::cout << "log Fatal error: No TT entry found for gameState hash " << gameState.hash << std::endl;
   throw std::runtime_error("No TT entry found!!!!!!");
  }
+ return ttEntry->bestMove;
+}
+void makeBestMove(GameState &gameState) {
+ const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 
- uint32_t bestMove = ttEntry->bestMove;
+
+ uint32_t bestMove = findBestMove(gameState, MAX_DEPTH, timeToMove);
  std::cout << "move " << stringifyMove(gameState, bestMove) << std::endl;
- gameState.makeMove(bestMove, true, false);
+ gameState.makeMove(bestMove);
  std::cout << "eval " << gameState.absEval << std::endl;
 }
 
@@ -107940,7 +107989,7 @@ int main() {
   if(atsiInitialised) {
    if(command == "opmove") {
     uint32_t opponentMove = parseMove(gameState, arguments);
-    gameState.makeMove(opponentMove, true, false);
+    gameState.makeMove(opponentMove);
     makeBestMove(gameState);
    } else if(command == "identify") {
     std::cout << "info \"" << "Tomatene" << "\" \"" << "Experimental taikyoku shogi engine" << "\" \"" << "s1050613" << "\" \"" << "v0" << "\"" << std::endl;
@@ -107993,21 +108042,21 @@ int main() {
      std::cerr << "Unknown ATSI version: " << version << std::endl;
     }
    } else if(command == "perft") {
-    uint32_t maxDepth = std::stoi(getItem(arguments, 1));
-    if(maxDepth > 4) {
-     std::cout << "Depth is greater than MAX_DEPTH = " << 4 << "; will only go to depth " << 4 << std::endl;
-     maxDepth = 4;
+    depth_t maxDepth = std::stoi(getItem(arguments, 1));
+    if(maxDepth > MAX_DEPTH) {
+     std::cout << "Depth is greater than MAX_DEPTH = " << MAX_DEPTH << "; will only go to depth " << MAX_DEPTH << std::endl;
+     maxDepth = MAX_DEPTH;
     }
-    for(uint32_t depth = 1; depth <= maxDepth; depth++) {
+    for(depth_t depth = 1; depth <= maxDepth; depth++) {
      using clock = std::chrono::steady_clock;
      auto start = clock::now();
      uint32_t nodesSearched = perft(gameState, depth);
      auto end = clock::now();
      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-     std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
+     std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
     }
    } else if(command == "search") {
-    uint32_t depth = std::stoi(getItem(arguments, 1));
+    depth_t depth = std::stoi(getItem(arguments, 1));
     using clock = std::chrono::steady_clock;
     auto start = clock::now();
     eval_t eval = 0;
@@ -108015,7 +108064,18 @@ int main() {
     eval = search(gameState, -100000000, 100000000, depth);
     auto end = clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Depth " << depth << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
+    std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+   } else if(command == "bestmove") {
+    depth_t depth = std::stoi(getItem(arguments, 1));
+    using clock = std::chrono::steady_clock;
+    auto start = clock::now();
+    nodesSearched = 0;
+    uint32_t bestMove = findBestMove(gameState, depth);
+    auto end = clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    gameState.makeMove(bestMove, true, true);
+    std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+    gameState.unmakeMove();
    }
   }
  }
