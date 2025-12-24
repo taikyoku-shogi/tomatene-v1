@@ -491,6 +491,7 @@ private:
 	std::array<BoardPosBitset, 2> playerOccupancyBitsets{};
 	BidirectionalAttackMap bidirectionalAttackMap;
 	BoardPosBitset squaresNeedingMoveRecalculation;
+	std::array<std::array<std::vector<uint32_t>, 1296>, 2> movesPerSquarePerPlayer;
 	// Keeps track of all the squares changed during a move, so that it can quickly unmake the move.
 	StaticVector<StaticVector<UndoSquare, 36>, MAX_DEPTH> undoStack;
 	
@@ -547,7 +548,6 @@ private:
 public:
 	uint8_t currentPlayer = 0;
 	std::array<int8_t, 2> royalsLeft{};
-	std::array<std::array<std::vector<uint32_t>, 1296>, 2> movesPerSquarePerPlayer;
 	// this could be made unsigned, but we'll be converting it to signed all the time
 	eval_t absEval = 0;
 	hash_t hash = 0;
@@ -715,11 +715,11 @@ public:
 					
 				// }
 				bidirectionalAttackMap.setAttacks(srcVec, attackingSquares);
-				validMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [x, y](const Vec2 &target) {
-					return createMove(x, y, target.x, target.y);
-				});
 				rangeCapturingMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [x, y](const Vec2 &target) {
 					return createMove(x, y, target.x, target.y, true);
+				});
+				validMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [x, y](const Vec2 &target) {
+					return createMove(x, y, target.x, target.y);
 				});
 			}
 		});
