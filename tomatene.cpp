@@ -496,12 +496,19 @@ private:
 	StaticVector<StaticVector<UndoSquare, 36>, MAX_DEPTH> undoStack;
 	
 	void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
-		if(getSquare(x, y)) {
-			// clearing before setting makes it a bit easier
-			clearSquare(x, y, regenerateMoves, saveToUndoStack);
-		} else if(saveToUndoStack) {
-			UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, Piece{ 0 } };
+		Piece oldPiece = getSquare(x, y);
+		if(saveToUndoStack) {
+			UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, oldPiece };
 			undoStack.back().push_back(undoSquare);
+		}
+		if(oldPiece) {
+			uint8_t oldPieceOwner = oldPiece.getOwner();
+			absEval -= evalPiece(oldPiece, x, y) * (oldPieceOwner? -1 : 1);
+			if(oldPiece.isRoyal()) {
+				royalsLeft[oldPieceOwner]--;
+			}
+			playerOccupancyBitsets[oldPieceOwner].erase(Vec2{ x, y });
+			hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
 		}
 		// handle promotion here
 		if(piece.canPromote() && piece.isInPromotionZone(y)) {
@@ -510,7 +517,7 @@ private:
 				piece = Piece::create(promotedSpecies, 0, piece.getOwner());
 			}
 		}
-		board[x + 36 * y] = piece;
+		board[Vec2{ x, y }.toIndex()] = piece;
 		absEval += evalPiece(piece, x, y) * (piece.getOwner()? -1 : 1);
 		if(piece.isRoyal()) {
 			royalsLeft[piece.getOwner()]++;
@@ -530,19 +537,19 @@ private:
 				UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, oldPiece };
 				undoStack.back().push_back(undoSquare);
 			}
-			absEval -= evalPiece(oldPiece, x, y) * (oldPiece.getOwner()? -1 : 1);
+			uint8_t oldPieceOwner = oldPiece.getOwner();
+			absEval -= evalPiece(oldPiece, x, y) * (oldPieceOwner? -1 : 1);
 			if(oldPiece.isRoyal()) {
-				royalsLeft[oldPiece.getOwner()]--;
+				royalsLeft[oldPieceOwner]--;
 			}
-		}
-		board[x + 36 * y] = Piece{ 0 };
-		hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
-		occupancyBitset.erase(Vec2{ x, y });
-		playerOccupancyBitsets[0].erase(Vec2{ x, y });
-		playerOccupancyBitsets[1].erase(Vec2{ x, y });
-		if(regenerateMoves) {
-			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+			board[Vec2{ x, y }.toIndex()] = Piece{ 0 };
+			occupancyBitset.erase(Vec2{ x, y });
+			playerOccupancyBitsets[oldPieceOwner].erase(Vec2{ x, y });
+			if(regenerateMoves) {
+				squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
+				squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+			}
+			hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
 		}
 	}
 public:
@@ -570,8 +577,7 @@ public:
 	}
 	
 	inline constexpr Piece getSquare(int8_t x, int8_t y) const {
-		// std::cout << std::to_string(x) << "," << std::to_string(y) << std::endl;
-		return board[x + 36 * y];
+		return board[Vec2{ x, y }.toIndex()];
 	}
 	void makeMove(uint32_t move, bool regenerateMoves = true, bool saveState = false) {
 		if(saveState) {
@@ -867,11 +873,11 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 		return gameState.eval();
 	}
 	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
-	if(ttEntry && ttEntry->depth >= depth) {
-		if(ttEntry->nodeType == NodeType::EXACT || (ttEntry->nodeType == NodeType::LOWER_BOUND && ttEntry->eval >= beta) || (ttEntry->nodeType == NodeType::UPPER_BOUND && ttEntry->eval <= alpha)) {
-			return ttEntry->eval;
-		}
-	}
+	// if(ttEntry && ttEntry->depth >= depth) {
+	// 	if(ttEntry->nodeType == NodeType::EXACT || (ttEntry->nodeType == NodeType::LOWER_BOUND && ttEntry->eval >= beta) || (ttEntry->nodeType == NodeType::UPPER_BOUND && ttEntry->eval <= alpha)) {
+	// 		return ttEntry->eval;
+	// 	}
+	// }
 	std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
 	// std::cout << "log Found " << moves.size() << " moves" << std::endl;
 	bool hasTtMove = ttEntry;
