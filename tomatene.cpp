@@ -20,7 +20,7 @@ typedef uint64_t hash_t;
 #include "zobristHashes.h"
 #include "transpositionTable.h"
 
-inline constexpr depth_t MAX_DEPTH = 4;
+inline constexpr depth_t MAX_DEPTH = 3;
 inline constexpr float ESTIMATED_GAME_LENGTH = 900;
 
 constexpr std::vector<std::string> splitString(std::string str, char delimiter) {
@@ -193,6 +193,12 @@ inline std::array<eval_t, 302> calculateBasePieceValues() {
 }
 const std::array<eval_t, 302> basePieceValues = calculateBasePieceValues();
 
+constexpr std::array<std::string, 302> pieceNames = {
+	"[None]",
+	#define Piece(code, promo, move) #code,
+		#include "pieces.inc"
+	#undef Piece
+};
 inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::TotalCount - 1> PieceSpeciesToId = {
 	#define Piece(code, promo, move) { #code, PieceSpecies::code },
 		#include "pieces.inc"
@@ -386,6 +392,21 @@ public:
 		}
 	}
 	template <std::invocable<size_t> F>
+	constexpr void forEach(F &&forEachFunction) {
+		size_t wordIndex = 0;
+		for(uint64_t word : words) {
+			while(word) {
+				auto bitOffset = std::countr_zero(word);
+				size_t index = (wordIndex << 6) + bitOffset;
+				forEachFunction(index);
+				
+				// remove the trailing bit
+				word &= word - 1;
+			}
+			wordIndex++;
+		}
+	}
+	template <std::invocable<size_t> F>
 	constexpr void forEachAndClear(F &&forEachFunction) {
 		size_t wordIndex = 0;
 		for(uint64_t &word : words) {
@@ -499,6 +520,7 @@ private:
 	void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
 		uint8_t pieceOwner = piece.getOwner();
 		Piece oldPiece = getSquare(x, y);
+		if(piece == oldPiece) return; // idk why
 		if(saveToUndoStack) {
 			UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, oldPiece };
 			undoStack.back().push_back(undoSquare);
@@ -513,7 +535,56 @@ private:
 			hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
 			if(regenerateMoves) {
 				squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-				squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+				bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y }).forEach([&](size_t i) {
+					Vec2 pos = Vec2::fromIndex(i);
+					Piece attackingPiece = getSquare(pos);
+					if(!attackingPiece) {
+						// IDK why this happens sometimes
+						return;
+					}
+					if(isRangeCapturingPiece(attackingPiece.getSpecies())) {
+						uint8_t oldPieceRank = oldPiece.getRank();
+						uint8_t newPieceRank = piece.getRank();
+						uint8_t attackingPieceRank = attackingPiece.getRank();
+						// if the rank makes a difference to the range capturing piece which is attacking this square, it needs to recalculate the attack map - it will be attacking more/less squares. if the relative rank doesn't change however, it doesn't need to do anything :)
+						if((oldPieceRank >= attackingPieceRank) != (newPieceRank >= attackingPieceRank)) {
+							squaresNeedingMoveRecalculation.insert(i);
+						}
+						return;
+					}
+					// NOTE: Everything above this line is correct. If I insert this squre into `squaresNeedingMoveRecalculation`, it will function exactly as without this optimization. Therefore all issues must be below this line but still inside this function.
+					
+					uint8_t oldPieceOwner = oldPiece.getOwner();
+					uint8_t newPieceOwner = piece.getOwner();
+					if(oldPieceOwner == newPieceOwner) {
+						// If a range-capturing piece lands on a piece from the same team, moves for regular pieces (i.e. pieces which don't range-capture and hence don't consider rank) don't change at all.
+						// std::cout << std::format("At ({}, {}), {} was replaced by {}, both owned by player {}. Technically: {}, {}", x, y, pieceNames[oldPiece.getSpecies()], pieceNames[piece.getSpecies()], oldPieceOwner + 1, std::to_string(oldPiece), std::to_string(piece)) << std::endl;
+						return;
+					}
+					
+					uint8_t attackingPieceOwner = attackingPiece.getOwner();
+					uint32_t move = createMove(pos.x, pos.y, x, y);
+					auto &moves = movesPerSquarePerPlayer[attackingPieceOwner][i];
+					if(attackingPieceOwner == newPieceOwner) {
+						// This implies attackingPieceOwner != oldPieceOwner, and hence there previously existed a valid move to this location. However since it is being replaced by a piece from the same team, it is no longer a valid move location and the move has to be removed.
+						auto it = std::find(moves.begin(), moves.end(), move);
+						if(it == moves.end()) {
+							// for some reason
+							return;
+							// std::cout << std::format("Piece {} at ({}, {}) doesn't have move to remove, to ({}, {}). Previously was player {}'s {}, now is player {}'s {}", pieceNames[attackingPiece.getSpecies()], pos.x, pos.y, x, y, oldPiece.getOwner() + 1, pieceNames[oldPiece.getSpecies()], piece.getOwner() + 1, pieceNames[piece.getSpecies()]) << std::endl;
+						} else {
+							moves.erase(it);
+						}
+					} else {
+						// Here it means that there wasn't a valid move to this location, but now that an enemy piece is here, it can now move to this location. Hence a move must be added.
+						if(std::find(moves.begin(), moves.end(), move) != moves.end()) {
+							std::cout << "Already has move" << std::endl;
+						} else {
+							// moves.push_back(move);
+							squaresNeedingMoveRecalculation.insert(i);
+						}
+					}
+				});
 			}
 		} else if(regenerateMoves) {
 			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
@@ -587,6 +658,9 @@ public:
 	inline constexpr Piece getSquare(Vec2 pos) const {
 		return board[pos.toIndex()];
 	}
+	inline constexpr bool playerHasPieceAtSquare(uint8_t player, Vec2 pos) const {
+		return playerOccupancyBitsets[player].contains(pos);
+	}
 	void makeMove(uint32_t move, bool regenerateMoves = true, bool saveState = false) {
 		if(saveState) {
 			undoStack.push_back(StaticVector<UndoSquare, 36>{});
@@ -639,6 +713,7 @@ public:
 			piece = Piece::create(PieceTable[piece.getSpecies()].promotion, 0, pieceOwner);
 		}
 		
+		// std::cout << std::format("Moving piece {} from ({}, {}) to ({}, {}); capturing {}", pieceNames[piece.getSpecies()], srcX, srcY, destX, destY, pieceNames[getSquare(destX, destY).getSpecies()]) << std::endl;
 		clearSquare(srcX, srcY, regenerateMoves, saveState);
 		setSquare(destX, destY, piece, regenerateMoves, saveState);
 		currentPlayer = 1 - currentPlayer;
@@ -646,13 +721,13 @@ public:
 			generateMoves();
 		}
 	}
-	void unmakeMove() {
+	void unmakeMove(bool regenerateMoves = true) {
 		StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
 		for(const UndoSquare &undoSquare : undoSquares) {
 			if(undoSquare.oldPiece) {
-				setSquare(undoSquare.pos.x, undoSquare.pos.y, undoSquare.oldPiece);
+				setSquare(undoSquare.pos.x, undoSquare.pos.y, undoSquare.oldPiece, regenerateMoves);
 			} else {
-				clearSquare(undoSquare.pos.x, undoSquare.pos.y);
+				clearSquare(undoSquare.pos.x, undoSquare.pos.y, regenerateMoves);
 			}
 		}
 		undoStack.pop_back();
@@ -905,8 +980,9 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	eval_t bestScore = -INF_SCORE;
 	uint32_t bestMove = 0;
 	bool foundPvNode = 0;
+	bool regenerateMoves = depth > 1;
 	for(uint32_t move : moves) {
-		gameState.makeMove(move, depth > 1, true);
+		gameState.makeMove(move, regenerateMoves, true);
 		eval_t score;
 		if(!foundPvNode) {
 			score = -search(gameState, -beta, -alpha, depth - 1);
@@ -916,7 +992,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 				score = -search(gameState, -beta, -alpha, depth - 1);
 			}
 		}
-		gameState.unmakeMove();
+		gameState.unmakeMove(regenerateMoves);
 		if(score > bestScore) {
 			bestScore = score;
 			bestMove = move;
@@ -947,10 +1023,11 @@ uint32_t perft(GameState &gameState, depth_t depth) {
 	}
 	uint32_t nodesSearched = 0;
 	std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
+	bool regenerateMoves = depth > 1;
 	for(uint32_t move : moves) {
-		gameState.makeMove(move, depth > 1, true);
+		gameState.makeMove(move, regenerateMoves, true);
 		nodesSearched += perft(gameState, depth - 1);
-		gameState.unmakeMove();
+		gameState.unmakeMove(regenerateMoves);
 	}
 	return nodesSearched;
 }
@@ -1064,7 +1141,7 @@ int main() {
 					uint32_t nodesSearched = perft(gameState, depth);
 					auto end = clock::now();
 					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-					std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
+					std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / std::max(static_cast<float>(elapsed.count()), 0.00001f) << " n/s)" << std::endl;
 				}
 			} else if(command == "search") {
 				depth_t depth = std::stoi(getItem(arguments, 1));

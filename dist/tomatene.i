@@ -106115,7 +106115,7 @@ public:
 };
 # 22 "tomatene.cpp" 2
 
-inline constexpr depth_t MAX_DEPTH = 4;
+inline constexpr depth_t MAX_DEPTH = 3;
 inline constexpr float ESTIMATED_GAME_LENGTH = 900;
 
 constexpr std::vector<std::string> splitString(std::string str, char delimiter) {
@@ -106892,6 +106892,314 @@ inline std::array<eval_t, 302> calculateBasePieceValues() {
 }
 const std::array<eval_t, 302> basePieceValues = calculateBasePieceValues();
 
+constexpr std::array<std::string, 302> pieceNames = {
+ "[None]",
+
+# 1 "pieces.inc" 1
+"K",
+"CP",
+"GG",
+"GLG",
+"FCH",
+"RIG",
+"RA",
+"LG",
+"LA",
+"RS",
+"CST",
+"FK",
+"FDE",
+"WDV",
+"CDV",
+"ED",
+"RDM",
+"FDM",
+"RH",
+"BC",
+"BO",
+"T",
+"RME",
+"FLE",
+"LME",
+"FD",
+"FF",
+"W",
+"GWH",
+"RR",
+"TF",
+"WT",
+"DTG",
+"TS",
+"DT",
+"IC",
+"WF",
+"RVC",
+"FEL",
+"EK",
+"WE",
+"TD",
+"GD",
+"FSW",
+"FWO",
+"F",
+"GDR",
+"FOD",
+"TR",
+"MS",
+"GS",
+"RP",
+"FL",
+"RSR",
+"FSR",
+"SSP",
+"GSH",
+"RTG",
+"FT",
+"RBE",
+"FBE",
+"NS",
+"HT",
+"BD",
+"GOG",
+"SWR",
+"SVG",
+"VM",
+"DE",
+"NK",
+"FST",
+"GCH",
+"PP",
+"SD",
+"RUD",
+"RUS",
+"FSG",
+"RW",
+"FW",
+"AG",
+"RAD",
+"FLG",
+"FCR",
+"RIT",
+"LTG",
+"RDR",
+"BDR",
+"LDR",
+"VSP",
+"BB",
+"WID",
+"FRD",
+"FP",
+"FDG",
+"RBI",
+"OK",
+"PCK",
+"WD",
+"PHM",
+"FDR",
+"KM",
+"COG",
+"SM",
+"SVC",
+"GW",
+"VB",
+"CH",
+"SS",
+"PIG",
+"FPI",
+"CG",
+"FRC",
+"PG",
+"HG",
+"FH",
+"OG",
+"FRO",
+"SBO",
+"FBO",
+"SR",
+"GOS",
+"L",
+"FFI",
+"FWC",
+"FID",
+"WDM",
+"SP",
+"VG",
+"SC",
+"WH",
+"CLE",
+"SE",
+"AM",
+"DH",
+"DK",
+"SW",
+"FLC",
+"MH",
+"HHW",
+"VT",
+"S",
+"CV",
+"LS",
+"CLD",
+"CPC",
+"CE",
+"RC",
+"CAC",
+"RHS",
+"TGS",
+"FIO",
+"FLO",
+"AD",
+"GBI",
+"FBI",
+"DS",
+"BS",
+"DV",
+"KT",
+"WC",
+"WST",
+"GF",
+"LHD",
+"LED",
+"RHD",
+"RID",
+"PS",
+"SQM",
+"WO",
+"GDE",
+"FIL",
+"FIE",
+"FLD",
+"PSR",
+"HM",
+"FGO",
+"SWW",
+"SCR",
+"FHW",
+"BDG",
+"FIS",
+"WG",
+"FG",
+"PH",
+"KR",
+"LT",
+"TT",
+"GT",
+"ST",
+"C",
+"TC",
+"RT",
+"VW",
+"SO",
+"DO",
+"FLH",
+"FB",
+"GBE",
+"AB",
+"EW",
+"PW",
+"WIH",
+"HH",
+"FC",
+"RHW",
+"OM",
+"MW",
+"HC",
+"WS",
+"NB",
+"SB",
+"WB",
+"LD",
+"EB",
+"RSB",
+"FIW",
+"BE",
+"MC",
+"CM",
+"PM",
+"EC",
+"RB",
+"DSP",
+"DD",
+"EBG",
+"H",
+"SWO",
+"CMK",
+"CSW",
+"GSW",
+"BM",
+"FLS",
+"BT",
+"OC",
+"PO",
+"SF",
+"BBE",
+"OR",
+"MB",
+"STC",
+"CS",
+"CD",
+"RD",
+"FE",
+"LH",
+"CHS",
+"HTK",
+"VS",
+"WIG",
+"FWI",
+"RG",
+"HR",
+"MG",
+"MT",
+"GST",
+"HS",
+"WOG",
+"OS",
+"RO",
+"EG",
+"BOS",
+"RBO",
+"SG",
+"LPS",
+"RL",
+"TG",
+"BES",
+"STB",
+"IG",
+"GM",
+"RCH",
+"RIC",
+"LC",
+"LIC",
+"SMK",
+"FO",
+"LBS",
+"LBG",
+"VP",
+"LK",
+"VH",
+"CAS",
+"CAG",
+"SWS",
+"SWG",
+"GH",
+"GE",
+"SPS",
+"SPG",
+"VL",
+"GL",
+"FIT",
+"GTG",
+"CBS",
+"CBG",
+"RDG",
+"GEL",
+"D",
+"MUG",
+"GB",
+"P",
+# 200 "tomatene.cpp" 2
+
+};
 inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::TotalCount - 1> PieceSpeciesToId = {
 
 # 1 "pieces.inc" 1
@@ -107196,7 +107504,7 @@ inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::T
 { "MUG", PieceSpecies::MUG },
 { "GB", PieceSpecies::GB },
 { "P", PieceSpecies::P },
-# 199 "tomatene.cpp" 2
+# 205 "tomatene.cpp" 2
 
 };
 struct PieceIdsWrapper {
@@ -107387,6 +107695,21 @@ public:
   }
  }
  template <std::invocable<size_t> F>
+ constexpr void forEach(F &&forEachFunction) {
+  size_t wordIndex = 0;
+  for(uint64_t word : words) {
+   while(word) {
+    auto bitOffset = std::countr_zero(word);
+    size_t index = (wordIndex << 6) + bitOffset;
+    forEachFunction(index);
+
+
+    word &= word - 1;
+   }
+   wordIndex++;
+  }
+ }
+ template <std::invocable<size_t> F>
  constexpr void forEachAndClear(F &&forEachFunction) {
   size_t wordIndex = 0;
   for(uint64_t &word : words) {
@@ -107500,6 +107823,7 @@ private:
  void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
   uint8_t pieceOwner = piece.getOwner();
   Piece oldPiece = getSquare(x, y);
+  if(piece == oldPiece) return;
   if(saveToUndoStack) {
    UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, oldPiece };
    undoStack.back().push_back(undoSquare);
@@ -107514,7 +107838,56 @@ private:
    hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
    if(regenerateMoves) {
     squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-    squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+    bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y }).forEach([&](size_t i) {
+     Vec2 pos = Vec2::fromIndex(i);
+     Piece attackingPiece = getSquare(pos);
+     if(!attackingPiece) {
+
+      return;
+     }
+     if(isRangeCapturingPiece(attackingPiece.getSpecies())) {
+      uint8_t oldPieceRank = oldPiece.getRank();
+      uint8_t newPieceRank = piece.getRank();
+      uint8_t attackingPieceRank = attackingPiece.getRank();
+
+      if((oldPieceRank >= attackingPieceRank) != (newPieceRank >= attackingPieceRank)) {
+       squaresNeedingMoveRecalculation.insert(i);
+      }
+      return;
+     }
+
+
+     uint8_t oldPieceOwner = oldPiece.getOwner();
+     uint8_t newPieceOwner = piece.getOwner();
+     if(oldPieceOwner == newPieceOwner) {
+
+
+      return;
+     }
+
+     uint8_t attackingPieceOwner = attackingPiece.getOwner();
+     uint32_t move = createMove(pos.x, pos.y, x, y);
+     auto &moves = movesPerSquarePerPlayer[attackingPieceOwner][i];
+     if(attackingPieceOwner == newPieceOwner) {
+
+      auto it = std::find(moves.begin(), moves.end(), move);
+      if(it == moves.end()) {
+
+       return;
+
+      } else {
+       moves.erase(it);
+      }
+     } else {
+
+      if(std::find(moves.begin(), moves.end(), move) != moves.end()) {
+       std::cout << "Already has move" << std::endl;
+      } else {
+
+       squaresNeedingMoveRecalculation.insert(i);
+      }
+     }
+    });
    }
   } else if(regenerateMoves) {
    squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
@@ -107588,6 +107961,9 @@ public:
  inline constexpr Piece getSquare(Vec2 pos) const {
   return board[pos.toIndex()];
  }
+ inline constexpr bool playerHasPieceAtSquare(uint8_t player, Vec2 pos) const {
+  return playerOccupancyBitsets[player].contains(pos);
+ }
  void makeMove(uint32_t move, bool regenerateMoves = true, bool saveState = false) {
   if(saveState) {
    undoStack.push_back(StaticVector<UndoSquare, 36>{});
@@ -107640,6 +108016,7 @@ public:
    piece = Piece::create(PieceTable[piece.getSpecies()].promotion, 0, pieceOwner);
   }
 
+
   clearSquare(srcX, srcY, regenerateMoves, saveState);
   setSquare(destX, destY, piece, regenerateMoves, saveState);
   currentPlayer = 1 - currentPlayer;
@@ -107647,13 +108024,13 @@ public:
    generateMoves();
   }
  }
- void unmakeMove() {
+ void unmakeMove(bool regenerateMoves = true) {
   StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
   for(const UndoSquare &undoSquare : undoSquares) {
    if(undoSquare.oldPiece) {
-    setSquare(undoSquare.pos.x, undoSquare.pos.y, undoSquare.oldPiece);
+    setSquare(undoSquare.pos.x, undoSquare.pos.y, undoSquare.oldPiece, regenerateMoves);
    } else {
-    clearSquare(undoSquare.pos.x, undoSquare.pos.y);
+    clearSquare(undoSquare.pos.x, undoSquare.pos.y, regenerateMoves);
    }
   }
   undoStack.pop_back();
@@ -107800,7 +108177,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 801 "tomatene.cpp" 2
+# 876 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -107908,8 +108285,9 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
  eval_t bestScore = -100000000;
  uint32_t bestMove = 0;
  bool foundPvNode = 0;
+ bool regenerateMoves = depth > 1;
  for(uint32_t move : moves) {
-  gameState.makeMove(move, depth > 1, true);
+  gameState.makeMove(move, regenerateMoves, true);
   eval_t score;
   if(!foundPvNode) {
    score = -search(gameState, -beta, -alpha, depth - 1);
@@ -107919,7 +108297,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
     score = -search(gameState, -beta, -alpha, depth - 1);
    }
   }
-  gameState.unmakeMove();
+  gameState.unmakeMove(regenerateMoves);
   if(score > bestScore) {
    bestScore = score;
    bestMove = move;
@@ -107950,27 +108328,30 @@ uint32_t perft(GameState &gameState, depth_t depth) {
  }
  uint32_t nodesSearched = 0;
  std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
+ bool regenerateMoves = depth > 1;
  for(uint32_t move : moves) {
-  gameState.makeMove(move, depth > 1, true);
+
+
+  gameState.makeMove(move, regenerateMoves, true);
   nodesSearched += perft(gameState, depth - 1);
-  gameState.unmakeMove();
+  gameState.unmakeMove(regenerateMoves);
  }
  return nodesSearched;
 }
 
 uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
  
-# 959 "tomatene.cpp" 3
+# 1038 "tomatene.cpp" 3
 (void) ((!!(
-# 959 "tomatene.cpp"
+# 1038 "tomatene.cpp"
 maxDepth <= MAX_DEPTH
-# 959 "tomatene.cpp" 3
+# 1038 "tomatene.cpp" 3
 )) || (_assert(
-# 959 "tomatene.cpp"
+# 1038 "tomatene.cpp"
 "maxDepth <= MAX_DEPTH"
-# 959 "tomatene.cpp" 3
-,"tomatene.cpp",959),0))
-# 959 "tomatene.cpp"
+# 1038 "tomatene.cpp" 3
+,"tomatene.cpp",1038),0))
+# 1038 "tomatene.cpp"
                              ;
  using clock = std::chrono::steady_clock;
  auto startTime = clock::now();
@@ -108079,7 +108460,7 @@ int main() {
      uint32_t nodesSearched = perft(gameState, depth);
      auto end = clock::now();
      auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-     std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / elapsed.count() << " n/s)" << std::endl;
+     std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / std::max(static_cast<float>(elapsed.count()), 0.00001f) << " n/s)" << std::endl;
     }
    } else if(command == "search") {
     depth_t depth = std::stoi(getItem(arguments, 1));
