@@ -251,7 +251,7 @@ struct Piece {
 		uint16_t pieceSpecies = getSpecies();
 		return pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP;
 	}
-	constexpr inline bool getRank() const {
+	constexpr inline uint8_t getRank() const {
 		if(isRoyal()) return 4;
 		uint16_t pieceSpecies = getSpecies();
 		if(pieceSpecies == PieceSpecies::GG) return 3;
@@ -299,6 +299,9 @@ inline constexpr Vec2 movementDirToBoardDir(Vec2 movementDir, uint8_t pieceOwner
 }
 inline constexpr Vec2 getMoveSrcPos(uint32_t move) {
 	return Vec2{ static_cast<int8_t>((move >> 18) & 0b111111), static_cast<int8_t>((move >> 12) & 0b111111) };
+}
+inline constexpr Vec2 getMoveDestPos(uint32_t move) {
+	return Vec2{ static_cast<int8_t>((move >> 6) & 0b111111), static_cast<int8_t>(move & 0b111111) };
 }
 
 // A bitset for storing board positions.
@@ -410,8 +413,11 @@ private:
 		reverseAttackMap[targetI].erase(srcI);
 	}
 public:
-	inline constexpr BoardPosBitset getReverseAttacks(const Vec2 src) {
+	inline constexpr BoardPosBitset getReverseAttacks(const Vec2 src) const {
 		return reverseAttackMap[src.toIndex()];
+	}
+	inline constexpr BoardPosBitset getAttacks(const size_t srcIndex) const {
+		return attackMap[srcIndex];
 	}
 	inline constexpr void setAttacks(const Vec2 src, const BoardPosBitset &attacks) {
 		size_t srcI = src.toIndex();
@@ -472,12 +478,6 @@ public:
 	inline constexpr T* end() {
 		return data.data() + currentSize;
 	}
-	inline constexpr T operator[](size_t index) {
-		if(index >= currentSize) {
-			throw std::runtime_error("StaticVector error: Out of bounds!");
-		}
-		return data[index];
-	}
 };
 struct UndoSquare {
 	Vec2 pos;
@@ -490,12 +490,14 @@ private:
 	BoardPosBitset occupancyBitset{};
 	std::array<BoardPosBitset, 2> playerOccupancyBitsets{};
 	BidirectionalAttackMap bidirectionalAttackMap;
+	// Squares that need to recalculate their attack map and their moves
 	BoardPosBitset squaresNeedingMoveRecalculation;
 	std::array<std::array<std::vector<uint32_t>, 1296>, 2> movesPerSquarePerPlayer;
 	// Keeps track of all the squares changed during a move, so that it can quickly unmake the move.
 	StaticVector<StaticVector<UndoSquare, 36>, MAX_DEPTH> undoStack;
 	
 	void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
+		uint8_t pieceOwner = piece.getOwner();
 		Piece oldPiece = getSquare(x, y);
 		if(saveToUndoStack) {
 			UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, oldPiece };
@@ -509,26 +511,29 @@ private:
 			}
 			playerOccupancyBitsets[oldPieceOwner].erase(Vec2{ x, y });
 			hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+			if(regenerateMoves) {
+				squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
+				squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+			}
+		} else if(regenerateMoves) {
+			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
+			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
 		}
 		// handle promotion here
 		if(piece.canPromote() && piece.isInPromotionZone(y)) {
 			PieceSpecies::Type promotedSpecies = PieceTable[piece.getSpecies()].promotion;
 			if(promotedSpecies) {
-				piece = Piece::create(promotedSpecies, 0, piece.getOwner());
+				piece = Piece::create(promotedSpecies, 0, pieceOwner);
 			}
 		}
 		board[Vec2{ x, y }.toIndex()] = piece;
-		absEval += evalPiece(piece, x, y) * (piece.getOwner()? -1 : 1);
+		absEval += evalPiece(piece, x, y) * (pieceOwner? -1 : 1);
 		if(piece.isRoyal()) {
-			royalsLeft[piece.getOwner()]++;
+			royalsLeft[pieceOwner]++;
 		}
 		hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
 		occupancyBitset.insert(Vec2{ x, y });
-		playerOccupancyBitsets[piece.getOwner()].insert(Vec2{ x, y });
-		if(regenerateMoves) {
-			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
-		}
+		playerOccupancyBitsets[pieceOwner].insert(Vec2{ x, y });
 	}
 	void clearSquare(int8_t x, int8_t y, bool regenerateMoves = true, bool saveToUndoStack = false) {
 		Piece oldPiece = getSquare(x, y);
@@ -579,6 +584,9 @@ public:
 	inline constexpr Piece getSquare(int8_t x, int8_t y) const {
 		return board[Vec2{ x, y }.toIndex()];
 	}
+	inline constexpr Piece getSquare(Vec2 pos) const {
+		return board[pos.toIndex()];
+	}
 	void makeMove(uint32_t move, bool regenerateMoves = true, bool saveState = false) {
 		if(saveState) {
 			undoStack.push_back(StaticVector<UndoSquare, 36>{});
@@ -591,8 +599,7 @@ public:
 		
 		auto [srcX, srcY] = getMoveSrcPos(move);
 		Piece piece = getSquare(srcX, srcY);
-		int8_t destX = (move >> 6) & 0b111111;
-		int8_t destY = move & 0b111111;
+		auto [destX, destY] = getMoveDestPos(move);
 		PieceSpecies::Type pieceSpecies = piece.getSpecies();
 		uint8_t pieceOwner = piece.getOwner();
 		bool middleStepShouldPromote = false;
@@ -811,8 +818,7 @@ Vec2 parseBoardPos(std::string boardPos) {
 }
 std::string stringifyMove(GameState &gameState, uint32_t move) {
 	auto [srcX, srcY] = getMoveSrcPos(move);
-	int8_t destX = (move >> 6) & 0b111111;
-	int8_t destY = move & 0b111111;
+	auto [destX, destY] = getMoveDestPos(move);
 	
 	// std::cout << "log stringifyMove = " << std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
 	std::string moveStr = stringifyBoardPos(srcX, srcY) + " " + stringifyBoardPos(destX, destY);
