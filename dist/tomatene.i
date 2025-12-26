@@ -112916,404 +112916,6 @@ typedef int32_t eval_t;
 typedef uint8_t depth_t;
 typedef uint64_t hash_t;
 
-# 1 "zobristHashes.h" 1
-
-
-
-       
-
-
-
-namespace ZobristHashes {
-
- namespace {
-  constexpr std::array<hash_t, 302> PieceHashes = {
-   0ULL,
-   2730226060588179675ULL,
-   4301660182550268777ULL,
-   10806292143925507243ULL,
-   12749803583236526400ULL,
-   2960735812660883808ULL,
-   8603763018843544753ULL,
-   9115273830126386625ULL,
-   18380522441443667204ULL,
-   10637154516735361883ULL,
-   10959122493204709803ULL,
-   11687718542247112142ULL,
-   18373982550478160601ULL,
-   13542436709001304210ULL,
-   5564028365241990822ULL,
-   16604986138423072288ULL,
-   3207964776452849778ULL,
-   18160028281596563349ULL,
-   9284792128932888775ULL,
-   6790275245353464449ULL,
-   12183816256580977514ULL,
-   18188073081328090313ULL,
-   10645653559346843544ULL,
-   12347983151003116397ULL,
-   15147325772760549137ULL,
-   11827435741943567418ULL,
-   1431216217776747012ULL,
-   13574869074064337048ULL,
-   9926053196390565261ULL,
-   15398678753997170677ULL,
-   16391151018846280156ULL,
-   16530134920166441483ULL,
-   6846839940601736315ULL,
-   13053832092164247543ULL,
-   72962997635707219ULL,
-   3402060387810900533ULL,
-   9694082631405314636ULL,
-   17249259083254156010ULL,
-   8948129323822934675ULL,
-   2589336791507822359ULL,
-   18313844170376219961ULL,
-   5798958319089624382ULL,
-   9545935524259259526ULL,
-   342614550815016140ULL,
-   5872387677003081632ULL,
-   13007746802186839037ULL,
-   14820834748073703001ULL,
-   2040745974623614477ULL,
-   2659424404003173675ULL,
-   14551509661001075564ULL,
-   3881248044232940774ULL,
-   14808699128745068846ULL,
-   14352121563698063336ULL,
-   15742873411524151891ULL,
-   7862523915756813851ULL,
-   4638932385987618903ULL,
-   14852880374408095419ULL,
-   12183726830735099363ULL,
-   1825986594365040473ULL,
-   16919873149116920174ULL,
-   15087612027925288604ULL,
-   2743688598811736ULL,
-   16055871218672780926ULL,
-   15574109820789367343ULL,
-   10873583537126415077ULL,
-   12333028087415395656ULL,
-   14682808584264992681ULL,
-   8153455248825353650ULL,
-   11721704067259019123ULL,
-   13238482584775270527ULL,
-   11044473204836531256ULL,
-   16791107308933401731ULL,
-   15629444959990291027ULL,
-   4045932735263338811ULL,
-   8564362910930581138ULL,
-   18218493868371134584ULL,
-   810224198528021891ULL,
-   17783683760189223337ULL,
-   9769851407187641205ULL,
-   9069091413342941116ULL,
-   4260792892987323573ULL,
-   17464994134427530957ULL,
-   12594099154017497738ULL,
-   11411643116250787912ULL,
-   5928818155863637773ULL,
-   11108715051967477998ULL,
-   14654479531232442515ULL,
-   1593817887737492140ULL,
-   6208551275941677529ULL,
-   18289945860007495645ULL,
-   15515568871384906532ULL,
-   617869504014814139ULL,
-   6520035627482522474ULL,
-   137668482862995336ULL,
-   4598965720456984957ULL,
-   11380873159792776985ULL,
-   11681250558033758123ULL,
-   13468094980194557611ULL,
-   12897318426010254287ULL,
-   18289927532545893247ULL,
-   4877460172521316558ULL,
-   11742982006799831806ULL,
-   16908026360433324612ULL,
-   13750501803293991607ULL,
-   1182323342423864917ULL,
-   2319462958881871584ULL,
-   9412533007857420651ULL,
-   2869376014158995761ULL,
-   10614544296080672289ULL,
-   6857448474756763539ULL,
-   11542110075050414845ULL,
-   7186670471907941516ULL,
-   7929096919393788727ULL,
-   14866729164537833746ULL,
-   3412549826567492096ULL,
-   11130297908609317535ULL,
-   10088879573407918591ULL,
-   1045216716830116828ULL,
-   17853848220472792074ULL,
-   16115983323643641174ULL,
-   4742708473430040960ULL,
-   15167401573492344618ULL,
-   8395521781116854798ULL,
-   7441664445295624543ULL,
-   11094214124715997364ULL,
-   6275695045470646332ULL,
-   755935653822695890ULL,
-   558800626446108294ULL,
-   5930704182344396964ULL,
-   4331094060636088909ULL,
-   2870993855377827457ULL,
-   7838129626600207821ULL,
-   3538319205255130342ULL,
-   8456320765251573850ULL,
-   10388317445569445078ULL,
-   7886689829638263158ULL,
-   7852613996503978277ULL,
-   8327077413289598399ULL,
-   2336341050099012756ULL,
-   1681705134726467046ULL,
-   10398129389238050139ULL,
-   15707533663581832713ULL,
-   7100865996382627760ULL,
-   2501385490514578483ULL,
-   16456528368790786825ULL,
-   4847095203289404503ULL,
-   12743551648126895069ULL,
-   11456495696746709082ULL,
-   2436534387276314820ULL,
-   16871965710973146660ULL,
-   13842545038154680110ULL,
-   12522041323503368500ULL,
-   15618515517516681455ULL,
-   5429841795674777314ULL,
-   18322707600796320324ULL,
-   5894862316388214605ULL,
-   511664382917205454ULL,
-   13266194378960507476ULL,
-   5566417008613155188ULL,
-   3144789749884417335ULL,
-   12817652400617341526ULL,
-   11257135823241904720ULL,
-   15740486121002418333ULL,
-   15545345466998230743ULL,
-   10085111487125220372ULL,
-   5270024974998427753ULL,
-   18440728426663275176ULL,
-   2225198834381938512ULL,
-   9197986579269136373ULL,
-   4601717946083337669ULL,
-   1047011985679707643ULL,
-   6047751838210290866ULL,
-   10190115244654592026ULL,
-   10247092805207617680ULL,
-   10470637582870075133ULL,
-   4775402153418169252ULL,
-   283181200143178033ULL,
-   10174120573921565574ULL,
-   13020231522692509074ULL,
-   9256582629482608583ULL,
-   1220018165247465549ULL,
-   15109274973766678556ULL,
-   11111165605588682284ULL,
-   14547919358264931992ULL,
-   535992771690710202ULL,
-   9288146224637965705ULL,
-   2670299676132521023ULL,
-   17120989288950936339ULL,
-   6224660983002762022ULL,
-   1894515615353933168ULL,
-   10580416227137465449ULL,
-   11833508123640618962ULL,
-   278685243504557304ULL,
-   1629215708014390947ULL,
-   14490996197904321902ULL,
-   8147524656851514831ULL,
-   148209120565259565ULL,
-   2837962466600394313ULL,
-   15886585961613872905ULL,
-   15987005650154879871ULL,
-   1101680018335275664ULL,
-   11130008005834029523ULL,
-   8554590353686330586ULL,
-   6881665414090595492ULL,
-   11451315943367101731ULL,
-   3598168618451747722ULL,
-   4535430551597817333ULL,
-   16479377774066939878ULL,
-   13822789108417991878ULL,
-   4972795900879424239ULL,
-   16661448171621460430ULL,
-   6768628582049143855ULL,
-   13531033975708269203ULL,
-   481846273212060793ULL,
-   6701710608579495505ULL,
-   3687394166385822885ULL,
-   4072226230678665789ULL,
-   2078967596900891536ULL,
-   7943849104652520514ULL,
-   10762223575583803399ULL,
-   3606404458579245625ULL,
-   2069855518684265696ULL,
-   16899679176494766714ULL,
-   17454857109033468841ULL,
-   2834354709831969958ULL,
-   3699701718777502613ULL,
-   8051264616556452341ULL,
-   13021688572695644589ULL,
-   10506470762241972498ULL,
-   17337741588153272081ULL,
-   17535583024894083922ULL,
-   8048236737083705117ULL,
-   12356391339788145879ULL,
-   10329793382023478201ULL,
-   3208306841878560312ULL,
-   11198592763659622420ULL,
-   6001974516470374711ULL,
-   1525188324240505798ULL,
-   340083016175179325ULL,
-   14100033826676650870ULL,
-   9602172413049836891ULL,
-   8850344581350122297ULL,
-   8977319920280652281ULL,
-   5529518331127376528ULL,
-   2170542467702735635ULL,
-   7740179343377569115ULL,
-   17771269329179638063ULL,
-   8873814172872390936ULL,
-   18355259638298350303ULL,
-   2775800699471602813ULL,
-   6505183026912487228ULL,
-   409177407311554350ULL,
-   15940069340514337208ULL,
-   11074755634649249923ULL,
-   4920301885249512278ULL,
-   2398084878483015988ULL,
-   1079524697480207804ULL,
-   12589029734116276851ULL,
-   13080529872088419916ULL,
-   5166057690650125487ULL,
-   1230941309581242251ULL,
-   14737869871043923876ULL,
-   15392916851680631846ULL,
-   13802015618008688344ULL,
-   2873402149884327347ULL,
-   15389091372499930001ULL,
-   6038906895515217527ULL,
-   16814207317985054862ULL,
-   7713276782512845301ULL,
-   5064934022228259399ULL,
-   17937184143497872305ULL,
-   10528843170501720832ULL,
-   1041762683003965137ULL,
-   2748581685439692689ULL,
-   8696218629365229823ULL,
-   2203240784782176628ULL,
-   5962387632448351573ULL,
-   3677113867366886546ULL,
-   5412498500751524137ULL,
-   13870834282558455243ULL,
-   1786179199600274928ULL,
-   14740955100443416316ULL,
-   8536157178041295090ULL,
-   2242075984661061756ULL,
-   12553358621836118689ULL,
-   7531337299541337544ULL,
-   12364680798152664263ULL,
-   3795967108841789986ULL,
-   13458948782014974964ULL,
-   17973502359161090743ULL,
-   6724704909763323984ULL,
-   5215345024794641531ULL,
-   10349962647811950028ULL,
-   116412061372550628ULL,
-   18024569275210285670ULL,
-   12825318214388622965ULL,
-   7055063431388336226ULL,
-   14724237673046928349ULL,
-   10238441476511471856ULL,
-   15688658464994654604ULL,
-   10461687216771103784ULL,
-   8421944988895447247ULL
-  };
-  constexpr std::array<hash_t, 36> FileHashes = {
-   17401646313710308810ULL,
-   17260915720187174283ULL,
-   11681960333160400406ULL,
-   4975544556831937181ULL,
-   6093860551484327120ULL,
-   12917355981495208292ULL,
-   18207450966034898755ULL,
-   521407526298420148ULL,
-   11419066755680456375ULL,
-   2574467159362908790ULL,
-   3678453535515316439ULL,
-   10052676115172459901ULL,
-   1203564119089256419ULL,
-   17240230908952724033ULL,
-   5646945572284632949ULL,
-   10957751896355203971ULL,
-   5643047715609591211ULL,
-   17006068632931140845ULL,
-   1744365652210512285ULL,
-   12254265285275675468ULL,
-   13973704735751096213ULL,
-   9574414339102194497ULL,
-   5884802497123290527ULL,
-   6638874906414359392ULL,
-   9414741112834346430ULL,
-   1372203263834831772ULL,
-   13979605583697771004ULL,
-   2517983421312647356ULL,
-   8786786588120811035ULL,
-   10785124844984733956ULL,
-   12744328489750790119ULL,
-   8480399709436139047ULL,
-   12057606573598667038ULL,
-   13574762268894204930ULL,
-   3143586433680054016ULL,
-   3223202370209838809ULL
-  };
-  constexpr std::array<hash_t, 36> RankHashes = {
-   8535667374868396458ULL,
-   4609524026062671870ULL,
-   3362867448148572306ULL,
-   8137846861696319279ULL,
-   12704669078983021296ULL,
-   13635002881261356717ULL,
-   7315607495596377694ULL,
-   7598353724772055489ULL,
-   1930981505560754667ULL,
-   6725003941975738484ULL,
-   2348943090924444929ULL,
-   437055855792495891ULL,
-   6382537851285120954ULL,
-   11767446828220357365ULL,
-   7295306995949492169ULL,
-   4596801948984898368ULL,
-   3126902891293835349ULL,
-   14837188377099521219ULL,
-   17408718539488607343ULL,
-   17330598425441081234ULL,
-   6517068796451376260ULL,
-   7801514890506187646ULL,
-   9166077119333294726ULL,
-   6994824609827697202ULL,
-   4794916269167439126ULL,
-   5342609381364749011ULL,
-   17357484834029973264ULL,
-   9311779426312897381ULL,
-   7986067354486427297ULL,
-   15513415835142282367ULL,
-   4222054295763607642ULL,
-   17205098686733473057ULL,
-   3811657374259129227ULL,
-   14206629839698733572ULL,
-   17088343654121319142ULL,
-   2940212843208481074ULL
-  };
- }
-
- constexpr inline hash_t getHash(uint16_t pieceSpecies, uint8_t file, uint8_t rank) {
-  return PieceHashes[pieceSpecies] ^ FileHashes[file] ^ RankHashes[rank];
- }
-};
-# 22 "tomatene.cpp" 2
 # 1 "transpositionTable.h" 1
        
 
@@ -113332,17 +112934,22 @@ enum class NodeType {
 };
 struct TranspositionTableEntry {
  hash_t hash;
- uint32_t bestMove;
+ uint32_t bestMove = 0;
 
  depth_t depth = 0;
+
+ uint16_t age;
  eval_t eval;
  NodeType nodeType;
 };
+
+constexpr size_t x = sizeof(TranspositionTableEntry);
 
 class TranspositionTable {
 private:
  std::array<TranspositionTableEntry, TRANSPOSITION_TABLE_SIZE>table{};
 public:
+ size_t size = 0;
  TranspositionTableEntry* get(hash_t hash) {
   hash_t maskedHash = hash & HASH_MASK;
   TranspositionTableEntry& entry = table[maskedHash];
@@ -113351,14 +112958,17 @@ public:
   }
   return nullptr;
  }
- void put(hash_t hash, uint32_t bestMove, depth_t depth, eval_t eval, NodeType nodeType) {
+ void put(hash_t hash, uint32_t bestMove, depth_t depth, uint16_t age, eval_t eval, NodeType nodeType) {
   hash_t maskedHash = hash & HASH_MASK;
-  if(depth >= table[maskedHash].depth) {
-   table[maskedHash] = { hash, bestMove, depth, eval, nodeType };
+  if(table[maskedHash].bestMove == 0) {
+   size++;
+  }
+  if(depth >= table[maskedHash].depth || age != table[maskedHash].age) {
+   table[maskedHash] = { hash, bestMove, depth, age, eval, nodeType };
   }
  }
 };
-# 23 "tomatene.cpp" 2
+# 22 "tomatene.cpp" 2
 
 inline constexpr depth_t MAX_DEPTH = 3;
 inline constexpr float ESTIMATED_GAME_LENGTH = 900;
@@ -113746,7 +113356,7 @@ D,
 MUG,
 GB,
 P,
-# 109 "tomatene.cpp" 2
+# 108 "tomatene.cpp" 2
 
   TotalCount
  };
@@ -114115,7 +113725,7 @@ PieceInfo PieceTable[] = {
 { PieceSpecies::None, {{{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
 { PieceSpecies::DE, {{{{0,1},1},{{0,-1},1}},{},{}} },
 { PieceSpecies::GLG, {{{{0,1},1}},{},{}} },
-# 176 "tomatene.cpp" 2
+# 175 "tomatene.cpp" 2
 
 };
 
@@ -114447,7 +114057,7 @@ constexpr std::array<std::string, 302> pieceNames = {
 "MUG",
 "GB",
 "P",
-# 206 "tomatene.cpp" 2
+# 205 "tomatene.cpp" 2
 
 };
 inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::TotalCount - 1> PieceSpeciesToId = {
@@ -114754,7 +114364,7 @@ inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::T
 { "MUG", PieceSpecies::MUG },
 { "GB", PieceSpecies::GB },
 { "P", PieceSpecies::P },
-# 211 "tomatene.cpp" 2
+# 210 "tomatene.cpp" 2
 
 };
 struct PieceIdsWrapper {
@@ -114865,6 +114475,332 @@ inline constexpr Vec2 getMoveSrcPos(uint32_t move) {
 inline constexpr Vec2 getMoveDestPos(uint32_t move) {
  return Vec2{ static_cast<int8_t>((move >> 6) & 0b111111), static_cast<int8_t>(move & 0b111111) };
 }
+
+
+# 1 "zobristHashes.h" 1
+
+
+
+       
+
+
+
+namespace ZobristHashes {
+
+ namespace {
+  constexpr std::array<hash_t, 302> PieceHashes = {
+   0ULL,
+   2730226060588179675ULL,
+   4301660182550268777ULL,
+   10806292143925507243ULL,
+   12749803583236526400ULL,
+   2960735812660883808ULL,
+   8603763018843544753ULL,
+   9115273830126386625ULL,
+   18380522441443667204ULL,
+   10637154516735361883ULL,
+   10959122493204709803ULL,
+   11687718542247112142ULL,
+   18373982550478160601ULL,
+   13542436709001304210ULL,
+   5564028365241990822ULL,
+   16604986138423072288ULL,
+   3207964776452849778ULL,
+   18160028281596563349ULL,
+   9284792128932888775ULL,
+   6790275245353464449ULL,
+   12183816256580977514ULL,
+   18188073081328090313ULL,
+   10645653559346843544ULL,
+   12347983151003116397ULL,
+   15147325772760549137ULL,
+   11827435741943567418ULL,
+   1431216217776747012ULL,
+   13574869074064337048ULL,
+   9926053196390565261ULL,
+   15398678753997170677ULL,
+   16391151018846280156ULL,
+   16530134920166441483ULL,
+   6846839940601736315ULL,
+   13053832092164247543ULL,
+   72962997635707219ULL,
+   3402060387810900533ULL,
+   9694082631405314636ULL,
+   17249259083254156010ULL,
+   8948129323822934675ULL,
+   2589336791507822359ULL,
+   18313844170376219961ULL,
+   5798958319089624382ULL,
+   9545935524259259526ULL,
+   342614550815016140ULL,
+   5872387677003081632ULL,
+   13007746802186839037ULL,
+   14820834748073703001ULL,
+   2040745974623614477ULL,
+   2659424404003173675ULL,
+   14551509661001075564ULL,
+   3881248044232940774ULL,
+   14808699128745068846ULL,
+   14352121563698063336ULL,
+   15742873411524151891ULL,
+   7862523915756813851ULL,
+   4638932385987618903ULL,
+   14852880374408095419ULL,
+   12183726830735099363ULL,
+   1825986594365040473ULL,
+   16919873149116920174ULL,
+   15087612027925288604ULL,
+   2743688598811736ULL,
+   16055871218672780926ULL,
+   15574109820789367343ULL,
+   10873583537126415077ULL,
+   12333028087415395656ULL,
+   14682808584264992681ULL,
+   8153455248825353650ULL,
+   11721704067259019123ULL,
+   13238482584775270527ULL,
+   11044473204836531256ULL,
+   16791107308933401731ULL,
+   15629444959990291027ULL,
+   4045932735263338811ULL,
+   8564362910930581138ULL,
+   18218493868371134584ULL,
+   810224198528021891ULL,
+   17783683760189223337ULL,
+   9769851407187641205ULL,
+   9069091413342941116ULL,
+   4260792892987323573ULL,
+   17464994134427530957ULL,
+   12594099154017497738ULL,
+   11411643116250787912ULL,
+   5928818155863637773ULL,
+   11108715051967477998ULL,
+   14654479531232442515ULL,
+   1593817887737492140ULL,
+   6208551275941677529ULL,
+   18289945860007495645ULL,
+   15515568871384906532ULL,
+   617869504014814139ULL,
+   6520035627482522474ULL,
+   137668482862995336ULL,
+   4598965720456984957ULL,
+   11380873159792776985ULL,
+   11681250558033758123ULL,
+   13468094980194557611ULL,
+   12897318426010254287ULL,
+   18289927532545893247ULL,
+   4877460172521316558ULL,
+   11742982006799831806ULL,
+   16908026360433324612ULL,
+   13750501803293991607ULL,
+   1182323342423864917ULL,
+   2319462958881871584ULL,
+   9412533007857420651ULL,
+   2869376014158995761ULL,
+   10614544296080672289ULL,
+   6857448474756763539ULL,
+   11542110075050414845ULL,
+   7186670471907941516ULL,
+   7929096919393788727ULL,
+   14866729164537833746ULL,
+   3412549826567492096ULL,
+   11130297908609317535ULL,
+   10088879573407918591ULL,
+   1045216716830116828ULL,
+   17853848220472792074ULL,
+   16115983323643641174ULL,
+   4742708473430040960ULL,
+   15167401573492344618ULL,
+   8395521781116854798ULL,
+   7441664445295624543ULL,
+   11094214124715997364ULL,
+   6275695045470646332ULL,
+   755935653822695890ULL,
+   558800626446108294ULL,
+   5930704182344396964ULL,
+   4331094060636088909ULL,
+   2870993855377827457ULL,
+   7838129626600207821ULL,
+   3538319205255130342ULL,
+   8456320765251573850ULL,
+   10388317445569445078ULL,
+   7886689829638263158ULL,
+   7852613996503978277ULL,
+   8327077413289598399ULL,
+   2336341050099012756ULL,
+   1681705134726467046ULL,
+   10398129389238050139ULL,
+   15707533663581832713ULL,
+   7100865996382627760ULL,
+   2501385490514578483ULL,
+   16456528368790786825ULL,
+   4847095203289404503ULL,
+   12743551648126895069ULL,
+   11456495696746709082ULL,
+   2436534387276314820ULL,
+   16871965710973146660ULL,
+   13842545038154680110ULL,
+   12522041323503368500ULL,
+   15618515517516681455ULL,
+   5429841795674777314ULL,
+   18322707600796320324ULL,
+   5894862316388214605ULL,
+   511664382917205454ULL,
+   13266194378960507476ULL,
+   5566417008613155188ULL,
+   3144789749884417335ULL,
+   12817652400617341526ULL,
+   11257135823241904720ULL,
+   15740486121002418333ULL,
+   15545345466998230743ULL,
+   10085111487125220372ULL,
+   5270024974998427753ULL,
+   18440728426663275176ULL,
+   2225198834381938512ULL,
+   9197986579269136373ULL,
+   4601717946083337669ULL,
+   1047011985679707643ULL,
+   6047751838210290866ULL,
+   10190115244654592026ULL,
+   10247092805207617680ULL,
+   10470637582870075133ULL,
+   4775402153418169252ULL,
+   283181200143178033ULL,
+   10174120573921565574ULL,
+   13020231522692509074ULL,
+   9256582629482608583ULL,
+   1220018165247465549ULL,
+   15109274973766678556ULL,
+   11111165605588682284ULL,
+   14547919358264931992ULL,
+   535992771690710202ULL,
+   9288146224637965705ULL,
+   2670299676132521023ULL,
+   17120989288950936339ULL,
+   6224660983002762022ULL,
+   1894515615353933168ULL,
+   10580416227137465449ULL,
+   11833508123640618962ULL,
+   278685243504557304ULL,
+   1629215708014390947ULL,
+   14490996197904321902ULL,
+   8147524656851514831ULL,
+   148209120565259565ULL,
+   2837962466600394313ULL,
+   15886585961613872905ULL,
+   15987005650154879871ULL,
+   1101680018335275664ULL,
+   11130008005834029523ULL,
+   8554590353686330586ULL,
+   6881665414090595492ULL,
+   11451315943367101731ULL,
+   3598168618451747722ULL,
+   4535430551597817333ULL,
+   16479377774066939878ULL,
+   13822789108417991878ULL,
+   4972795900879424239ULL,
+   16661448171621460430ULL,
+   6768628582049143855ULL,
+   13531033975708269203ULL,
+   481846273212060793ULL,
+   6701710608579495505ULL,
+   3687394166385822885ULL,
+   4072226230678665789ULL,
+   2078967596900891536ULL,
+   7943849104652520514ULL,
+   10762223575583803399ULL,
+   3606404458579245625ULL,
+   2069855518684265696ULL,
+   16899679176494766714ULL,
+   17454857109033468841ULL,
+   2834354709831969958ULL,
+   3699701718777502613ULL,
+   8051264616556452341ULL,
+   13021688572695644589ULL,
+   10506470762241972498ULL,
+   17337741588153272081ULL,
+   17535583024894083922ULL,
+   8048236737083705117ULL,
+   12356391339788145879ULL,
+   10329793382023478201ULL,
+   3208306841878560312ULL,
+   11198592763659622420ULL,
+   6001974516470374711ULL,
+   1525188324240505798ULL,
+   340083016175179325ULL,
+   14100033826676650870ULL,
+   9602172413049836891ULL,
+   8850344581350122297ULL,
+   8977319920280652281ULL,
+   5529518331127376528ULL,
+   2170542467702735635ULL,
+   7740179343377569115ULL,
+   17771269329179638063ULL,
+   8873814172872390936ULL,
+   18355259638298350303ULL,
+   2775800699471602813ULL,
+   6505183026912487228ULL,
+   409177407311554350ULL,
+   15940069340514337208ULL,
+   11074755634649249923ULL,
+   4920301885249512278ULL,
+   2398084878483015988ULL,
+   1079524697480207804ULL,
+   12589029734116276851ULL,
+   13080529872088419916ULL,
+   5166057690650125487ULL,
+   1230941309581242251ULL,
+   14737869871043923876ULL,
+   15392916851680631846ULL,
+   13802015618008688344ULL,
+   2873402149884327347ULL,
+   15389091372499930001ULL,
+   6038906895515217527ULL,
+   16814207317985054862ULL,
+   7713276782512845301ULL,
+   5064934022228259399ULL,
+   17937184143497872305ULL,
+   10528843170501720832ULL,
+   1041762683003965137ULL,
+   2748581685439692689ULL,
+   8696218629365229823ULL,
+   2203240784782176628ULL,
+   5962387632448351573ULL,
+   3677113867366886546ULL,
+   5412498500751524137ULL,
+   13870834282558455243ULL,
+   1786179199600274928ULL,
+   14740955100443416316ULL,
+   8536157178041295090ULL,
+   2242075984661061756ULL,
+   12553358621836118689ULL,
+   7531337299541337544ULL,
+   12364680798152664263ULL,
+   3795967108841789986ULL,
+   13458948782014974964ULL,
+   17973502359161090743ULL,
+   6724704909763323984ULL,
+   5215345024794641531ULL,
+   10349962647811950028ULL,
+   116412061372550628ULL,
+   18024569275210285670ULL,
+   12825318214388622965ULL,
+   7055063431388336226ULL,
+   14724237673046928349ULL,
+   10238441476511471856ULL,
+   15688658464994654604ULL,
+   10461687216771103784ULL,
+   8421944988895447247ULL
+  };
+ }
+
+ constexpr inline hash_t getHash(Piece piece, uint8_t file, uint8_t rank) {
+
+  hash_t hash = PieceHashes[piece.getSpecies()] ^ ((static_cast<hash_t>(file) * 36 + static_cast<hash_t>(rank)) * 0x5C1B4D72E2FFCD75ULL);
+  return piece.getOwner()? std::rotr(hash, 32) : hash;
+ }
+};
+# 323 "tomatene.cpp" 2
 
 
 class BoardPosBitset {
@@ -115088,7 +115024,7 @@ private:
     royalsLeft[oldPieceOwner]--;
    }
    playerOccupancyBitsets[oldPieceOwner].erase(Vec2{ x, y });
-   hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+   hash ^= ZobristHashes::getHash(oldPiece, x, y);
    if(regenerateMoves) {
     squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
     bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y }).forEach([&](size_t i) {
@@ -115158,7 +115094,7 @@ private:
   if(piece.isRoyal()) {
    royalsLeft[pieceOwner]++;
   }
-  hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
+  hash ^= ZobristHashes::getHash(piece, x, y);
   occupancyBitset.insert(Vec2{ x, y });
   playerOccupancyBitsets[pieceOwner].insert(Vec2{ x, y });
  }
@@ -115181,7 +115117,7 @@ private:
     squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
     squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
    }
-   hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+   hash ^= ZobristHashes::getHash(oldPiece, x, y);
   }
  }
 public:
@@ -115190,6 +115126,7 @@ public:
 
  eval_t absEval = 0;
  hash_t hash = 0;
+ uint16_t age = 0;
 
  std::string toString() const {
   std::ostringstream oss;
@@ -115206,6 +115143,9 @@ public:
    return absEval * -1;
   }
   return absEval;
+ }
+ bool isDraw() const {
+  return false;
  }
 
  inline constexpr Piece getSquare(int8_t x, int8_t y) const {
@@ -115233,14 +115173,19 @@ public:
   PieceSpecies::Type pieceSpecies = piece.getSpecies();
   uint8_t pieceOwner = piece.getOwner();
   bool middleStepShouldPromote = false;
+  bool captureHappens = false;
   if(isLionLikePiece(pieceSpecies)) {
 
    int8_t doesMiddleStep = move >> 28;
    if(doesMiddleStep) {
     int8_t middleStepX = ((move >> 26) & 0b11) - 1;
     int8_t middleStepY = ((move >> 24) & 0b11) - 1;
+    int8_t middleX = srcX + middleStepX;
     int8_t middleY = srcY + middleStepY;
-    clearSquare(srcX + middleStepX, middleY, regenerateMoves, saveState);
+    clearSquare(middleX, middleY, regenerateMoves, saveState);
+    if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ middleX, middleY })) {
+     captureHappens = true;
+    }
     middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
    }
   } else if(isRangeCapturingPiece(pieceSpecies)) {
@@ -115253,6 +115198,9 @@ public:
     int8_t y = srcY + dirY;
     int i = 0;
     while(x != destX || y != destY) {
+     if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ x, y })) {
+      captureHappens = true;
+     }
      clearSquare(x, y, regenerateMoves, saveState);
      x += dirX;
      y += dirY;
@@ -115271,10 +115219,18 @@ public:
 
 
   clearSquare(srcX, srcY, regenerateMoves, saveState);
+  if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ destX, destY })) {
+   captureHappens = true;
+  }
   setSquare(destX, destY, piece, regenerateMoves, saveState);
   currentPlayer = 1 - currentPlayer;
+  hash = ~hash;
   if(regenerateMoves) {
    generateMoves();
+  }
+
+  if(captureHappens) {
+   age++;
   }
  }
  void unmakeMove(bool regenerateMoves = true) {
@@ -115289,6 +115245,7 @@ public:
   undoStack.pop_back();
   generateMoves();
   currentPlayer = 1 - currentPlayer;
+  hash = ~hash;
  }
 
  void generateMoves() {
@@ -115430,7 +115387,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 885 "tomatene.cpp" 2
+# 908 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -115511,6 +115468,9 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
  if(depth == 0) {
   return gameState.eval();
  }
+ if(gameState.isDraw()) {
+  return 0;
+ }
  TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
 
 
@@ -115568,7 +115528,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
   }
  }
  NodeType nodeType = bestScore <= originalAlpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
- transpositionTable.put(gameState.hash, bestMove, depth, bestScore, nodeType);
+ transpositionTable.put(gameState.hash, bestMove, depth, gameState.age, bestScore, nodeType);
  return bestScore;
 }
 uint32_t perft(GameState &gameState, depth_t depth) {
@@ -115577,6 +115537,9 @@ uint32_t perft(GameState &gameState, depth_t depth) {
   return 1;
  }
  if(depth == 0) {
+  return 1;
+ }
+ if(gameState.isDraw()) {
   return 1;
  }
  uint32_t nodesSearched = 0;
@@ -115590,19 +115553,47 @@ uint32_t perft(GameState &gameState, depth_t depth) {
  return nodesSearched;
 }
 
+uint32_t perftTt(GameState &gameState, depth_t depth) {
+ TranspositionTableEntry *ttEntry = transpositionTable.get(gameState.hash);
+ if(ttEntry && ttEntry->depth == 19) return ttEntry->bestMove;
+
+ if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
+  transpositionTable.put(gameState.hash, 1, 19, 0, 0, NodeType::EXACT);
+  return 1;
+ }
+ if(depth == 0) {
+  transpositionTable.put(gameState.hash, 1, 19, 0, 0, NodeType::EXACT);
+  return 1;
+ }
+ if(gameState.isDraw()) {
+  transpositionTable.put(gameState.hash, 1, 19, 0, 0, NodeType::EXACT);
+  return 1;
+ }
+ uint32_t nodesSearched = 0;
+ std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
+ bool regenerateMoves = depth > 1;
+ for(uint32_t move : moves) {
+  gameState.makeMove(move, regenerateMoves, true);
+  nodesSearched += perftTt(gameState, depth - 1);
+  gameState.unmakeMove(regenerateMoves);
+ }
+ transpositionTable.put(gameState.hash, nodesSearched, 19, 0, 0, NodeType::EXACT);
+ return nodesSearched;
+}
+
 uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
  
-# 1045 "tomatene.cpp" 3
+# 1102 "tomatene.cpp" 3
 (void) ((!!(
-# 1045 "tomatene.cpp"
+# 1102 "tomatene.cpp"
 maxDepth <= MAX_DEPTH
-# 1045 "tomatene.cpp" 3
+# 1102 "tomatene.cpp" 3
 )) || (_assert(
-# 1045 "tomatene.cpp"
+# 1102 "tomatene.cpp"
 "maxDepth <= MAX_DEPTH"
-# 1045 "tomatene.cpp" 3
-,"tomatene.cpp",1045),0))
-# 1045 "tomatene.cpp"
+# 1102 "tomatene.cpp" 3
+,"tomatene.cpp",1102),0))
+# 1102 "tomatene.cpp"
                              ;
  using clock = std::chrono::steady_clock;
  auto startTime = clock::now();
@@ -115625,6 +115616,9 @@ maxDepth <= MAX_DEPTH
  }
  return ttEntry->bestMove;
 }
+void outputTtSize() {
+ std::cout << "Transposition table size: " << transpositionTable.size << " / " << TRANSPOSITION_TABLE_SIZE << std::endl;
+}
 void makeBestMove(GameState &gameState) {
  const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 
@@ -115633,6 +115627,8 @@ void makeBestMove(GameState &gameState) {
  std::cout << "move " << stringifyMove(gameState, bestMove) << std::endl;
  gameState.makeMove(bestMove);
  std::cout << "eval " << gameState.absEval << std::endl;
+ std::cout << "log ";
+ outputTtSize();
 }
 
 int main() {
@@ -115710,9 +115706,21 @@ int main() {
      auto start = clock::now();
      uint32_t nodesSearched = perft(gameState, depth);
      auto end = clock::now();
-     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-     std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / std::max(static_cast<float>(elapsed.count()), 0.00001f) << " n/s)" << std::endl;
+     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+     std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
     }
+   } else if(command == "perfttt") {
+    depth_t depth = std::stoi(getItem(arguments, 1));
+    if(depth > MAX_DEPTH) {
+     std::cout << "Depth is greater than MAX_DEPTH = " << MAX_DEPTH << "; will only go to depth " << MAX_DEPTH << std::endl;
+     depth = MAX_DEPTH;
+    }
+    using clock = std::chrono::steady_clock;
+    auto start = clock::now();
+    uint32_t nodesSearched = perftTt(gameState, depth);
+    auto end = clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << nodesSearched / (static_cast<float>(elapsed.count()) / 1000000.0f) << " n/s)" << std::endl;
    } else if(command == "search") {
     depth_t depth = std::stoi(getItem(arguments, 1));
     using clock = std::chrono::steady_clock;
@@ -115721,8 +115729,8 @@ int main() {
     nodesSearched = 0;
     eval = search(gameState, -100000000, 100000000, depth);
     auto end = clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
    } else if(command == "bestmove") {
     depth_t depth = std::stoi(getItem(arguments, 1));
     using clock = std::chrono::steady_clock;
@@ -115730,10 +115738,12 @@ int main() {
     nodesSearched = 0;
     uint32_t bestMove = findBestMove(gameState, depth);
     auto end = clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     gameState.makeMove(bestMove, true, true);
-    std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+    std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
     gameState.unmakeMove();
+   } else if(command == "ttsize") {
+    outputTtSize();
    }
   }
  }

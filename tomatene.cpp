@@ -18,7 +18,6 @@ typedef int32_t eval_t;
 typedef uint8_t depth_t;
 typedef uint64_t hash_t;
 
-#include "zobristHashes.h"
 #include "transpositionTable.h"
 
 inline constexpr depth_t MAX_DEPTH = 3;
@@ -319,6 +318,9 @@ inline constexpr Vec2 getMoveDestPos(uint32_t move) {
 	return Vec2{ static_cast<int8_t>((move >> 6) & 0b111111), static_cast<int8_t>(move & 0b111111) };
 }
 
+// this file relies on Piece. I'm too lazy to add proper header files.
+#include "zobristHashes.h"
+
 // A bitset for storing board positions.
 class BoardPosBitset {
 private:
@@ -541,7 +543,7 @@ private:
 				royalsLeft[oldPieceOwner]--;
 			}
 			playerOccupancyBitsets[oldPieceOwner].erase(Vec2{ x, y });
-			hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+			hash ^= ZobristHashes::getHash(oldPiece, x, y);
 			if(regenerateMoves) {
 				squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
 				bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y }).forEach([&](size_t i) {
@@ -611,7 +613,7 @@ private:
 		if(piece.isRoyal()) {
 			royalsLeft[pieceOwner]++;
 		}
-		hash ^= ZobristHashes::getHash(piece.getSpecies(), x, y);
+		hash ^= ZobristHashes::getHash(piece, x, y);
 		occupancyBitset.insert(Vec2{ x, y });
 		playerOccupancyBitsets[pieceOwner].insert(Vec2{ x, y });
 	}
@@ -634,7 +636,7 @@ private:
 				squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
 				squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
 			}
-			hash ^= ZobristHashes::getHash(oldPiece.getSpecies(), x, y);
+			hash ^= ZobristHashes::getHash(oldPiece, x, y);
 		}
 	}
 public:
@@ -643,6 +645,7 @@ public:
 	// this could be made unsigned, but we'll be converting it to signed all the time
 	eval_t absEval = 0;
 	hash_t hash = 0;
+	uint16_t age = 0;
 	
 	std::string toString() const {
 		std::ostringstream oss;
@@ -686,14 +689,19 @@ public:
 		PieceSpecies::Type pieceSpecies = piece.getSpecies();
 		uint8_t pieceOwner = piece.getOwner();
 		bool middleStepShouldPromote = false;
+		bool captureHappens = false;
 		if(isLionLikePiece(pieceSpecies)) {
 			// lion-like pieces
 			int8_t doesMiddleStep = move >> 28;
 			if(doesMiddleStep) {
 				int8_t middleStepX = ((move >> 26) & 0b11) - 1;
 				int8_t middleStepY = ((move >> 24) & 0b11) - 1;
+				int8_t middleX = srcX + middleStepX;
 				int8_t middleY = srcY + middleStepY;
-				clearSquare(srcX + middleStepX, middleY, regenerateMoves, saveState);
+				clearSquare(middleX, middleY, regenerateMoves, saveState);
+				if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ middleX, middleY })) {
+					captureHappens = true;
+				}
 				middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
 			}
 		} else if(isRangeCapturingPiece(pieceSpecies)) {
@@ -706,6 +714,9 @@ public:
 				int8_t y = srcY + dirY;
 				int i = 0;
 				while(x != destX || y != destY) {
+					if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ x, y })) {
+						captureHappens = true;
+					}
 					clearSquare(x, y, regenerateMoves, saveState);
 					x += dirX;
 					y += dirY;
@@ -724,10 +735,18 @@ public:
 		
 		// std::cout << std::format("Moving piece {} from ({}, {}) to ({}, {}); capturing {}", pieceNames[piece.getSpecies()], srcX, srcY, destX, destY, pieceNames[getSquare(destX, destY).getSpecies()]) << std::endl;
 		clearSquare(srcX, srcY, regenerateMoves, saveState);
+		if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ destX, destY })) {
+			captureHappens = true;
+		}
 		setSquare(destX, destY, piece, regenerateMoves, saveState);
 		currentPlayer = 1 - currentPlayer;
+		hash = ~hash;
 		if(regenerateMoves) {
 			generateMoves();
+		}
+		// captures are irreversible moves and hence the "age" of the game must be incremented
+		if(captureHappens) {
+			age++;
 		}
 	}
 	void unmakeMove(bool regenerateMoves = true) {
@@ -742,6 +761,7 @@ public:
 		undoStack.pop_back();
 		generateMoves();
 		currentPlayer = 1 - currentPlayer;
+		hash = ~hash;
 	}
 	
 	void generateMoves() {
@@ -1019,7 +1039,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 		}
 	}
 	NodeType nodeType = bestScore <= originalAlpha? NodeType::UPPER_BOUND : bestScore >= beta? NodeType::LOWER_BOUND : NodeType::EXACT;
-	transpositionTable.put(gameState.hash, bestMove, depth, bestScore, nodeType);
+	transpositionTable.put(gameState.hash, bestMove, depth, gameState.age, bestScore, nodeType);
 	return bestScore;
 }
 uint32_t perft(GameState &gameState, depth_t depth) {
@@ -1038,6 +1058,30 @@ uint32_t perft(GameState &gameState, depth_t depth) {
 		nodesSearched += perft(gameState, depth - 1);
 		gameState.unmakeMove(regenerateMoves);
 	}
+	return nodesSearched;
+}
+// WARNING: This will corrupt the transposition table!! Testing purposes only!
+uint32_t perftTt(GameState &gameState, depth_t depth) {
+	TranspositionTableEntry *ttEntry = transpositionTable.get(gameState.hash);
+	if(ttEntry && ttEntry->depth == 19) return ttEntry->bestMove;
+	
+	if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
+		transpositionTable.put(gameState.hash, 1, 19, 0, 0, NodeType::EXACT);
+		return 1;
+	}
+	if(depth == 0) {
+		transpositionTable.put(gameState.hash, 1, 19, 0, 0, NodeType::EXACT);
+		return 1;
+	}
+	uint32_t nodesSearched = 0;
+	std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
+	bool regenerateMoves = depth > 1;
+	for(uint32_t move : moves) {
+		gameState.makeMove(move, regenerateMoves, true);
+		nodesSearched += perftTt(gameState, depth - 1);
+		gameState.unmakeMove(regenerateMoves);
+	}
+	transpositionTable.put(gameState.hash, nodesSearched, 19, 0, 0, NodeType::EXACT);
 	return nodesSearched;
 }
 
@@ -1064,6 +1108,9 @@ uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove =
 	}
 	return ttEntry->bestMove;
 }
+void outputTtSize() {
+	std::cout << "Transposition table size: " << transpositionTable.size << " / " << TRANSPOSITION_TABLE_SIZE << std::endl;
+}
 void makeBestMove(GameState &gameState) {
 	const float timeToMove = timeIncrement + startingTime / ESTIMATED_GAME_LENGTH;
 	// std::cout << "log Time to move: " << std::to_string(timeToMove) << " seconds" << std::endl;
@@ -1072,6 +1119,8 @@ void makeBestMove(GameState &gameState) {
 	std::cout << "move " << stringifyMove(gameState, bestMove) << std::endl;
 	gameState.makeMove(bestMove);
 	std::cout << "eval " << gameState.absEval << std::endl;
+	std::cout << "log ";
+	outputTtSize();
 }
 
 int main() {
@@ -1149,9 +1198,21 @@ int main() {
 					auto start = clock::now();
 					uint32_t nodesSearched = perft(gameState, depth);
 					auto end = clock::now();
-					auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-					std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << elapsed << " (" << nodesSearched * 1000 / std::max(static_cast<float>(elapsed.count()), 0.00001f) << " n/s)" << std::endl;
+					auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+					std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
 				}
+			} else if(command == "perfttt") {
+				depth_t depth = std::stoi(getItem(arguments, 1));
+				if(depth > MAX_DEPTH) {
+					std::cout << "Depth is greater than MAX_DEPTH = " << MAX_DEPTH << "; will only go to depth " << MAX_DEPTH << std::endl;
+					depth = MAX_DEPTH;
+				}
+				using clock = std::chrono::steady_clock;
+				auto start = clock::now();
+				uint32_t nodesSearched = perftTt(gameState, depth);
+				auto end = clock::now();
+				auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+				std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << nodesSearched / (static_cast<float>(elapsed.count()) / 1000000.0f) << " n/s)" << std::endl;
 			} else if(command == "search") {
 				depth_t depth = std::stoi(getItem(arguments, 1));
 				using clock = std::chrono::steady_clock;
@@ -1160,8 +1221,8 @@ int main() {
 				nodesSearched = 0;
 				eval = search(gameState, -INF_SCORE, INF_SCORE, depth);
 				auto end = clock::now();
-				auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-				std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+				auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+				std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
 			} else if(command == "bestmove") {
 				depth_t depth = std::stoi(getItem(arguments, 1));
 				using clock = std::chrono::steady_clock;
@@ -1169,10 +1230,12 @@ int main() {
 				nodesSearched = 0;
 				uint32_t bestMove = findBestMove(gameState, depth);
 				auto end = clock::now();
-				auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+				auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 				gameState.makeMove(bestMove, true, true);
-				std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << elapsed << " (" << static_cast<uint64_t>(nodesSearched) * 1000 / elapsed.count() << " n/s)" << std::endl;
+				std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
 				gameState.unmakeMove();
+			} else if(command == "ttsize") {
+				outputTtSize();
 			}
 		}
 	}
