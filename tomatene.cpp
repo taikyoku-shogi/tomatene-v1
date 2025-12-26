@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 #include <bit>
+#include <cmath>
 
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
@@ -176,13 +177,18 @@ PieceInfo PieceTable[] = {
 };
 
 inline std::array<eval_t, 302> calculateBasePieceValues() {
+	constexpr eval_t basePieceValue = 95;
+	constexpr eval_t slideFactor = 5;
+	constexpr eval_t rangeCapturingFactor = 10;
+	
 	std::array<eval_t, 302> values;
 	values[0] = 0;
 	for(int pieceSpecies = 1; pieceSpecies < 302; pieceSpecies++) {
 		Movements &movements = PieceTable[pieceSpecies].movements;
-		eval_t value = 95; // centipawns
+		eval_t value = basePieceValue; // centipawns
 		for(const auto &slide : movements.slides) {
-			value += slide.range * (isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies)) && slide.range == 35? 50 : 5);
+			bool isRangeCapturingSlide = isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies)) && slide.range == 35;
+			value += slide.range * slideFactor * (isRangeCapturingSlide? rangeCapturingFactor : 1) * std::pow(slide.dir.x * slide.dir.x + slide.dir.y * slide.dir.y, 0.25);
 		}
 		if(pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP) {
 			value += 100000;
@@ -291,7 +297,10 @@ constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
 	eval_t horizontalCenterBonus = 18 - std::abs(x - 17.5f);
 	eval_t verticalCenterBonus = std::min(y, static_cast<int8_t>(25));
 	
-	return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2;
+	eval_t manhattenDistanceFromRoyals = std::abs(x - 17.5f) + y;
+	eval_t protectingRoyalsBonus = manhattenDistanceFromRoyals <= 4? 500 : 0;
+	
+	return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2 + protectingRoyalsBonus;
 }
 
 inline constexpr bool isPosWithinBounds(Vec2 pos) {
