@@ -527,6 +527,8 @@ private:
 	std::array<std::array<std::vector<uint32_t>, 1296>, 2> movesPerSquarePerPlayer;
 	// Keeps track of all the squares changed during a move, so that it can quickly unmake the move.
 	StaticVector<StaticVector<UndoSquare, 36>, MAX_DEPTH> undoStack;
+	std::vector<hash_t> positionHashHistory;
+	int positionHashHistorySize = 0;
 	
 	void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
 		uint8_t pieceOwner = piece.getOwner();
@@ -647,6 +649,11 @@ public:
 	hash_t hash = 0;
 	uint16_t age = 0;
 	
+	GameState() {
+		// random guess at an upper bound for how many moves will go between captures. regardless it won't affect memory much at all.
+		positionHashHistory.reserve(50);
+	}
+	
 	std::string toString() const {
 		std::ostringstream oss;
 		oss << "Player: " << static_cast<int>(currentPlayer) << "\nBoard: [";
@@ -662,6 +669,22 @@ public:
 			return absEval * -1;
 		}
 		return absEval;
+	}
+	// Checks if there is a draw (by repetition), by checking if the most current game state hash is repeated 3 times earlier.
+	bool isDraw() const {
+		// not 3 like in Western chess
+		uint8_t repetitionsToDraw = 4;
+		// casting to an int avoids unsigned integer underflow at the start of the for loop
+		if(positionHashHistorySize < repetitionsToDraw * 2 - 1) {
+			return false;
+		}
+		
+		for(int i = positionHashHistorySize - 3; i >= 0; i -= 2) {
+			if(positionHashHistory[i] == hash && !--repetitionsToDraw) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	inline constexpr Piece getSquare(int8_t x, int8_t y) const {
@@ -689,7 +712,7 @@ public:
 		PieceSpecies::Type pieceSpecies = piece.getSpecies();
 		uint8_t pieceOwner = piece.getOwner();
 		bool middleStepShouldPromote = false;
-		bool captureHappens = false;
+		bool ageShouldChange = false;
 		if(isLionLikePiece(pieceSpecies)) {
 			// lion-like pieces
 			int8_t doesMiddleStep = move >> 28;
@@ -699,8 +722,8 @@ public:
 				int8_t middleX = srcX + middleStepX;
 				int8_t middleY = srcY + middleStepY;
 				clearSquare(middleX, middleY, regenerateMoves, saveState);
-				if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ middleX, middleY })) {
-					captureHappens = true;
+				if(!saveState && occupancyBitset.contains(Vec2{ middleX, middleY })) {
+					ageShouldChange = true;
 				}
 				middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
 			}
@@ -714,8 +737,8 @@ public:
 				int8_t y = srcY + dirY;
 				int i = 0;
 				while(x != destX || y != destY) {
-					if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ x, y })) {
-						captureHappens = true;
+					if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ x, y })) {
+						ageShouldChange = true;
 					}
 					clearSquare(x, y, regenerateMoves, saveState);
 					x += dirX;
@@ -731,12 +754,15 @@ public:
 		bool shouldPromote = middleStepShouldPromote || inPromotionZone(pieceOwner, destY);
 		if(shouldPromote && piece.canPromote()) {
 			piece = Piece::create(PieceTable[piece.getSpecies()].promotion, 0, pieceOwner);
+			if(!saveState) {
+				ageShouldChange = true;
+			}
 		}
 		
 		// std::cout << std::format("Moving piece {} from ({}, {}) to ({}, {}); capturing {}", pieceNames[piece.getSpecies()], srcX, srcY, destX, destY, pieceNames[getSquare(destX, destY).getSpecies()]) << std::endl;
 		clearSquare(srcX, srcY, regenerateMoves, saveState);
-		if(!saveState && !captureHappens && occupancyBitset.contains(Vec2{ destX, destY })) {
-			captureHappens = true;
+		if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ destX, destY })) {
+			ageShouldChange = true;
 		}
 		setSquare(destX, destY, piece, regenerateMoves, saveState);
 		currentPlayer = 1 - currentPlayer;
@@ -745,9 +771,14 @@ public:
 			generateMoves();
 		}
 		// captures are irreversible moves and hence the "age" of the game must be incremented
-		if(captureHappens) {
+		if(ageShouldChange) {
 			age++;
+			std::cout << "log Changing age to " << age << std::endl;
+			positionHashHistory.clear();
+			positionHashHistorySize = 0;
 		}
+		positionHashHistory.push_back(hash);
+		positionHashHistorySize++;
 	}
 	void unmakeMove(bool regenerateMoves = true) {
 		StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
@@ -762,6 +793,8 @@ public:
 		generateMoves();
 		currentPlayer = 1 - currentPlayer;
 		hash = ~hash;
+		positionHashHistory.pop_back();
+		positionHashHistorySize--;
 	}
 	
 	void generateMoves() {
@@ -982,6 +1015,9 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	if(depth == 0) {
 		return gameState.eval();
 	}
+	if(gameState.isDraw()) {
+		return 0;
+	}
 	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
 	// if(ttEntry && ttEntry->depth >= depth) {
 	// 	if(ttEntry->nodeType == NodeType::EXACT || (ttEntry->nodeType == NodeType::LOWER_BOUND && ttEntry->eval >= beta) || (ttEntry->nodeType == NodeType::UPPER_BOUND && ttEntry->eval <= alpha)) {
@@ -1050,6 +1086,9 @@ uint32_t perft(GameState &gameState, depth_t depth) {
 	if(depth == 0) {
 		return 1;
 	}
+	if(gameState.isDraw()) {
+		return 1;
+	}
 	uint32_t nodesSearched = 0;
 	std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
 	bool regenerateMoves = depth > 1;
@@ -1070,6 +1109,10 @@ uint32_t perftTt(GameState &gameState, depth_t depth) {
 		return 1;
 	}
 	if(depth == 0) {
+		transpositionTable.put(gameState.hash, 1, 19, 0, 0, NodeType::EXACT);
+		return 1;
+	}
+	if(gameState.isDraw()) {
 		transpositionTable.put(gameState.hash, 1, 19, 0, 0, NodeType::EXACT);
 		return 1;
 	}
