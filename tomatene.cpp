@@ -95,6 +95,20 @@ constexpr inline char capitaliseLetter(char c) {
 	}
 	return c - ('a' - 'A');
 }
+constexpr inline std::string capitaliseString(std::string s) {
+	std::string res(s.size(), '\0');
+	std::transform(s.begin(), s.end(), res.begin(), [](auto c) {
+		return capitaliseLetter(c);
+	});
+	return res;
+}
+constexpr inline std::string lowercaseString(std::string s) {
+	std::string res(s.size(), '\0');
+	std::transform(s.begin(), s.end(), res.begin(), [](auto c) {
+		return std::tolower(c);
+	});
+	return res;
+}
 template <typename T>
 T sign(T x) {
 	return (x > 0) - (x < 0);
@@ -222,7 +236,6 @@ std::array<uint32_t, MAX_DEPTH + 1> killerMoves1{};
 std::array<uint32_t, MAX_DEPTH + 1> killerMoves2{};
 
 bool atsiInitialised = false;
-bool inGame = false; // i sthis needed?
 uint8_t player = 0;
 float startingTime = 0;
 float timeIncrement = 0;
@@ -522,6 +535,7 @@ struct UndoSquare {
 class GameState {
 private:
 	std::array<Piece, 1296> board{};
+	uint16_t moveCounter = 0;
 	BoardPosBitset occupancyBitset{};
 	std::array<BoardPosBitset, 2> playerOccupancyBitsets{};
 	BidirectionalAttackMap bidirectionalAttackMap;
@@ -720,6 +734,7 @@ public:
 			// lion-like pieces
 			int8_t doesMiddleStep = move >> 28;
 			if(doesMiddleStep) {
+				std::cout << "log Does middle step: " << std::to_string(move) << std::endl;
 				int8_t middleStepX = ((move >> 26) & 0b11) - 1;
 				int8_t middleStepY = ((move >> 24) & 0b11) - 1;
 				int8_t middleX = srcX + middleStepX;
@@ -782,6 +797,10 @@ public:
 		}
 		positionHashHistory.push_back(hash);
 		positionHashHistorySize++;
+		
+		if(!saveState) {
+			moveCounter++;
+		}
 	}
 	void unmakeMove(bool regenerateMoves = true) {
 		StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
@@ -877,7 +896,6 @@ public:
 			}
 		});
 	}
-	
 	std::vector<uint32_t> getAllMovesForPlayer(uint8_t player) {
 		size_t totalSpace = 0;
 		for(const std::vector<uint32_t> &moves : movesPerSquarePerPlayer[player]) {
@@ -892,6 +910,32 @@ public:
 		}
 		
 		return allMoves;
+	}
+	
+	std::string toTsfen() {
+		std::string tsfen = "";
+		for(int y = 0; y < 36; y++) {
+			for(int x = 0; x < 36; x++) {
+				Piece piece = getSquare(x, y);
+				if(piece) {
+					std::string pieceName = pieceNames[piece.getSpecies()];
+					tsfen += piece.getOwner()? pieceName : lowercaseString(pieceName);
+				} else {
+					tsfen += "1";
+				}
+				if(x < 35) {
+					tsfen += ",";
+				}
+			}
+			if(y < 35) {
+				tsfen += "/";
+			}
+		}
+		tsfen += " " + std::to_string(moveCounter);
+		return tsfen;
+	}
+	void logTsfen() {
+		std::cout << "log TSFEN: " << toTsfen() << std::endl;
 	}
 	
 	static GameState fromTsfen(std::string_view tsfen) {
@@ -920,16 +964,16 @@ public:
 					count = stringViewToNum<uint8_t>(cell.substr(i));
 				}
 				bool isSecondPlayer = isUppercaseLetter(pieceSpecies[0]);
-				std::transform(pieceSpecies.begin(), pieceSpecies.end(), pieceSpecies.begin(), [](auto c) {
-					return capitaliseLetter(c);
-				});
+				pieceSpecies = capitaliseString(pieceSpecies);
 				for(int j = 0; j < count; j++) {
 					gameState.setSquare(x++, y, Piece::create(pieceSpecies, true, isSecondPlayer));
 				}
 			}
 			y++;
 		}
-		gameState.currentPlayer = stringViewToNum<uint8_t>(fields[1]) % 2;
+		uint16_t moveCounter = stringViewToNum<uint16_t>(fields[1]);
+		gameState.moveCounter = moveCounter;
+		gameState.currentPlayer = moveCounter % 2;
 		gameState.generateMoves();
 		
 		return gameState;
@@ -994,10 +1038,12 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 		}
 	}
 	bool didLionStep = false;
-	Vec2 lionStepPos;
-	if(arguments.size() > 3) {
+	Vec2 lionStepPos{0, 0};
+	// each "opmove" command will have at least 5 arguments: "opmove [src] [dest] [time] [optime]" so more than 5 means there's a middle step
+	if(arguments.size() > 5) {
 		// must be a lion-like piece
 		didLionStep = true;
+		std::cout << "log LION STEP HAHHAHAHAHA" << std::endl;
 		Vec2 stepPos = parseBoardPos(arguments[3]);
 		Vec2 stepDeltaPos = stepPos - srcPos;
 		lionStepPos = stepDeltaPos + 1; // 1 is subtracted in makeMove() so the range [-1, 1] is mapped to [0, 2] to work better as a 2-bit int
@@ -1048,7 +1094,8 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	
 	eval_t originalAlpha = alpha;
 	eval_t bestScore = -INF_SCORE;
-	uint32_t bestMove = 0;
+	// Initialising to the first move only matters when unavoidable loss is detected, and hence no moves are greater than alpha (initially INF_SCORE). Without this it will return 0 as a move, which translates to "move 36a 36a" which is ofc impossible.
+	uint32_t bestMove = moves[0];
 	bool foundPvNode = 0;
 	bool regenerateMoves = depth > 1;
 	for(uint32_t move : moves) {
@@ -1184,7 +1231,9 @@ int main() {
 			if(command == "opmove") {
 				uint32_t opponentMove = parseMove(gameState, arguments);
 				gameState.makeMove(opponentMove);
-				makeBestMove(gameState);
+				if(gameState.royalsLeft[0] && gameState.royalsLeft[1]) {
+					makeBestMove(gameState);
+				}
 			} else if(command == "identify") {
 				std::cout << "info \"" << ENGINE_NAME << "\" \"" << ENGINE_DESC << "\" \"" << ENGINE_AUTHOR << "\" \"" << ENGINE_VERSION << "\"" << std::endl;
 			} else if(command == "time") {
@@ -1216,15 +1265,17 @@ int main() {
 					makeBestMove(gameState);
 				}
 			} else if(command == "win") {
-				inGame = false;
+				gameState.logTsfen();
 			} else if(command == "loss") {
-				inGame = false;
+				gameState.logTsfen();
 			} else if(command == "draw") {
-				inGame = false;
+				gameState.logTsfen();
 			} else if(command == "setparam") {
 				// parameters not yet implemented, this command should never be received
 			} else if(command == "quit") {
 				atsiInitialised = false;
+			} else if(command == "tsfen") {
+				gameState.logTsfen();
 			}
 		} else {
 			if(command == "atsiinit") {

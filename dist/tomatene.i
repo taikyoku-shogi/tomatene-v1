@@ -113045,6 +113045,20 @@ constexpr inline char capitaliseLetter(char c) {
  }
  return c - ('a' - 'A');
 }
+constexpr inline std::string capitaliseString(std::string s) {
+ std::string res(s.size(), '\0');
+ std::transform(s.begin(), s.end(), res.begin(), [](auto c) {
+  return capitaliseLetter(c);
+ });
+ return res;
+}
+constexpr inline std::string lowercaseString(std::string s) {
+ std::string res(s.size(), '\0');
+ std::transform(s.begin(), s.end(), res.begin(), [](auto c) {
+  return std::tolower(c);
+ });
+ return res;
+}
 template <typename T>
 T sign(T x) {
  return (x > 0) - (x < 0);
@@ -113356,7 +113370,7 @@ D,
 MUG,
 GB,
 P,
-# 108 "tomatene.cpp" 2
+# 122 "tomatene.cpp" 2
 
   TotalCount
  };
@@ -113725,7 +113739,7 @@ PieceInfo PieceTable[] = {
 { PieceSpecies::None, {{{{0,1},35},{{0,-1},35},{{1,1},35},{{-1,1},35}},{},{}} },
 { PieceSpecies::DE, {{{{0,1},1},{{0,-1},1}},{},{}} },
 { PieceSpecies::GLG, {{{{0,1},1}},{},{}} },
-# 175 "tomatene.cpp" 2
+# 189 "tomatene.cpp" 2
 
 };
 
@@ -114057,7 +114071,7 @@ constexpr std::array<std::string, 302> pieceNames = {
 "MUG",
 "GB",
 "P",
-# 205 "tomatene.cpp" 2
+# 219 "tomatene.cpp" 2
 
 };
 inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::TotalCount - 1> PieceSpeciesToId = {
@@ -114364,7 +114378,7 @@ inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::T
 { "MUG", PieceSpecies::MUG },
 { "GB", PieceSpecies::GB },
 { "P", PieceSpecies::P },
-# 210 "tomatene.cpp" 2
+# 224 "tomatene.cpp" 2
 
 };
 struct PieceIdsWrapper {
@@ -114380,7 +114394,6 @@ std::array<uint32_t, MAX_DEPTH + 1> killerMoves1{};
 std::array<uint32_t, MAX_DEPTH + 1> killerMoves2{};
 
 bool atsiInitialised = false;
-bool inGame = false;
 uint8_t player = 0;
 float startingTime = 0;
 float timeIncrement = 0;
@@ -114455,9 +114468,12 @@ constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
  eval_t verticalCenterBonus = std::min(y, static_cast<int8_t>(25));
 
  eval_t manhattenDistanceFromRoyals = std::abs(x - 17.5f) + y;
- eval_t protectingRoyalsBonus = manhattenDistanceFromRoyals <= 4? 500 : 0;
+ eval_t protectingRoyalsBonus = manhattenDistanceFromRoyals <= 4? 2000 : 0;
 
- return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2 + protectingRoyalsBonus;
+ eval_t manhattenDistanceFromOpponentRoyals = std::abs(x - 17.5f) + 35 - y;
+ eval_t attackingOpponentRoyalsBonus = manhattenDistanceFromOpponentRoyals < 8? 2000 + (7 - manhattenDistanceFromOpponentRoyals) * 200 : 0;
+
+ return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2 + protectingRoyalsBonus + attackingOpponentRoyalsBonus;
 }
 
 inline constexpr bool isPosWithinBounds(Vec2 pos) {
@@ -114800,7 +114816,7 @@ namespace ZobristHashes {
   return piece.getOwner()? std::rotr(hash, 32) : hash;
  }
 };
-# 323 "tomatene.cpp" 2
+# 339 "tomatene.cpp" 2
 
 
 class BoardPosBitset {
@@ -115000,6 +115016,7 @@ struct UndoSquare {
 class GameState {
 private:
  std::array<Piece, 1296> board{};
+ uint16_t moveCounter = 0;
  BoardPosBitset occupancyBitset{};
  std::array<BoardPosBitset, 2> playerOccupancyBitsets{};
  BidirectionalAttackMap bidirectionalAttackMap;
@@ -115198,6 +115215,7 @@ public:
 
    int8_t doesMiddleStep = move >> 28;
    if(doesMiddleStep) {
+    std::cout << "log Does middle step: " << std::to_string(move) << std::endl;
     int8_t middleStepX = ((move >> 26) & 0b11) - 1;
     int8_t middleStepY = ((move >> 24) & 0b11) - 1;
     int8_t middleX = srcX + middleStepX;
@@ -115260,6 +115278,10 @@ public:
   }
   positionHashHistory.push_back(hash);
   positionHashHistorySize++;
+
+  if(!saveState) {
+   moveCounter++;
+  }
  }
  void unmakeMove(bool regenerateMoves = true) {
   StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
@@ -115355,7 +115377,6 @@ public:
    }
   });
  }
-
  std::vector<uint32_t> getAllMovesForPlayer(uint8_t player) {
   size_t totalSpace = 0;
   for(const std::vector<uint32_t> &moves : movesPerSquarePerPlayer[player]) {
@@ -115370,6 +115391,32 @@ public:
   }
 
   return allMoves;
+ }
+
+ std::string toTsfen() {
+  std::string tsfen = "";
+  for(int y = 0; y < 36; y++) {
+   for(int x = 0; x < 36; x++) {
+    Piece piece = getSquare(x, y);
+    if(piece) {
+     std::string pieceName = pieceNames[piece.getSpecies()];
+     tsfen += piece.getOwner()? pieceName : lowercaseString(pieceName);
+    } else {
+     tsfen += "1";
+    }
+    if(x < 35) {
+     tsfen += ",";
+    }
+   }
+   if(y < 35) {
+    tsfen += "/";
+   }
+  }
+  tsfen += " " + std::to_string(moveCounter);
+  return tsfen;
+ }
+ void logTsfen() {
+  std::cout << "log TSFEN: " << toTsfen() << std::endl;
  }
 
  static GameState fromTsfen(std::string_view tsfen) {
@@ -115398,16 +115445,16 @@ public:
      count = stringViewToNum<uint8_t>(cell.substr(i));
     }
     bool isSecondPlayer = isUppercaseLetter(pieceSpecies[0]);
-    std::transform(pieceSpecies.begin(), pieceSpecies.end(), pieceSpecies.begin(), [](auto c) {
-     return capitaliseLetter(c);
-    });
+    pieceSpecies = capitaliseString(pieceSpecies);
     for(int j = 0; j < count; j++) {
      gameState.setSquare(x++, y, Piece::create(pieceSpecies, true, isSecondPlayer));
     }
    }
    y++;
   }
-  gameState.currentPlayer = stringViewToNum<uint8_t>(fields[1]) % 2;
+  uint16_t moveCounter = stringViewToNum<uint16_t>(fields[1]);
+  gameState.moveCounter = moveCounter;
+  gameState.currentPlayer = moveCounter % 2;
   gameState.generateMoves();
 
   return gameState;
@@ -115417,7 +115464,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 938 "tomatene.cpp" 2
+# 985 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -115474,10 +115521,12 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
   }
  }
  bool didLionStep = false;
- Vec2 lionStepPos;
- if(arguments.size() > 3) {
+ Vec2 lionStepPos{0, 0};
+
+ if(arguments.size() > 5) {
 
   didLionStep = true;
+  std::cout << "log LION STEP HAHHAHAHAHA" << std::endl;
   Vec2 stepPos = parseBoardPos(arguments[3]);
   Vec2 stepDeltaPos = stepPos - srcPos;
   lionStepPos = stepDeltaPos + 1;
@@ -115507,6 +115556,8 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 
 
 
+
+
  std::vector<uint32_t> moves = gameState.getAllMovesForPlayer(gameState.currentPlayer);
 
  bool hasTtMove = ttEntry;
@@ -115526,7 +115577,8 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 
  eval_t originalAlpha = alpha;
  eval_t bestScore = -100000000;
- uint32_t bestMove = 0;
+
+ uint32_t bestMove = moves[0];
  bool foundPvNode = 0;
  bool regenerateMoves = depth > 1;
  for(uint32_t move : moves) {
@@ -115613,17 +115665,17 @@ uint32_t perftTt(GameState &gameState, depth_t depth) {
 
 uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
  
-# 1132 "tomatene.cpp" 3
+# 1184 "tomatene.cpp" 3
 (void) ((!!(
-# 1132 "tomatene.cpp"
+# 1184 "tomatene.cpp"
 maxDepth <= MAX_DEPTH
-# 1132 "tomatene.cpp" 3
+# 1184 "tomatene.cpp" 3
 )) || (_assert(
-# 1132 "tomatene.cpp"
+# 1184 "tomatene.cpp"
 "maxDepth <= MAX_DEPTH"
-# 1132 "tomatene.cpp" 3
-,"tomatene.cpp",1132),0))
-# 1132 "tomatene.cpp"
+# 1184 "tomatene.cpp" 3
+,"tomatene.cpp",1184),0))
+# 1184 "tomatene.cpp"
                              ;
  using clock = std::chrono::steady_clock;
  auto startTime = clock::now();
@@ -115674,7 +115726,9 @@ int main() {
    if(command == "opmove") {
     uint32_t opponentMove = parseMove(gameState, arguments);
     gameState.makeMove(opponentMove);
-    makeBestMove(gameState);
+    if(gameState.royalsLeft[0] && gameState.royalsLeft[1]) {
+     makeBestMove(gameState);
+    }
    } else if(command == "identify") {
     std::cout << "info \"" << "Tomatene" << "\" \"" << "Experimental taikyoku shogi engine" << "\" \"" << "s1050613" << "\" \"" << "v0" << "\"" << std::endl;
    } else if(command == "time") {
@@ -115706,15 +115760,17 @@ int main() {
      makeBestMove(gameState);
     }
    } else if(command == "win") {
-    inGame = false;
+    gameState.logTsfen();
    } else if(command == "loss") {
-    inGame = false;
+    gameState.logTsfen();
    } else if(command == "draw") {
-    inGame = false;
+    gameState.logTsfen();
    } else if(command == "setparam") {
 
    } else if(command == "quit") {
     atsiInitialised = false;
+   } else if(command == "tsfen") {
+    gameState.logTsfen();
    }
   } else {
    if(command == "atsiinit") {
