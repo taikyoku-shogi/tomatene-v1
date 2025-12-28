@@ -297,9 +297,12 @@ constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
 	eval_t verticalCenterBonus = std::min(y, static_cast<int8_t>(25));
 	
 	eval_t manhattenDistanceFromRoyals = std::abs(x - 17.5f) + y;
-	eval_t protectingRoyalsBonus = manhattenDistanceFromRoyals <= 4? 500 : 0;
+	eval_t protectingRoyalsBonus = manhattenDistanceFromRoyals <= 4? 2000 : 0;
 	
-	return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2 + protectingRoyalsBonus;
+	eval_t manhattenDistanceFromOpponentRoyals = std::abs(x - 17.5f) + 35 - y;
+	eval_t attackingOpponentRoyalsBonus = manhattenDistanceFromOpponentRoyals < 8? 2000 + (7 - manhattenDistanceFromOpponentRoyals) * 200 : 0;
+	
+	return pieceBaseEval + horizontalCenterBonus + verticalCenterBonus + horizontalCenterBonus * verticalCenterBonus / 2 + protectingRoyalsBonus + attackingOpponentRoyalsBonus;
 }
 
 inline constexpr bool isPosWithinBounds(Vec2 pos) {
@@ -1019,6 +1022,8 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 		return 0;
 	}
 	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
+	// this makes it look at more nodes somehow... and there are hash collisions still... so I don't really trust it
+	
 	// if(ttEntry && ttEntry->depth >= depth) {
 	// 	if(ttEntry->nodeType == NodeType::EXACT || (ttEntry->nodeType == NodeType::LOWER_BOUND && ttEntry->eval >= beta) || (ttEntry->nodeType == NodeType::UPPER_BOUND && ttEntry->eval <= alpha)) {
 	// 		return ttEntry->eval;

@@ -11,7 +11,7 @@ all: $(SRC) | dist
 	$(COMPILE)
 
 fast: $(SRC) | dist
-	$(COMPILE)_fast -Ofast
+	$(COMPILE)_fast -Ofast -march=native
 
 debug: $(SRC) | dist
 	$(COMPILE) -g -fno-omit-frame-pointer
