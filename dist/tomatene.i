@@ -112943,8 +112943,6 @@ struct TranspositionTableEntry {
  NodeType nodeType;
 };
 
-constexpr size_t x = sizeof(TranspositionTableEntry);
-
 class TranspositionTable {
 private:
  std::array<TranspositionTableEntry, TRANSPOSITION_TABLE_SIZE>table{};
@@ -115293,7 +115291,9 @@ public:
    }
   }
   undoStack.pop_back();
-  generateMoves();
+  if(regenerateMoves) {
+   generateMoves();
+  }
   currentPlayer = 1 - currentPlayer;
   hash = ~hash;
   positionHashHistory.pop_back();
@@ -115464,7 +115464,7 @@ public:
 inline constexpr std::string_view INITIAL_TSFEN = {
 # 1 "initialTsfen.inc" 1
 "IC,WT,RR,W,FD,RME,T,BC,RH,FDM,ED,WDV,FDE,FK,RS,RIG,GLG,CP,K,GLG,LG,RS,FK,FDE,CDV,ED,FDM,RH,BC,T,LME,FD,W,RR,TS,IC/RVC,FEL,TD,FSW,FWO,RDM,FOD,MS,RP,RSR,SSP,GD,RTG,RBE,NS,GOG,SVG,DE,NK,SVG,SWR,BD,RBE,RTG,GD,SSP,RSR,RP,MS,FOD,RDM,FWO,FSW,TD,WE,RVC/GCH,SD,RUS,RW,AG,FLG,RIT,RDR,BO,WID,FP,RBI,OK,PCK,WD,FDR,COG,PHM,KM,COG,FDR,WD,PCK,OK,RBI,FP,WID,BO,LDR,LTG,FLG,AG,RW,RUS,SD,GCH/SVC,VB,CH,PIG,CG,PG,HG,OG,CST,SBO,SR,GOS,L,FWC,GS,FID,WDM,VG,GG,WDM,FID,GS,FWC,L,GOS,SR,SBO,CST,OG,HG,PG,CG,PIG,CH,VB,SVC/SC,CLE,AM,FCH,SW,FLC,MH,VT,S,LS,CLD,CPC,RC,RHS,FIO,GDR,GBI,DS,DV,GBI,GDR,FIO,RHS,RC,CPC,CLD,LS,S,VT,MH,FLC,SW,FCH,AM,CLE,SC/WC,WF,RHD,SM,PS,WO,FIL,FIE,FLD,PSR,FGO,SCR,BDG,WG,FG,PH,HM,LT,GT,C,KR,FG,WG,BDG,SCR,FGO,PSR,FLD,FIE,FIL,WO,PS,SM,LHD,WF,WC/TC,VW,SO,DO,FLH,FB,AB,EW,WIH,FC,OM,HC,NB,SB,FIS,FIW,TF,CM,PM,TF,FIW,FIS,EB,WB,HC,OM,FC,WIH,EW,AB,FB,FLH,DO,SO,VW,TC/EC,VSP,EBG,H,SWO,CMK,CSW,SWW,BM,BT,OC,SF,BBE,OR,SQM,CS,RD,FE,LH,RD,CS,SQM,OR,BBE,SF,OC,BT,BM,SWW,CSW,CMK,SWO,H,EBG,BDR,EC/CHS,SS,VS,WIG,RG,MG,FST,HS,WOG,OS,EG,BOS,SG,LPS,TG,BES,IG,GST,GM,IG,BES,TG,LPS,SG,BOS,EG,OS,WOG,HS,FST,MG,RG,WIG,VS,SS,CHS/RCH,SMK,VM,FLO,LBS,VP,VH,CAS,DH,DK,SWS,HHW,FLE,SPS,VL,FIT,CBS,RDG,LD,CBS,FIT,VL,SPS,FLE,HHW,SWS,DK,DH,CAS,VH,VP,LBS,FLO,VM,SMK,LC/P36/5,D,4,GB,3,D,6,D,3,GB,4,D,5/36/36/36/36/36/36/36/36/36/36/36/36/5,d,4,gb,3,d,6,d,3,gb,4,d,5/p36/lc,smk,vm,flo,lbs,vp,vh,cas,dh,dk,sws,hhw,fle,sps,vl,fit,cbs,ld,rdg,cbs,fit,vl,sps,fle,hhw,sws,dk,dh,cas,vh,vp,lbs,flo,vm,smk,rch/chs,ss,vs,wig,rg,mg,fst,hs,wog,os,eg,bos,sg,lps,tg,bes,ig,gm,gst,ig,bes,tg,lps,sg,bos,eg,os,wog,hs,fst,mg,rg,wig,vs,ss,chs/ec,bdr,ebg,h,swo,cmk,csw,sww,bm,bt,oc,sf,bbe,or,sqm,cs,rd,lh,fe,rd,cs,sqm,or,bbe,sf,oc,bt,bm,sww,csw,cmk,swo,h,ebg,vsp,ec/tc,vw,so,do,flh,fb,ab,ew,wih,fc,om,hc,wb,eb,fis,fiw,tf,pm,cm,tf,fiw,fis,sb,nb,hc,om,fc,wih,ew,ab,fb,flh,do,so,vw,tc/wc,wf,lhd,sm,ps,wo,fil,fie,fld,psr,fgo,scr,bdg,wg,fg,kr,c,gt,lt,hm,ph,fg,wg,bdg,scr,fgo,psr,fld,fie,fil,wo,ps,sm,rhd,wf,wc/sc,cle,am,fch,sw,flc,mh,vt,s,ls,cld,cpc,rc,rhs,fio,gdr,gbi,dv,ds,gbi,gdr,fio,rhs,rc,cpc,cld,ls,s,vt,mh,flc,sw,fch,am,cle,sc/svc,vb,ch,pig,cg,pg,hg,og,cst,sbo,sr,gos,l,fwc,gs,fid,wdm,gg,vg,wdm,fid,gs,fwc,l,gos,sr,sbo,cst,og,hg,pg,cg,pig,ch,vb,svc/gch,sd,rus,rw,ag,flg,ltg,ldr,bo,wid,fp,rbi,ok,pck,wd,fdr,cog,km,phm,cog,fdr,wd,pck,ok,rbi,fp,wid,bo,rdr,rit,flg,ag,rw,rus,sd,gch/rvc,we,td,fsw,fwo,rdm,fod,ms,rp,rsr,ssp,gd,rtg,rbe,bd,swr,svg,nk,de,svg,gog,ns,rbe,rtg,gd,ssp,rsr,rp,ms,fod,rdm,fwo,fsw,td,fel,rvc/ic,ts,rr,w,fd,lme,t,bc,rh,fdm,ed,cdv,fde,fk,rs,lg,glg,k,cp,glg,rig,rs,fk,fde,wdv,ed,fdm,rh,bc,t,rme,fd,w,rr,wt,ic 0"
-# 985 "tomatene.cpp" 2
+# 987 "tomatene.cpp" 2
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
@@ -115536,7 +115536,7 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 
 
 
-unsigned int nodesSearched = 0;
+uint32_t nodesSearched = 0;
 
 eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
  nodesSearched++;
@@ -115576,9 +115576,9 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
  }
 
  eval_t originalAlpha = alpha;
- eval_t bestScore = -100000000;
 
- uint32_t bestMove = moves[0];
+ eval_t bestScore = -100000000 - 1;
+ uint32_t bestMove = 0;
  bool foundPvNode = 0;
  bool regenerateMoves = depth > 1;
  for(uint32_t move : moves) {
@@ -115665,17 +115665,17 @@ uint32_t perftTt(GameState &gameState, depth_t depth) {
 
 uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove = std::numeric_limits<float>::infinity()) {
  
-# 1184 "tomatene.cpp" 3
+# 1186 "tomatene.cpp" 3
 (void) ((!!(
-# 1184 "tomatene.cpp"
+# 1186 "tomatene.cpp"
 maxDepth <= MAX_DEPTH
-# 1184 "tomatene.cpp" 3
+# 1186 "tomatene.cpp" 3
 )) || (_assert(
-# 1184 "tomatene.cpp"
+# 1186 "tomatene.cpp"
 "maxDepth <= MAX_DEPTH"
-# 1184 "tomatene.cpp" 3
-,"tomatene.cpp",1184),0))
-# 1184 "tomatene.cpp"
+# 1186 "tomatene.cpp" 3
+,"tomatene.cpp",1186),0))
+# 1186 "tomatene.cpp"
                              ;
  using clock = std::chrono::steady_clock;
  auto startTime = clock::now();
@@ -115711,6 +115711,21 @@ void makeBestMove(GameState &gameState) {
  std::cout << "eval " << gameState.absEval << std::endl;
  std::cout << "log ";
  outputTtSize();
+}
+struct FunctionTiming {
+ uint32_t nodesSearched;
+ std::chrono::milliseconds duration;
+ std::string nodesPerSecond;
+};
+template <std::invocable F>
+requires std::convertible_to<std::invoke_result_t<F>, uint32_t>
+inline FunctionTiming timeFunction(F func) {
+ using clock = std::chrono::steady_clock;
+ auto start = clock::now();
+ uint32_t nodesSearched = func();
+ auto end = clock::now();
+ auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+ return { nodesSearched, std::chrono::duration_cast<std::chrono::milliseconds>(elapsed), std::format("{} n/s", nodesSearched / (static_cast<float>(elapsed.count()) / 1000000.0f)) };
 }
 
 int main() {
@@ -115788,12 +115803,10 @@ int main() {
      maxDepth = MAX_DEPTH;
     }
     for(depth_t depth = 1; depth <= maxDepth; depth++) {
-     using clock = std::chrono::steady_clock;
-     auto start = clock::now();
-     uint32_t nodesSearched = perft(gameState, depth);
-     auto end = clock::now();
-     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-     std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
+     FunctionTiming timing = timeFunction([&]() {
+      return perft(gameState, depth);
+     });
+     std::cout << std::format("Depth {}: Found {} nodes in {} ({})", depth, timing.nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
     }
    } else if(command == "perfttt") {
     depth_t depth = std::stoi(getItem(arguments, 1));
@@ -115801,32 +115814,29 @@ int main() {
      std::cout << "Depth is greater than MAX_DEPTH = " << MAX_DEPTH << "; will only go to depth " << MAX_DEPTH << std::endl;
      depth = MAX_DEPTH;
     }
-    using clock = std::chrono::steady_clock;
-    auto start = clock::now();
-    uint32_t nodesSearched = perftTt(gameState, depth);
-    auto end = clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << nodesSearched / (static_cast<float>(elapsed.count()) / 1000000.0f) << " n/s)" << std::endl;
+    FunctionTiming timing = timeFunction([&]() {
+     return perftTt(gameState, depth);
+    });
+    std::cout << std::format("Depth {}: Found {} nodes in {} ({})", depth, timing.nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
    } else if(command == "search") {
     depth_t depth = std::stoi(getItem(arguments, 1));
-    using clock = std::chrono::steady_clock;
-    auto start = clock::now();
-    eval_t eval = 0;
+    eval_t eval;
     nodesSearched = 0;
-    eval = search(gameState, -100000000, 100000000, depth);
-    auto end = clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
+    FunctionTiming timing = timeFunction([&]() {
+     eval = search(gameState, -100000000, 100000000, depth);
+     return nodesSearched;
+    });
+    std::cout << std::format("Depth {}: Found {} nodes; Eval = {} in {} ({})", depth, nodesSearched, eval, timing.duration, timing.nodesPerSecond) << std::endl;
    } else if(command == "bestmove") {
     depth_t depth = std::stoi(getItem(arguments, 1));
-    using clock = std::chrono::steady_clock;
-    auto start = clock::now();
     nodesSearched = 0;
-    uint32_t bestMove = findBestMove(gameState, depth);
-    auto end = clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    uint32_t bestMove = 0;
+    FunctionTiming timing = timeFunction([&]() {
+     bestMove = findBestMove(gameState, depth);
+     return nodesSearched;
+    });
     gameState.makeMove(bestMove, true, true);
-    std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
+    std::cout << std::format("Depth {}: Best move = {}; Current eval = {}; found {} nodes in {} ({})", depth, bestMove, gameState.absEval, nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
     gameState.unmakeMove();
    } else if(command == "ttsize") {
     outputTtSize();

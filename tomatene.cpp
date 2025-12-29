@@ -812,7 +812,9 @@ public:
 			}
 		}
 		undoStack.pop_back();
-		generateMoves();
+		if(regenerateMoves) {
+			generateMoves();
+		}
 		currentPlayer = 1 - currentPlayer;
 		hash = ~hash;
 		positionHashHistory.pop_back();
@@ -1051,15 +1053,15 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 	return createMove(srcPos.x, srcPos.y, destPos.x, destPos.y, isRangeCapturingMove, didLionStep, lionStepPos);
 }
 
-#define INF_SCORE 100000000
+#define MAX_SCORE 100000000
 
-unsigned int nodesSearched = 0;
+uint32_t nodesSearched = 0;
 
 eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	nodesSearched++;
 	// checking royal pieces only needs to be done for the current player - no point checking the player who just moved
 	if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
-		return -INF_SCORE;
+		return -MAX_SCORE;
 	}
 	if(depth == 0) {
 		return gameState.eval();
@@ -1093,9 +1095,9 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	}
 	
 	eval_t originalAlpha = alpha;
-	eval_t bestScore = -INF_SCORE;
-	// Initialising to the first move only matters when unavoidable loss is detected, and hence no moves are greater than alpha (initially INF_SCORE). Without this it will return 0 as a move, which translates to "move 36a 36a" which is ofc impossible.
-	uint32_t bestMove = moves[0];
+	// Must have -1 at the end so even if all moves lead to loss (and hence the best is -MAX_SCORE), it will store a move rather than nothing at all.
+	eval_t bestScore = -MAX_SCORE - 1;
+	uint32_t bestMove = 0;
 	bool foundPvNode = 0;
 	bool regenerateMoves = depth > 1;
 	for(uint32_t move : moves) {
@@ -1189,7 +1191,7 @@ uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove =
 	eval_t eval;
 	for(depth_t depth = 1; depth <= maxDepth; depth++) {
 		nodesSearched = 0;
-		eval = search(gameState, -INF_SCORE, INF_SCORE, depth);
+		eval = search(gameState, -MAX_SCORE, MAX_SCORE, depth);
 		std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
 		if(clock::now() >= stopTime) {
 			break;
@@ -1216,6 +1218,21 @@ void makeBestMove(GameState &gameState) {
 	std::cout << "eval " << gameState.absEval << std::endl;
 	std::cout << "log ";
 	outputTtSize();
+}
+struct FunctionTiming {
+	uint32_t nodesSearched;
+	std::chrono::milliseconds duration;
+	std::string nodesPerSecond;
+};
+template <std::invocable F>
+requires std::convertible_to<std::invoke_result_t<F>, uint32_t>
+inline FunctionTiming timeFunction(F func) {
+	using clock = std::chrono::steady_clock;
+	auto start = clock::now();
+	uint32_t nodesSearched = func();
+	auto end = clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	return { nodesSearched, std::chrono::duration_cast<std::chrono::milliseconds>(elapsed), std::format("{} n/s", nodesSearched / (static_cast<float>(elapsed.count()) / 1000000.0f)) };
 }
 
 int main() {
@@ -1293,12 +1310,10 @@ int main() {
 					maxDepth = MAX_DEPTH;
 				}
 				for(depth_t depth = 1; depth <= maxDepth; depth++) {
-					using clock = std::chrono::steady_clock;
-					auto start = clock::now();
-					uint32_t nodesSearched = perft(gameState, depth);
-					auto end = clock::now();
-					auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-					std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
+					FunctionTiming timing = timeFunction([&]() {
+						return perft(gameState, depth);
+					});
+					std::cout << std::format("Depth {}: Found {} nodes in {} ({})", depth, timing.nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
 				}
 			} else if(command == "perfttt") {
 				depth_t depth = std::stoi(getItem(arguments, 1));
@@ -1306,32 +1321,29 @@ int main() {
 					std::cout << "Depth is greater than MAX_DEPTH = " << MAX_DEPTH << "; will only go to depth " << MAX_DEPTH << std::endl;
 					depth = MAX_DEPTH;
 				}
-				using clock = std::chrono::steady_clock;
-				auto start = clock::now();
-				uint32_t nodesSearched = perftTt(gameState, depth);
-				auto end = clock::now();
-				auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-				std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << nodesSearched / (static_cast<float>(elapsed.count()) / 1000000.0f) << " n/s)" << std::endl;
+				FunctionTiming timing = timeFunction([&]() {
+					return perftTt(gameState, depth);
+				});
+				std::cout << std::format("Depth {}: Found {} nodes in {} ({})", depth, timing.nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
 			} else if(command == "search") {
 				depth_t depth = std::stoi(getItem(arguments, 1));
-				using clock = std::chrono::steady_clock;
-				auto start = clock::now();
-				eval_t eval = 0;
+				eval_t eval;
 				nodesSearched = 0;
-				eval = search(gameState, -INF_SCORE, INF_SCORE, depth);
-				auto end = clock::now();
-				auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-				std::cout << "Depth " << std::to_string(depth) << ": Found " << nodesSearched << " nodes; Eval = " << eval << " in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
+				FunctionTiming timing = timeFunction([&]() {
+					eval = search(gameState, -MAX_SCORE, MAX_SCORE, depth);
+					return nodesSearched;
+				});
+				std::cout << std::format("Depth {}: Found {} nodes; Eval = {} in {} ({})", depth, nodesSearched, eval, timing.duration, timing.nodesPerSecond) << std::endl;
 			} else if(command == "bestmove") {
 				depth_t depth = std::stoi(getItem(arguments, 1));
-				using clock = std::chrono::steady_clock;
-				auto start = clock::now();
 				nodesSearched = 0;
-				uint32_t bestMove = findBestMove(gameState, depth);
-				auto end = clock::now();
-				auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+				uint32_t bestMove = 0;
+				FunctionTiming timing = timeFunction([&]() {
+					bestMove = findBestMove(gameState, depth);
+					return nodesSearched;
+				});
 				gameState.makeMove(bestMove, true, true);
-				std::cout << "Depth " << std::to_string(depth) << ": Best move = " << stringifyMove(gameState, bestMove) << "; Eval = " << gameState.absEval << "; found " << nodesSearched << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed) << " (" << static_cast<uint64_t>(nodesSearched) / static_cast<float>(elapsed.count() / 1000000.0f) << " n/s)" << std::endl;
+				std::cout << std::format("Depth {}: Best move = {}; Current eval = {}; found {} nodes in {} ({})", depth, bestMove, gameState.absEval, nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
 				gameState.unmakeMove();
 			} else if(command == "ttsize") {
 				outputTtSize();

@@ -24,8 +24,6 @@ struct TranspositionTableEntry {
 	NodeType nodeType;
 };
 
-constexpr size_t x = sizeof(TranspositionTableEntry);
-
 class TranspositionTable {
 private:
 	std::array<TranspositionTableEntry, TRANSPOSITION_TABLE_SIZE>table{};
