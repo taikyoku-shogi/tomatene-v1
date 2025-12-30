@@ -166,13 +166,16 @@ struct Slide {
 // these could be simplified
 struct CompoundMovementStep1 {
 	std::vector<Slide> slides;
+	std::vector<Vec2> jumps;
 	bool canContinueAfterCapture;
 };
 struct CompoundMovementStep2 {
 	std::vector<Slide> slides;
+	std::vector<Vec2> jumps;
 };
 struct Movements {
 	std::vector<Slide> slides;
+	std::vector<Vec2> jumps;
 	std::vector<Vec2> tripleSlashedArrowDirs;
 	std::vector<std::pair<CompoundMovementStep1, CompoundMovementStep2>> compoundMoves;
 };
@@ -203,6 +206,9 @@ inline std::array<eval_t, 302> calculateBasePieceValues() {
 		for(const auto &slide : movements.slides) {
 			bool isRangeCapturingSlide = isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies)) && slide.range == 35;
 			value += slide.range * slideFactor * (isRangeCapturingSlide? rangeCapturingFactor : 1) * std::pow(slide.dir.x * slide.dir.x + slide.dir.y * slide.dir.y, 0.25);
+		}
+		for(const auto &jump : movements.jumps) {
+			value += slideFactor * std::pow(jump.x * jump.x + jump.y * jump.y, 0.25);
 		}
 		if(pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP) {
 			value += 100000;
@@ -729,6 +735,15 @@ public:
 							} else {
 								validMoveLocations.insert(target);
 							}
+						}
+					}
+				}
+				for(const Vec2 &jump : movements.jumps) {
+					Vec2 target = srcVec + movementDirToBoardDir(jump, pieceOwner);
+					if(isPosWithinBounds(target)) {
+						attackingSquares.insert(target);
+						if(!playerOccupancyBitsets[pieceOwner].contains(target)) {
+							validMoveLocations.insert(target);
 						}
 					}
 				}
