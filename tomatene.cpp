@@ -178,16 +178,17 @@ struct Movements {
 };
 
 struct PieceInfo {
+	std::string name;
 	PieceSpecies::Type promotion;
 	Movements movements;
 };
 #define UNPAREN(...) __VA_ARGS__
-PieceInfo PieceTable[] = {
-	{ PieceSpecies::None, {} },
-	#define Piece(code, promo, move) { PieceSpecies::promo, UNPAREN move },
+const std::array<PieceInfo, 302> PieceTable = { {
+	{ "[None]", PieceSpecies::None, {} },
+	#define Piece(code, promo, move) { #code, PieceSpecies::promo, UNPAREN move },
 		#include "pieces.inc"
 	#undef Piece
-};
+} };
 
 inline std::array<eval_t, 302> calculateBasePieceValues() {
 	constexpr eval_t basePieceValue = 95;
@@ -197,7 +198,7 @@ inline std::array<eval_t, 302> calculateBasePieceValues() {
 	std::array<eval_t, 302> values;
 	values[0] = 0;
 	for(int pieceSpecies = 1; pieceSpecies < 302; pieceSpecies++) {
-		Movements &movements = PieceTable[pieceSpecies].movements;
+		const Movements &movements = PieceTable[pieceSpecies].movements;
 		eval_t value = basePieceValue; // centipawns
 		for(const auto &slide : movements.slides) {
 			bool isRangeCapturingSlide = isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies)) && slide.range == 35;
@@ -212,12 +213,6 @@ inline std::array<eval_t, 302> calculateBasePieceValues() {
 }
 const std::array<eval_t, 302> basePieceValues = calculateBasePieceValues();
 
-constexpr std::array<std::string, 302> pieceNames = {
-	"[None]",
-	#define Piece(code, promo, move) #code,
-		#include "pieces.inc"
-	#undef Piece
-};
 inline constexpr frozen::unordered_map<frozen::string, uint16_t, PieceSpecies::TotalCount - 1> PieceSpeciesToId = {
 	#define Piece(code, promo, move) { #code, PieceSpecies::code },
 		#include "pieces.inc"
@@ -473,7 +468,7 @@ private:
 					uint8_t newPieceOwner = piece.getOwner();
 					if(oldPieceOwner == newPieceOwner) {
 						// If a range-capturing piece lands on a piece from the same team, moves for regular pieces (i.e. pieces which don't range-capture and hence don't consider rank) don't change at all.
-						// std::cout << std::format("At ({}, {}), {} was replaced by {}, both owned by player {}. Technically: {}, {}", x, y, pieceNames[oldPiece.getSpecies()], pieceNames[piece.getSpecies()], oldPieceOwner + 1, std::to_string(oldPiece), std::to_string(piece)) << std::endl;
+						// std::cout << std::format("At ({}, {}), {} was replaced by {}, both owned by player {}. Technically: {}, {}", x, y, PieceTable[oldPiece.getSpecies()].name, PieceTable[piece.getSpecies()].name, oldPieceOwner + 1, std::to_string(oldPiece), std::to_string(piece)) << std::endl;
 						return;
 					}
 					
@@ -486,7 +481,7 @@ private:
 						if(it == moves.end()) {
 							// for some reason
 							return;
-							// std::cout << std::format("Piece {} at ({}, {}) doesn't have move to remove, to ({}, {}). Previously was player {}'s {}, now is player {}'s {}", pieceNames[attackingPiece.getSpecies()], pos.x, pos.y, x, y, oldPiece.getOwner() + 1, pieceNames[oldPiece.getSpecies()], piece.getOwner() + 1, pieceNames[piece.getSpecies()]) << std::endl;
+							// std::cout << std::format("Piece {} at ({}, {}) doesn't have move to remove, to ({}, {}). Previously was player {}'s {}, now is player {}'s {}", PieceTable[attackingPiece.getSpecies()].name, pos.x, pos.y, x, y, oldPiece.getOwner() + 1, PieceTable[oldPiece.getSpecies()].name, piece.getOwner() + 1, PieceTable[piece.getSpecies()].name) << std::endl;
 						} else {
 							moves.erase(it);
 						}
@@ -650,7 +645,7 @@ public:
 			}
 		}
 		
-		// std::cout << std::format("Moving piece {} from ({}, {}) to ({}, {}); capturing {}", pieceNames[piece.getSpecies()], srcX, srcY, destX, destY, pieceNames[getSquare(destX, destY).getSpecies()]) << std::endl;
+		// std::cout << std::format("Moving piece {} from ({}, {}) to ({}, {}); capturing {}", PieceTable[piece.getSpecies()].name, srcX, srcY, destX, destY, PieceTable[getSquare(destX, destY).getSpecies()].name) << std::endl;
 		clearSquare(srcX, srcY, regenerateMoves, saveState);
 		if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ destX, destY })) {
 			ageShouldChange = true;
@@ -664,7 +659,6 @@ public:
 		// captures are irreversible moves and hence the "age" of the game must be incremented
 		if(ageShouldChange) {
 			age++;
-			std::cout << "log Changing age to " << age << std::endl;
 			positionHashHistory.clear();
 			positionHashHistorySize = 0;
 		}
@@ -795,7 +789,7 @@ public:
 			for(int x = 0; x < 36; x++) {
 				Piece piece = getSquare(x, y);
 				if(piece) {
-					std::string pieceName = pieceNames[piece.getSpecies()];
+					std::string pieceName = PieceTable[piece.getSpecies()].name;
 					tsfen += piece.getOwner()? pieceName : lowercaseString(pieceName);
 				} else {
 					tsfen += "1";
@@ -930,6 +924,7 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 
 #define MAX_SCORE 100000000
 
+uint64_t totalNodesSearched = 0;
 uint32_t nodesSearched = 0;
 
 eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
@@ -1065,6 +1060,7 @@ uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove =
 	
 	eval_t eval;
 	for(depth_t depth = 1; depth <= maxDepth; depth++) {
+		totalNodesSearched += nodesSearched;
 		nodesSearched = 0;
 		eval = search(gameState, -MAX_SCORE, MAX_SCORE, depth);
 		std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
@@ -1156,12 +1152,9 @@ int main() {
 				if(player == 0) {
 					makeBestMove(gameState);
 				}
-			} else if(command == "win") {
+			} else if(command == "win" || command == "win" || command == "draw") {
 				gameState.logTsfen();
-			} else if(command == "loss") {
-				gameState.logTsfen();
-			} else if(command == "draw") {
-				gameState.logTsfen();
+				std::cout << std::format("log Found {} nodes in total", totalNodesSearched) << std::endl;
 			} else if(command == "setparam") {
 				// parameters not yet implemented, this command should never be received
 			} else if(command == "quit") {
@@ -1222,6 +1215,14 @@ int main() {
 				gameState.unmakeMove();
 			} else if(command == "ttsize") {
 				outputTtSize();
+			} else if(command == "pieces") {
+				for(size_t i = 0; i < PieceTable.size(); i++) {
+					std::cout << std::format("{}: {}; value: {}; promotion: {}", i, PieceTable[i].name, basePieceValues[i], PieceTable[PieceTable[i].promotion].name) << std::endl;
+				}
+			} else if(command == "values") {
+				for(size_t i = 0; i < PieceTable.size(); i++) {
+					std::cout << PieceTable[i].name << "," << basePieceValues[i] << std::endl;
+				}
 			}
 		}
 	}
