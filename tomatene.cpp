@@ -161,7 +161,7 @@ struct Vec2 {
 };
 struct Slide {
 	Vec2 dir;
-	int8_t range;
+	uint8_t range;
 };
 // these could be simplified
 struct CompoundMovementStep1 {
@@ -723,13 +723,12 @@ public:
 				BoardPosBitset rangeCapturingMoveLocations;
 				for(const auto &slide : movements.slides) {
 					bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
-					Vec2 target = srcVec;
 					Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
-					for(int8_t dist = 0; dist < slide.range; dist++) {
+					uint8_t distToEdgeOfBoard = std::min(slideDir.x? slideDir.x > 0? (35 - x) / slideDir.x : -x / slideDir.x : 35, slideDir.y? slideDir.y > 0? (35 - y) / slideDir.y : -y / slideDir.y : 35);
+					uint8_t maxDist = std::min(slide.range, distToEdgeOfBoard);
+					Vec2 target = srcVec;
+					for(uint8_t dist = 0; dist < maxDist; dist++) {
 						target += slideDir;
-						if(!isPosWithinBounds(target)) {
-							break;
-						}
 						attackingSquares.insert(target);
 						if(occupancyBitset.contains(target)) {
 							bool isBlocked = slideIsRangeCapturing? getSquare(target.x, target.y).getRank() >= pieceRank : playerOccupancyBitsets[pieceOwner].contains(target);
@@ -754,7 +753,10 @@ public:
 				for(const Vec2 &tripleSlashedArrowDir : movements.tripleSlashedArrowDirs) {
 					Vec2 dir = movementDirToBoardDir(tripleSlashedArrowDir, pieceOwner);
 					uint8_t jumpsRemaining = 4; // it will be decremented first before being checked, so this will make it trigger on the fourth jump
-					for(Vec2 target = srcVec + dir; isPosWithinBounds(target); target += dir) {
+					uint8_t distToEdgeOfBoard = std::min(dir.x? dir.x > 0? 35 - x : x : 35, dir.y? dir.y > 0? 35 - y : y : 35);
+					Vec2 target = srcVec;
+					for(uint8_t dist = 0; dist < distToEdgeOfBoard; dist++) {
+						target += dir;
 						attackingSquares.insert(target);
 						if(occupancyBitset.contains(target)) {
 							bool isBlocked = playerOccupancyBitsets[pieceOwner].contains(target);
