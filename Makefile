@@ -1,6 +1,6 @@
-.PHONY: all fast debug preprocess dist clean
+.PHONY: all debug preprocess dist clean
 CXX = g++
-CXXFLAGS = -std=c++23 -Iinclude -Wall -Wextra -Wpedantic
+CXXFLAGS = -std=c++23 -Iinclude -Wall -Wextra -Wpedantic -Ofast -march=native
 SRC = tomatene.cpp
 TARGET_DIR = dist
 TARGET = tomatene
@@ -9,9 +9,6 @@ COMPILE = $(CXX) $(CXXFLAGS) $(ARGS) $(SRC) -o $(TARGET_DIR)/$(TARGET)
 
 all: $(SRC) | dist
 	$(COMPILE)
-
-fast: $(SRC) | dist
-	$(COMPILE)_fast -Ofast -march=native
 
 debug: $(SRC) | dist
 	$(COMPILE) -g -fno-omit-frame-pointer

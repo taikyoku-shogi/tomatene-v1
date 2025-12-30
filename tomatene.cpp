@@ -240,9 +240,9 @@ uint8_t player = 0;
 float startingTime = 0;
 float timeIncrement = 0;
 
-constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY, bool rangeCaptures = false, bool didLionStep = false, Vec2 lionStepPos = Vec2{ 0, 0 }) {
+constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY, bool rangeCaptures = false, bool didMiddleStep = false, Vec2 middleStepPos = Vec2{ 0, 0 }) {
 	// std::cout << "log Creating move: "<< std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
-	return didLionStep << 28 | lionStepPos.x << 26 | lionStepPos.y << 24 | rangeCaptures << 24 | srcX << 18 | srcY << 12 | destX << 6 | destY;
+	return didMiddleStep << 29 | middleStepPos.x << 27 | middleStepPos.y << 25 | rangeCaptures << 24 | srcX << 18 | srcY << 12 | destX << 6 | destY;
 }
 
 // hacky wrapper around a uint16_t lol
@@ -611,47 +611,35 @@ public:
 		auto [srcX, srcY] = getMoveSrcPos(move);
 		Piece piece = getSquare(srcX, srcY);
 		auto [destX, destY] = getMoveDestPos(move);
-		PieceSpecies::Type pieceSpecies = piece.getSpecies();
 		uint8_t pieceOwner = piece.getOwner();
 		bool middleStepShouldPromote = false;
 		bool ageShouldChange = false;
-		if(isLionLikePiece(pieceSpecies)) {
-			// lion-like pieces
-			int8_t doesMiddleStep = move >> 28;
-			if(doesMiddleStep) {
-				std::cout << "log Does middle step: " << std::to_string(move) << std::endl;
-				int8_t middleStepX = ((move >> 26) & 0b11) - 1;
-				int8_t middleStepY = ((move >> 24) & 0b11) - 1;
-				int8_t middleX = srcX + middleStepX;
-				int8_t middleY = srcY + middleStepY;
-				clearSquare(middleX, middleY, regenerateMoves, saveState);
-				if(!saveState && occupancyBitset.contains(Vec2{ middleX, middleY })) {
+		if(move >> 24) {
+			// range capturing move
+			int8_t dirX = sign(destX - srcX);
+			int8_t dirY = sign(destY - srcY);
+			int8_t x = srcX + dirX;
+			int8_t y = srcY + dirY;
+			while(x != destX || y != destY) {
+				if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ x, y })) {
 					ageShouldChange = true;
 				}
-				middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
+				clearSquare(x, y, regenerateMoves, saveState);
+				x += dirX;
+				y += dirY;
 			}
-		} else if(isRangeCapturingPiece(pieceSpecies)) {
-			// range capturing pieces
-			bool captureAllFlag = move >> 24;
-			if(captureAllFlag) {
-				int8_t dirX = sign(destX - srcX);
-				int8_t dirY = sign(destY - srcY);
-				int8_t x = srcX + dirX;
-				int8_t y = srcY + dirY;
-				int i = 0;
-				while(x != destX || y != destY) {
-					if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ x, y })) {
-						ageShouldChange = true;
-					}
-					clearSquare(x, y, regenerateMoves, saveState);
-					x += dirX;
-					y += dirY;
-					if(i++ > 100) {
-						std::cout << "log Error: Range capturing has failed! src: " << srcX << "," << srcY << "   dest: " << destX << "," << destY << "   dir: " << dirX << "," << dirY << std::endl; 
-						throw std::runtime_error("Range capturing fail");
-					}
-				}
+		} else if(move >> 29) {
+			// lion-like pieces. not yet implemented so this should never trigger.
+			std::cout << "log Does middle step: " << std::to_string(move) << std::endl;
+			int8_t middleStepX = ((move >> 27) & 0b11) - 1;
+			int8_t middleStepY = ((move >> 25) & 0b11) - 1;
+			int8_t middleX = srcX + middleStepX;
+			int8_t middleY = srcY + middleStepY;
+			clearSquare(middleX, middleY, regenerateMoves, saveState);
+			if(!saveState && occupancyBitset.contains(Vec2{ middleX, middleY })) {
+				ageShouldChange = true;
 			}
+			middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
 		}
 		
 		bool shouldPromote = middleStepShouldPromote || inPromotionZone(pieceOwner, destY);
