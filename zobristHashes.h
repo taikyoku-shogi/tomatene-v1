@@ -314,9 +314,9 @@ namespace ZobristHashes {
 		};
 	}
 	
-	constexpr inline hash_t getHash(Piece piece, uint8_t file, uint8_t rank) {
+	constexpr inline hash_t getHash(Piece piece, Vec2 pos) {
 		// The magic number belo ws chosen as it leads to an average Hamming distance of 32.02458 bits between other position hashes. Less memory than a full table, but I'd have to verify sometime if it actually impacts performance.
-		hash_t hash = PieceHashes[piece.getSpecies()] ^ ((static_cast<hash_t>(file) * 36 + static_cast<hash_t>(rank)) * 0x5C1B4D72E2FFCD75ULL);
+		hash_t hash = PieceHashes[piece.getSpecies()] ^ ((static_cast<hash_t>(pos.x) * 36 + static_cast<hash_t>(pos.y)) * 0x5C1B4D72E2FFCD75ULL);
 		return piece.getOwner()? std::rotr(hash, 32) : hash;
 	}
 };

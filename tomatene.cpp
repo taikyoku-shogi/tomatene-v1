@@ -4,6 +4,8 @@
 #include <chrono>
 #include <bit>
 #include <cmath>
+#include <vector>
+#include <string_view>
 
 #include <frozen/unordered_map.h>
 #include <frozen/string.h>
@@ -20,6 +22,7 @@ typedef uint64_t hash_t;
 
 #include "transpositionTable.h"
 
+inline constexpr eval_t MAX_EVAL = 100000000;
 inline constexpr depth_t MAX_DEPTH = 3;
 inline constexpr float ESTIMATED_GAME_LENGTH = 900;
 
@@ -233,17 +236,31 @@ inline constexpr PieceIdsWrapper pieceIds;
 
 TranspositionTable transpositionTable;
 
-std::array<uint32_t, MAX_DEPTH + 1> killerMoves1{};
-std::array<uint32_t, MAX_DEPTH + 1> killerMoves2{};
+std::array<std::array<uint32_t, MAX_DEPTH + 1>, 2> killerMoves{};
 
 bool atsiInitialised = false;
 uint8_t player = 0;
 float startingTime = 0;
 float timeIncrement = 0;
 
-constexpr inline uint32_t createMove(int8_t srcX, int8_t srcY, int8_t destX, int8_t destY, bool rangeCaptures = false, bool didMiddleStep = false, Vec2 middleStepPos = Vec2{ 0, 0 }) {
+constexpr inline uint32_t createMove(Vec2 src, Vec2 dest, bool rangeCaptures = false, bool didMiddleStep = false, Vec2 middleStepPos = { -1, -1 }) {
 	// std::cout << "log Creating move: "<< std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
-	return didMiddleStep << 29 | middleStepPos.x << 27 | middleStepPos.y << 25 | rangeCaptures << 24 | srcX << 18 | srcY << 12 | destX << 6 | destY;
+	return didMiddleStep << 29 | (middleStepPos.x + 1) << 27 | (middleStepPos.y + 1) << 25 | rangeCaptures << 24 | src.x << 18 | src.y << 12 | dest.x << 6 | dest.y;
+}
+inline constexpr Vec2 getMoveSrcPos(uint32_t move) {
+	return Vec2{ static_cast<int8_t>((move >> 18) & 0b111111), static_cast<int8_t>((move >> 12) & 0b111111) };
+}
+inline constexpr Vec2 getMoveDestPos(uint32_t move) {
+	return Vec2{ static_cast<int8_t>((move >> 6) & 0b111111), static_cast<int8_t>(move & 0b111111) };
+}
+inline constexpr bool doesMoveRangeCapture(uint32_t move) {
+	return (move >> 24) & 1;
+}
+inline constexpr bool doesMoveHaveMiddleStep(uint32_t move) {
+	return move >> 29;
+}
+inline constexpr Vec2 getMoveMiddleStep(uint32_t move) {
+	return { static_cast<int8_t>(((move >> 27) & 0b11) - 1), static_cast<int8_t>(((move >> 25) & 0b11) - 1) };
 }
 
 // hacky wrapper around a uint16_t lol
@@ -292,8 +309,9 @@ struct Piece {
 	}
 };
 
-constexpr eval_t evalPiece(Piece piece, int8_t x, int8_t y) {
+constexpr eval_t evalPiece(Piece piece, Vec2 pos) {
 	if(!piece) return 0;
+	auto [x, y] = pos;
 	uint8_t owner = piece.getOwner();
 	// flip x and y to be relative to the piece. 0 means to the left of the piece or the back of the board behind the piece.
 	if(owner) {
@@ -327,12 +345,6 @@ inline bool inPromotionZone(uint8_t owner, int8_t y) {
 }
 inline constexpr Vec2 movementDirToBoardDir(Vec2 movementDir, uint8_t pieceOwner) {
 	return pieceOwner? Vec2{ static_cast<int8_t>(-movementDir.x), movementDir.y } : Vec2{ movementDir.x, static_cast<int8_t>(-movementDir.y) };
-}
-inline constexpr Vec2 getMoveSrcPos(uint32_t move) {
-	return Vec2{ static_cast<int8_t>((move >> 18) & 0b111111), static_cast<int8_t>((move >> 12) & 0b111111) };
-}
-inline constexpr Vec2 getMoveDestPos(uint32_t move) {
-	return Vec2{ static_cast<int8_t>((move >> 6) & 0b111111), static_cast<int8_t>(move & 0b111111) };
 }
 
 // this file relies on Piece. I'm too lazy to add proper header files.
@@ -433,27 +445,27 @@ private:
 	std::vector<hash_t> positionHashHistory;
 	int positionHashHistorySize = 0;
 	
-	void setSquare(int8_t x, int8_t y, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
+	void setSquare(Vec2 pos, Piece piece, bool regenerateMoves = true, bool saveToUndoStack = false) {
 		uint8_t pieceOwner = piece.getOwner();
-		Piece oldPiece = getSquare(x, y);
+		Piece oldPiece = getSquare(pos);
 		if(piece == oldPiece) return; // idk why
 		if(saveToUndoStack) {
-			UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, oldPiece };
+			UndoSquare undoSquare = { pos, oldPiece };
 			undoStack.back().push_back(undoSquare);
 		}
 		if(oldPiece) {
 			uint8_t oldPieceOwner = oldPiece.getOwner();
-			absEval -= evalPiece(oldPiece, x, y) * (oldPieceOwner? -1 : 1);
+			absEval -= evalPiece(oldPiece, pos) * (oldPieceOwner? -1 : 1);
 			if(oldPiece.isRoyal()) {
 				royalsLeft[oldPieceOwner]--;
 			}
-			playerOccupancyBitsets[oldPieceOwner].erase(Vec2{ x, y });
-			hash ^= ZobristHashes::getHash(oldPiece, x, y);
+			playerOccupancyBitsets[oldPieceOwner].erase(pos);
+			hash ^= ZobristHashes::getHash(oldPiece, pos);
 			if(regenerateMoves) {
-				squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-				bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y }).forEach([&](size_t i) {
-					Vec2 pos = Vec2::fromIndex(i);
-					Piece attackingPiece = getSquare(pos);
+				squaresNeedingMoveRecalculation.insert(pos);
+				bidirectionalAttackMap.getReverseAttacks(pos).forEach([&](size_t i) {
+					Vec2 attackingPos = Vec2::fromIndex(i);
+					Piece attackingPiece = getSquare(attackingPos);
 					if(!attackingPiece) {
 						// IDK why this happens sometimes
 						return;
@@ -470,18 +482,16 @@ private:
 					}
 					// NOTE: Everything above this line is correct. If I insert this squre into `squaresNeedingMoveRecalculation`, it will function exactly as without this optimization. Therefore all issues must be below this line but still inside this function.
 					
-					uint8_t oldPieceOwner = oldPiece.getOwner();
-					uint8_t newPieceOwner = piece.getOwner();
-					if(oldPieceOwner == newPieceOwner) {
+					if(oldPieceOwner == pieceOwner) {
 						// If a range-capturing piece lands on a piece from the same team, moves for regular pieces (i.e. pieces which don't range-capture and hence don't consider rank) don't change at all.
 						// std::cout << std::format("At ({}, {}), {} was replaced by {}, both owned by player {}. Technically: {}, {}", x, y, PieceTable[oldPiece.getSpecies()].name, PieceTable[piece.getSpecies()].name, oldPieceOwner + 1, std::to_string(oldPiece), std::to_string(piece)) << std::endl;
 						return;
 					}
 					
 					uint8_t attackingPieceOwner = attackingPiece.getOwner();
-					uint32_t move = createMove(pos.x, pos.y, x, y);
+					uint32_t move = createMove(attackingPos, pos);
 					auto &moves = movesPerSquarePerPlayer[attackingPieceOwner][i];
-					if(attackingPieceOwner == newPieceOwner) {
+					if(attackingPieceOwner == pieceOwner) {
 						// This implies attackingPieceOwner != oldPieceOwner, and hence there previously existed a valid move to this location. However since it is being replaced by a piece from the same team, it is no longer a valid move location and the move has to be removed.
 						auto it = std::find(moves.begin(), moves.end(), move);
 						if(it == moves.end()) {
@@ -503,45 +513,45 @@ private:
 				});
 			}
 		} else if(regenerateMoves) {
-			squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+			squaresNeedingMoveRecalculation.insert(pos);
+			squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(pos);
 		}
 		// handle promotion here
-		if(piece.canPromote() && piece.isInPromotionZone(y)) {
+		if(piece.canPromote() && piece.isInPromotionZone(pos.y)) {
 			PieceSpecies::Type promotedSpecies = PieceTable[piece.getSpecies()].promotion;
 			if(promotedSpecies) {
 				piece = Piece::create(promotedSpecies, 0, pieceOwner);
 			}
 		}
-		board[Vec2{ x, y }.toIndex()] = piece;
-		absEval += evalPiece(piece, x, y) * (pieceOwner? -1 : 1);
+		board[pos.toIndex()] = piece;
+		absEval += evalPiece(piece, pos) * (pieceOwner? -1 : 1);
 		if(piece.isRoyal()) {
 			royalsLeft[pieceOwner]++;
 		}
-		hash ^= ZobristHashes::getHash(piece, x, y);
-		occupancyBitset.insert(Vec2{ x, y });
-		playerOccupancyBitsets[pieceOwner].insert(Vec2{ x, y });
+		hash ^= ZobristHashes::getHash(piece, pos);
+		occupancyBitset.insert(pos);
+		playerOccupancyBitsets[pieceOwner].insert(pos);
 	}
-	void clearSquare(int8_t x, int8_t y, bool regenerateMoves = true, bool saveToUndoStack = false) {
-		Piece oldPiece = getSquare(x, y);
+	void clearSquare(Vec2 pos, bool regenerateMoves = true, bool saveToUndoStack = false) {
+		Piece oldPiece = getSquare(pos);
 		if(oldPiece) {
 			if(saveToUndoStack) {
-				UndoSquare undoSquare = UndoSquare{ Vec2{ x, y }, oldPiece };
+				UndoSquare undoSquare = UndoSquare{ pos, oldPiece };
 				undoStack.back().push_back(undoSquare);
 			}
 			uint8_t oldPieceOwner = oldPiece.getOwner();
-			absEval -= evalPiece(oldPiece, x, y) * (oldPieceOwner? -1 : 1);
+			absEval -= evalPiece(oldPiece, pos) * (oldPieceOwner? -1 : 1);
 			if(oldPiece.isRoyal()) {
 				royalsLeft[oldPieceOwner]--;
 			}
-			board[Vec2{ x, y }.toIndex()] = Piece{ 0 };
-			occupancyBitset.erase(Vec2{ x, y });
-			playerOccupancyBitsets[oldPieceOwner].erase(Vec2{ x, y });
+			board[pos.toIndex()] = Piece{ 0 };
+			occupancyBitset.erase(pos);
+			playerOccupancyBitsets[oldPieceOwner].erase(pos);
 			if(regenerateMoves) {
-				squaresNeedingMoveRecalculation.insert(Vec2{ x, y });
-				squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(Vec2{ x, y });
+				squaresNeedingMoveRecalculation.insert(pos);
+				squaresNeedingMoveRecalculation |= bidirectionalAttackMap.getReverseAttacks(pos);
 			}
-			hash ^= ZobristHashes::getHash(oldPiece, x, y);
+			hash ^= ZobristHashes::getHash(oldPiece, pos);
 		}
 	}
 public:
@@ -577,11 +587,9 @@ public:
 	bool isDraw() const {
 		// not 3 like in Western chess
 		uint8_t repetitionsToDraw = 4;
-		// casting to an int avoids unsigned integer underflow at the start of the for loop
 		if(positionHashHistorySize < repetitionsToDraw * 2 - 1) {
 			return false;
 		}
-		
 		for(int i = positionHashHistorySize - 3; i >= 0; i -= 2) {
 			if(positionHashHistory[i] == hash && !--repetitionsToDraw) {
 				return true;
@@ -590,9 +598,6 @@ public:
 		return false;
 	}
 	
-	inline constexpr Piece getSquare(int8_t x, int8_t y) const {
-		return board[Vec2{ x, y }.toIndex()];
-	}
 	inline constexpr Piece getSquare(Vec2 pos) const {
 		return board[pos.toIndex()];
 	}
@@ -609,14 +614,15 @@ public:
 		// for range capturing pieces, 1 bit extra: capture all
 		// for lion-like pieces, extra 1 bit: does middle step, extra 2 bits: middle step x offset, extra 2 bits: middle step y offset
 		
-		auto [srcX, srcY] = getMoveSrcPos(move);
-		Piece piece = getSquare(srcX, srcY);
-		auto [destX, destY] = getMoveDestPos(move);
+		Vec2 srcPos = getMoveSrcPos(move);
+		auto [srcX, srcY] = srcPos;
+		Piece piece = getSquare(srcPos);
+		Vec2 destPos = getMoveDestPos(move);
+		auto [destX, destY] = destPos;
 		uint8_t pieceOwner = piece.getOwner();
 		bool middleStepShouldPromote = false;
 		bool ageShouldChange = false;
-		if(move >> 24) {
-			// range capturing move
+		if(doesMoveRangeCapture(move)) {
 			int8_t dirX = sign(destX - srcX);
 			int8_t dirY = sign(destY - srcY);
 			int8_t x = srcX + dirX;
@@ -625,22 +631,20 @@ public:
 				if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ x, y })) {
 					ageShouldChange = true;
 				}
-				clearSquare(x, y, regenerateMoves, saveState);
+				clearSquare(Vec2{ x, y }, regenerateMoves, saveState);
 				x += dirX;
 				y += dirY;
 			}
-		} else if(move >> 29) {
+		} else if(doesMoveHaveMiddleStep(move)) {
 			// lion-like pieces. not yet implemented so this should never trigger.
 			std::cout << "log Does middle step: " << std::to_string(move) << std::endl;
-			int8_t middleStepX = ((move >> 27) & 0b11) - 1;
-			int8_t middleStepY = ((move >> 25) & 0b11) - 1;
-			int8_t middleX = srcX + middleStepX;
-			int8_t middleY = srcY + middleStepY;
-			clearSquare(middleX, middleY, regenerateMoves, saveState);
-			if(!saveState && occupancyBitset.contains(Vec2{ middleX, middleY })) {
+			Vec2 middleStep = getMoveMiddleStep(move);
+			Vec2 middleStepPos = srcPos + middleStep;
+			clearSquare(middleStepPos, regenerateMoves, saveState);
+			if(!saveState && occupancyBitset.contains(middleStepPos)) {
 				ageShouldChange = true;
 			}
-			middleStepShouldPromote = inPromotionZone(pieceOwner, middleY);
+			middleStepShouldPromote = inPromotionZone(pieceOwner, middleStepPos.y);
 		}
 		
 		bool shouldPromote = middleStepShouldPromote || inPromotionZone(pieceOwner, destY);
@@ -652,11 +656,11 @@ public:
 		}
 		
 		// std::cout << std::format("Moving piece {} from ({}, {}) to ({}, {}); capturing {}", PieceTable[piece.getSpecies()].name, srcX, srcY, destX, destY, PieceTable[getSquare(destX, destY).getSpecies()].name) << std::endl;
-		clearSquare(srcX, srcY, regenerateMoves, saveState);
+		clearSquare(srcPos, regenerateMoves, saveState);
 		if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ destX, destY })) {
 			ageShouldChange = true;
 		}
-		setSquare(destX, destY, piece, regenerateMoves, saveState);
+		setSquare(destPos, piece, regenerateMoves, saveState);
 		currentPlayer = 1 - currentPlayer;
 		hash = ~hash;
 		if(regenerateMoves) {
@@ -679,9 +683,9 @@ public:
 		StaticVector<UndoSquare, 36> &undoSquares = undoStack.back();
 		for(const UndoSquare &undoSquare : undoSquares) {
 			if(undoSquare.oldPiece) {
-				setSquare(undoSquare.pos.x, undoSquare.pos.y, undoSquare.oldPiece, regenerateMoves);
+				setSquare(undoSquare.pos, undoSquare.oldPiece, regenerateMoves);
 			} else {
-				clearSquare(undoSquare.pos.x, undoSquare.pos.y, regenerateMoves);
+				clearSquare(undoSquare.pos, regenerateMoves);
 			}
 		}
 		undoStack.pop_back();
@@ -698,9 +702,8 @@ public:
 		squaresNeedingMoveRecalculation.forEachAndClear([this](size_t i) {
 			movesPerSquarePerPlayer[0][i].clear();
 			movesPerSquarePerPlayer[1][i].clear();
-			Vec2 srcVec = Vec2::fromIndex(i);
-			auto [x, y] = srcVec;
-			Piece piece = getSquare(x, y);
+			Vec2 src = Vec2::fromIndex(i);
+			Piece piece = getSquare(src);
 			auto pieceOwner = piece.getOwner();
 			bool pieceIsRangeCapturing = isRangeCapturingPiece(piece.getSpecies());
 			auto pieceRank = piece.getRank();
@@ -712,14 +715,14 @@ public:
 				for(const auto &slide : movements.slides) {
 					bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
 					Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
-					uint8_t distToEdgeOfBoard = std::min(slideDir.x? slideDir.x > 0? (35 - x) / slideDir.x : -x / slideDir.x : 35, slideDir.y? slideDir.y > 0? (35 - y) / slideDir.y : -y / slideDir.y : 35);
+					uint8_t distToEdgeOfBoard = std::min(slideDir.x? slideDir.x > 0? (35 - src.x) / slideDir.x : -src.x / slideDir.x : 35, slideDir.y? slideDir.y > 0? (35 - src.y) / slideDir.y : -src.y / slideDir.y : 35);
 					uint8_t maxDist = std::min(slide.range, distToEdgeOfBoard);
-					Vec2 target = srcVec;
+					Vec2 target = src;
 					for(uint8_t dist = 0; dist < maxDist; dist++) {
 						target += slideDir;
 						attackingSquares.insert(target);
 						if(occupancyBitset.contains(target)) {
-							bool isBlocked = slideIsRangeCapturing? getSquare(target.x, target.y).getRank() >= pieceRank : playerOccupancyBitsets[pieceOwner].contains(target);
+							bool isBlocked = slideIsRangeCapturing? getSquare(target).getRank() >= pieceRank : playerOccupancyBitsets[pieceOwner].contains(target);
 							if(isBlocked) {
 								break;
 							}
@@ -739,7 +742,7 @@ public:
 					}
 				}
 				for(const Vec2 &jump : movements.jumps) {
-					Vec2 target = srcVec + movementDirToBoardDir(jump, pieceOwner);
+					Vec2 target = src + movementDirToBoardDir(jump, pieceOwner);
 					if(isPosWithinBounds(target)) {
 						attackingSquares.insert(target);
 						if(!playerOccupancyBitsets[pieceOwner].contains(target)) {
@@ -750,8 +753,8 @@ public:
 				for(const Vec2 &tripleSlashedArrowDir : movements.tripleSlashedArrowDirs) {
 					Vec2 dir = movementDirToBoardDir(tripleSlashedArrowDir, pieceOwner);
 					uint8_t jumpsRemaining = 4; // it will be decremented first before being checked, so this will make it trigger on the fourth jump
-					uint8_t distToEdgeOfBoard = std::min(dir.x? dir.x > 0? 35 - x : x : 35, dir.y? dir.y > 0? 35 - y : y : 35);
-					Vec2 target = srcVec;
+					uint8_t distToEdgeOfBoard = std::min(dir.x? dir.x > 0? 35 - src.x : src.x : 35, dir.y? dir.y > 0? 35 - src.y : src.y : 35);
+					Vec2 target = src;
 					for(uint8_t dist = 0; dist < distToEdgeOfBoard; dist++) {
 						target += dir;
 						attackingSquares.insert(target);
@@ -772,12 +775,12 @@ public:
 				// for(const auto &compoundMove : movements.compoundMoves) {
 					
 				// }
-				bidirectionalAttackMap.setAttacks(srcVec, attackingSquares);
-				rangeCapturingMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [x, y](const Vec2 &target) {
-					return createMove(x, y, target.x, target.y, true);
+				bidirectionalAttackMap.setAttacks(src, attackingSquares);
+				rangeCapturingMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [src](const Vec2 &target) {
+					return createMove(src, target, true);
 				});
-				validMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [x, y](const Vec2 &target) {
-					return createMove(x, y, target.x, target.y);
+				validMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [src](const Vec2 &target) {
+					return createMove(src, target);
 				});
 			}
 		});
@@ -800,9 +803,9 @@ public:
 	
 	std::string toTsfen() {
 		std::string tsfen = "";
-		for(int y = 0; y < 36; y++) {
-			for(int x = 0; x < 36; x++) {
-				Piece piece = getSquare(x, y);
+		for(int8_t y = 0; y < 36; y++) {
+			for(int8_t x = 0; x < 36; x++) {
+				Piece piece = getSquare(Vec2{ x, y });
 				if(piece) {
 					std::string pieceName = PieceTable[piece.getSpecies()].name;
 					tsfen += piece.getOwner()? pieceName : lowercaseString(pieceName);
@@ -829,9 +832,9 @@ public:
 		GameState gameState;
 		
 		auto rows = splitStringView(fields[0], '/');
-		int y = 0;
+		int8_t y = 0;
 		for(auto row : rows) {
-			int x = 0;
+			int8_t x = 0;
 			auto cells = splitStringView(row, ',');
 			for(auto cell : cells) {
 				if(isNumber(cell)) {
@@ -852,7 +855,7 @@ public:
 				bool isSecondPlayer = isUppercaseLetter(pieceSpecies[0]);
 				pieceSpecies = capitaliseString(pieceSpecies);
 				for(int j = 0; j < count; j++) {
-					gameState.setSquare(x++, y, Piece::create(pieceSpecies, true, isSecondPlayer));
+					gameState.setSquare(Vec2{ x++, y }, Piece::create(pieceSpecies, true, isSecondPlayer));
 				}
 			}
 			y++;
@@ -871,10 +874,10 @@ inline constexpr std::string_view INITIAL_TSFEN = {
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
-std::string stringifyBoardPos(int8_t x, int8_t y) {
-	int8_t file = 36 - x;
-	std::string rank(1, 'a' + (y % 26)); // I love c++
-	if(y >= 26) {
+std::string stringifyBoardPos(Vec2 pos) {
+	int8_t file = 36 - pos.x;
+	std::string rank(1, 'a' + (pos.y % 26)); // I love c++
+	if(pos.y >= 26) {
 		rank += rank;
 	}
 	return std::to_string(file) + rank;
@@ -886,24 +889,16 @@ Vec2 parseBoardPos(std::string boardPos) {
 	int8_t y = rank.at(0) - 'a' + (rank.length() > 1) * 26;
 	return { x, y };
 }
-std::string stringifyMove(GameState &gameState, uint32_t move) {
-	auto [srcX, srcY] = getMoveSrcPos(move);
-	auto [destX, destY] = getMoveDestPos(move);
+std::string stringifyMove(uint32_t move) {
+	Vec2 srcPos = getMoveSrcPos(move);
+	Vec2 destPos = getMoveDestPos(move);
 	
 	// std::cout << "log stringifyMove = " << std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
-	std::string moveStr = stringifyBoardPos(srcX, srcY) + " " + stringifyBoardPos(destX, destY);
+	std::string moveStr = stringifyBoardPos(srcPos) + " " + stringifyBoardPos(destPos);
 	
-	Piece piece = gameState.getSquare(srcX, srcY);
-	PieceSpecies::Type pieceSpecies = piece.getSpecies();
-	if(isLionLikePiece(pieceSpecies)) {
-		int8_t doesMiddleStep = move >> 28;
-		if(doesMiddleStep) {
-			int8_t middleStepX = ((move >> 26) & 0b11) - 1;
-			int8_t middleX = srcX + middleStepX;
-			int8_t middleStepY = ((move >> 24) & 0b11) - 1;
-			int8_t middleY = srcY + middleStepY;
-			moveStr += " " + stringifyBoardPos(middleX, middleY);
-		}
+	if(doesMoveHaveMiddleStep(move)) {
+		Vec2 middleStep = getMoveMiddleStep(move);
+		moveStr += " " + stringifyBoardPos(srcPos + middleStep);
 	}
 	
 	return moveStr;
@@ -911,33 +906,30 @@ std::string stringifyMove(GameState &gameState, uint32_t move) {
 uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 	auto srcPos = parseBoardPos(arguments[1]);
 	auto destPos = parseBoardPos(arguments[2]);
-	Piece movingPiece = gameState.getSquare(srcPos.x, srcPos.y);
+	Piece movingPiece = gameState.getSquare(srcPos);
 	bool isRangeCapturingMove = false;
 	if(isRangeCapturingPiece(movingPiece.getSpecies())) {
 		auto &slides = PieceTable[movingPiece.getSpecies()].movements.slides;
 		Vec2 deltaPos = destPos - srcPos;
-		Vec2 slideDir = Vec2{ sign(deltaPos.x), sign(deltaPos.y) };
+		Vec2 slideDir = { sign(deltaPos.x), sign(deltaPos.y) };
 		for(const auto &slide : slides) {
 			if(slide.range == 35 && movementDirToBoardDir(slide.dir, movingPiece.getOwner()) == slideDir) {
 				isRangeCapturingMove = true;
 			}
 		}
 	}
-	bool didLionStep = false;
-	Vec2 lionStepPos{0, 0};
+	bool didMiddleStep = false;
+	Vec2 middleStepPos = {0, 0};
 	// each "opmove" command will have at least 5 arguments: "opmove [src] [dest] [time] [optime]" so more than 5 means there's a middle step
 	if(arguments.size() > 5) {
 		// must be a lion-like piece
-		didLionStep = true;
+		didMiddleStep = true;
 		std::cout << "log LION STEP HAHHAHAHAHA" << std::endl;
 		Vec2 stepPos = parseBoardPos(arguments[3]);
-		Vec2 stepDeltaPos = stepPos - srcPos;
-		lionStepPos = stepDeltaPos + 1; // 1 is subtracted in makeMove() so the range [-1, 1] is mapped to [0, 2] to work better as a 2-bit int
+		middleStepPos = stepPos - srcPos;
 	}
-	return createMove(srcPos.x, srcPos.y, destPos.x, destPos.y, isRangeCapturingMove, didLionStep, lionStepPos);
+	return createMove(srcPos, destPos, isRangeCapturingMove, didMiddleStep, middleStepPos);
 }
-
-#define MAX_SCORE 100000000
 
 uint64_t totalNodesSearched = 0;
 uint32_t nodesSearched = 0;
@@ -946,7 +938,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	nodesSearched++;
 	// checking royal pieces only needs to be done for the current player - no point checking the player who just moved
 	if(gameState.royalsLeft[gameState.currentPlayer] == 0) {
-		return -MAX_SCORE;
+		return -MAX_EVAL;
 	}
 	if(depth == 0) {
 		return gameState.eval();
@@ -970,18 +962,18 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 		if(moves[i] == ttMove) {
 			moves[i] = moves[0];
 			moves[0] = ttMove;
-		} else if(moves[i] == killerMoves1[depth]) {
+		} else if(moves[i] == killerMoves[0][depth]) {
 			moves[i] = moves[hasTtMove];
-			moves[hasTtMove] = killerMoves1[depth];
-		} else if(moves[i] == killerMoves2[depth]) {
+			moves[hasTtMove] = killerMoves[0][depth];
+		} else if(moves[i] == killerMoves[1][depth]) {
 			moves[i] = moves[hasTtMove + 1];
-			moves[hasTtMove + 1] = killerMoves2[depth];
+			moves[hasTtMove + 1] = killerMoves[1][depth];
 		}
 	}
 	
 	eval_t originalAlpha = alpha;
-	// Must have -1 at the end so even if all moves lead to loss (and hence the best is -MAX_SCORE), it will store a move rather than nothing at all.
-	eval_t bestScore = -MAX_SCORE - 1;
+	// Must have -1 at the end so even if all moves lead to loss (and hence the best is -MAX_EVAL), it will store a move rather than nothing at all.
+	eval_t bestScore = -MAX_EVAL - 1;
 	uint32_t bestMove = 0;
 	bool foundPvNode = 0;
 	bool regenerateMoves = depth > 1;
@@ -1003,9 +995,9 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 			if(bestScore > alpha) {
 				alpha = bestScore;
 				if(alpha >= beta) {
-					if(bestMove != killerMoves1[depth]) {
-						killerMoves2[depth] = killerMoves1[depth];
-						killerMoves1[depth] = bestMove;
+					if(bestMove != killerMoves[0][depth]) {
+						killerMoves[1][depth] = killerMoves[0][depth];
+						killerMoves[0][depth] = bestMove;
 					}
 					break;
 				}
@@ -1077,7 +1069,7 @@ uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove =
 	for(depth_t depth = 1; depth <= maxDepth; depth++) {
 		totalNodesSearched += nodesSearched;
 		nodesSearched = 0;
-		eval = search(gameState, -MAX_SCORE, MAX_SCORE, depth);
+		eval = search(gameState, -MAX_EVAL, MAX_EVAL, depth);
 		std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
 		if(clock::now() >= stopTime) {
 			break;
@@ -1099,7 +1091,7 @@ void makeBestMove(GameState &gameState) {
 	// std::cout << "log Time to move: " << std::to_string(timeToMove) << " seconds" << std::endl;
 	
 	uint32_t bestMove = findBestMove(gameState, MAX_DEPTH, timeToMove);
-	std::cout << "move " << stringifyMove(gameState, bestMove) << std::endl;
+	std::cout << "move " << stringifyMove(bestMove) << std::endl;
 	gameState.makeMove(bestMove);
 	std::cout << "eval " << gameState.absEval << std::endl;
 	std::cout << "log ";
@@ -1213,7 +1205,7 @@ int main() {
 				eval_t eval;
 				nodesSearched = 0;
 				FunctionTiming timing = timeFunction([&]() {
-					eval = search(gameState, -MAX_SCORE, MAX_SCORE, depth);
+					eval = search(gameState, -MAX_EVAL, MAX_EVAL, depth);
 					return nodesSearched;
 				});
 				std::cout << std::format("Depth {}: Found {} nodes; Eval = {} in {} ({})", depth, nodesSearched, eval, timing.duration, timing.nodesPerSecond) << std::endl;
@@ -1226,7 +1218,7 @@ int main() {
 					return nodesSearched;
 				});
 				gameState.makeMove(bestMove, true, true);
-				std::cout << std::format("Depth {}: Best move = {}; Current eval = {}; found {} nodes in {} ({})", depth, stringifyMove(gameState, bestMove), gameState.absEval, nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
+				std::cout << std::format("Depth {}: Best move = {}; Current eval = {}; found {} nodes in {} ({})", depth, stringifyMove(bestMove), gameState.absEval, nodesSearched, timing.duration, timing.nodesPerSecond) << std::endl;
 				gameState.unmakeMove();
 			} else if(command == "ttsize") {
 				outputTtSize();
