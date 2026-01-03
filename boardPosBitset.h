@@ -2,15 +2,14 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include <bit>
+#include <immintrin.h>
 
 // A bitset for storing board positions.
 class BoardPosBitset {
 private:
-	std::array<uint64_t, 21> words{};
+	alignas(64) std::array<uint64_t, 21> words{};
 public:
-	constexpr uint64_t getWord(size_t wordI) const {
-		return words[wordI];
-	}
 	constexpr void insert(const Vec2 pos) {
 		size_t i = pos.toIndex();
 		insert(i);
@@ -44,9 +43,44 @@ public:
 	}
 	
 	constexpr BoardPosBitset& operator|=(const BoardPosBitset &other) noexcept {
-		for(size_t i = 0; i < 21; i++) {
-			words[i] |= other.getWord(i);
-		}
+		uint64_t* thisWords = words.data();
+		const uint64_t* otherWords = other.words.data();
+		#ifdef __AVX512F__
+			// Two AVX-512 registers + 1 AVX register + 1 regular register
+			for(int i = 0; i < 2; i++) {
+				uint64_t* thisWordAdr = thisWords + i * 8;
+				__m512i thisWord = _mm512_load_si512(thisWordAdr);
+				const uint64_t* otherWordAdr = otherWords + i * 8;
+				__m512i otherWord = _mm512_load_si512(otherWordAdr);
+				__m512i res = _mm512_or_si512(thisWord, otherWord);
+				_mm512_store_si512(thisWordAdr, res);
+			}
+			
+			__m256i* thisWordAdr = reinterpret_cast<__m256i*>(thisWords + 16);
+			__m256i thisWord = _mm256_load_si256(thisWordAdr);
+			const __m256i* otherWordAdr = reinterpret_cast<const __m256i*>(otherWords + 16);
+			__m256i otherWord = _mm256_load_si256(otherWordAdr);
+			__m256i res = _mm256_or_si256(thisWord, otherWord);
+			_mm256_store_si256(thisWordAdr, res);
+			
+			words[20] |= other.words[20];
+		#elif defined(__AVX2__)
+			// 5 AVX registers + 1 regular register
+			for(int i = 0; i < 5; i++) {
+				__m256i* thisWordAdr = reinterpret_cast<__m256i*>(thisWords + i * 4);
+				__m256i thisWord = _mm256_load_si256(thisWordAdr);
+				const __m256i* otherWordAdr = reinterpret_cast<const __m256i*>(otherWords + i * 4);
+				__m256i otherWord = _mm256_load_si256(otherWordAdr);
+				__m256i res = _mm256_or_si256(thisWord, otherWord);
+				_mm256_store_si256(thisWordAdr, res);
+			}
+			
+			words[20] |= other.words[20];
+		#else
+			for(size_t i = 0; i < 21; i++) {
+				words[i] |= other.words[i];
+			}
+		#endif
 		return *this;
 	}
 	
@@ -72,7 +106,7 @@ public:
 	constexpr void bitTransformForEach(const BoardPosBitset &other, F &&bitTransformFunction, J &&forEachFunction) const {
 		size_t wordIndex = 0;
 		for(uint64_t word : words) {
-			word = bitTransformFunction(word, other.getWord(wordIndex));
+			word = bitTransformFunction(word, other.words[wordIndex]);
 			while(word) {
 				auto bitOffset = std::countr_zero(word);
 				size_t index = (wordIndex << 6) + bitOffset;
