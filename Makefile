@@ -11,7 +11,7 @@ all: $(SRC) | dist
 	$(COMPILE)
 
 debug: $(SRC) | dist
-	$(COMPILE) -g -fno-omit-frame-pointer
+	$(COMPILE) -O0 -g -fno-omit-frame-pointer
 
 preprocess: $(SRC) | dist
 	$(COMPILE).i -E

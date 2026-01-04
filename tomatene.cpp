@@ -361,8 +361,7 @@ public:
 	inline constexpr const BoardPosBitset &getReverseAttacks(const Vec2 src) const {
 		return reverseAttackMap[src.toIndex()];
 	}
-	inline constexpr void setAttacks(const Vec2 src, const BoardPosBitset &attacks) {
-		size_t srcI = src.toIndex();
+	inline constexpr void setAttacks(size_t srcI, const BoardPosBitset &attacks) {
 		BoardPosBitset &currentAttacks = attackMap[srcI];
 		
 		// find the changed attacks and update them accordingly
@@ -378,6 +377,14 @@ public:
 		});
 		
 		currentAttacks = attacks;
+	}
+	inline constexpr void clearAttacks(size_t srcI) {
+		BoardPosBitset &currentAttacks = attackMap[srcI];
+		
+		currentAttacks.forEach([this, srcI](size_t targetI) {
+			eraseReverse(srcI, targetI);
+		});
+		currentAttacks.clear();
 	}
 };
 
@@ -490,21 +497,19 @@ private:
 					if(attackingPieceOwner == pieceOwner) {
 						// This implies attackingPieceOwner != oldPieceOwner, and hence there previously existed a valid move to this location. However since it is being replaced by a piece from the same team, it is no longer a valid move location and the move has to be removed.
 						auto it = std::find(moves.begin(), moves.end(), move);
-						if(it == moves.end()) {
-							// for some reason
-							return;
-							// std::cout << std::format("Piece {} at ({}, {}) doesn't have move to remove, to ({}, {}). Previously was player {}'s {}, now is player {}'s {}", PieceTable[attackingPiece.getSpecies()].name, pos.x, pos.y, x, y, oldPiece.getOwner() + 1, PieceTable[oldPiece.getSpecies()].name, piece.getOwner() + 1, PieceTable[piece.getSpecies()].name) << std::endl;
-						} else {
-							moves.erase(it);
-						}
+						// if(it == moves.end()) {
+						// 	// should NEVER happen
+						// 	std::cout << std::format("Piece {} at ({}, {}) doesn't have move to remove, to ({}, {}). Previously was player {}'s {}, now is player {}'s {}", PieceTable[attackingPiece.getSpecies()].name, attackingPos.x, attackingPos.y, pos.x, pos.y, oldPiece.getOwner() + 1, PieceTable[oldPiece.getSpecies()].name, piece.getOwner() + 1, PieceTable[piece.getSpecies()].name) << std::endl;
+						// 	return;
+						// }
+						moves.erase(it);
 					} else {
 						// Here it means that there wasn't a valid move to this location, but now that an enemy piece is here, it can now move to this location. Hence a move must be added.
-						if(std::find(moves.begin(), moves.end(), move) != moves.end()) {
-							std::cout << "Already has move" << std::endl;
-						} else {
-							// moves.push_back(move);
-							squaresNeedingMoveRecalculation.insert(i);
-						}
+						// if(std::find(moves.begin(), moves.end(), move) != moves.end()) {
+						// 	std::cout << "Already has move" << std::endl;
+						// 	return;
+						// }
+						moves.push_back(move);
 					}
 				});
 			}
@@ -695,10 +700,10 @@ public:
 	}
 	
 	void generateMoves() {
-		squaresNeedingMoveRecalculation.forEachAndClear([this](size_t i) {
-			movesPerSquarePerPlayer[0][i].clear();
-			movesPerSquarePerPlayer[1][i].clear();
-			Vec2 src = Vec2::fromIndex(i);
+		squaresNeedingMoveRecalculation.forEachAndClear([this](size_t srcI) {
+			movesPerSquarePerPlayer[0][srcI].clear();
+			movesPerSquarePerPlayer[1][srcI].clear();
+			Vec2 src = Vec2::fromIndex(srcI);
 			Piece piece = getSquare(src);
 			auto pieceOwner = piece.getOwner();
 			bool pieceIsRangeCapturing = isRangeCapturingPiece(piece.getSpecies());
@@ -771,13 +776,15 @@ public:
 				// for(const auto &compoundMove : movements.compoundMoves) {
 					
 				// }
-				bidirectionalAttackMap.setAttacks(src, attackingSquares);
-				rangeCapturingMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [src](const Vec2 &target) {
+				bidirectionalAttackMap.setAttacks(srcI, attackingSquares);
+				rangeCapturingMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][srcI], [src](const Vec2 &target) {
 					return createMove(src, target, true);
 				});
-				validMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][i], [src](const Vec2 &target) {
+				validMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][srcI], [src](const Vec2 &target) {
 					return createMove(src, target);
 				});
+			} else {
+				bidirectionalAttackMap.clearAttacks(srcI);
 			}
 		});
 	}
