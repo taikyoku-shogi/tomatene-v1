@@ -9,7 +9,7 @@
 #define ENGINE_NAME "Tomatene"
 #define ENGINE_DESC "Experimental taikyoku shogi engine"
 #define ENGINE_AUTHOR "s1050613"
-#define ENGINE_VERSION "v0"
+#define ENGINE_VERSION std::format("v0 {} {}", __DATE__, __TIME__)
 
 // Centipawns
 typedef int32_t eval_t;
@@ -154,29 +154,33 @@ struct Vec2 {
 		y += other.y;
 		return *this;
 	}
-	constexpr bool operator==(const Vec2 &other) const noexcept {
-		return x == other.x && y == other.y;
-	}
+	constexpr bool operator==(const Vec2&) const = default;
 };
 struct Slide {
 	Vec2 dir;
 	uint8_t range;
+	
+	bool operator==(const Slide&) const = default;
 };
 // these could be simplified
-struct CompoundMovementStep1 {
+struct CompoundMoveStep1 {
 	std::vector<Slide> slides;
 	std::vector<Vec2> jumps;
 	bool canContinueAfterCapture;
 };
-struct CompoundMovementStep2 {
+struct CompoundMoveStep2 {
 	std::vector<Slide> slides;
 	std::vector<Vec2> jumps;
+};
+struct CompoundMove {
+	CompoundMoveStep1 firstStep;
+	CompoundMoveStep2 secondStep;
 };
 struct Movements {
 	std::vector<Slide> slides;
 	std::vector<Vec2> jumps;
 	std::vector<Vec2> tripleSlashedArrowDirs;
-	std::vector<std::pair<CompoundMovementStep1, CompoundMovementStep2>> compoundMoves;
+	std::vector<CompoundMove> compoundMoves;
 };
 
 struct PieceInfo {
@@ -436,7 +440,6 @@ struct UndoSquare {
 class GameState {
 private:
 	std::array<Piece, 1296> board{};
-	uint16_t moveCounter = 0;
 	BoardPosBitset occupancyBitset{};
 	std::array<BoardPosBitset, 2> playerOccupancyBitsets{};
 	BidirectionalAttackMap bidirectionalAttackMap;
@@ -556,6 +559,7 @@ private:
 		}
 	}
 public:
+	uint16_t moveCounter = 0;
 	uint8_t currentPlayer = 0;
 	std::array<int8_t, 2> royalsLeft{};
 	// this could be made unsigned, but we'll be converting it to signed all the time
@@ -699,83 +703,134 @@ public:
 		positionHashHistorySize--;
 	}
 	
+	template <bool slideIsRangeCapturing, std::invocable<Vec2> F, std::invocable<Vec2> J>
+	void generateSlideMoves(Vec2 src, Slide slide, uint8_t pieceOwner, uint8_t pieceRank, F &&insertIntoAttackingSquares, J &&insertIntoMoveLocations) {
+		Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
+		uint8_t distToEdgeOfBoard = std::min(slideDir.x? slideDir.x > 0? (35 - src.x) / slideDir.x : -src.x / slideDir.x : 35, slideDir.y? slideDir.y > 0? (35 - src.y) / slideDir.y : -src.y / slideDir.y : 35);
+		uint8_t maxDist = std::min(slide.range, distToEdgeOfBoard);
+		Vec2 target = src;
+		if constexpr(slideIsRangeCapturing) {
+			for(uint8_t dist = 0; dist < maxDist; dist++) {
+				target += slideDir;
+				insertIntoAttackingSquares(target);
+				if(occupancyBitset.contains(target)) {
+					bool isBlocked = getSquare(target).getRank() >= pieceRank;
+					if(isBlocked) {
+						break;
+					}
+				}
+				insertIntoMoveLocations(target);
+			}
+		} else {
+			for(uint8_t dist = 0; dist < maxDist; dist++) {
+				target += slideDir;
+				insertIntoAttackingSquares(target);
+				if(occupancyBitset.contains(target)) {
+					bool isBlocked = playerOccupancyBitsets[pieceOwner].contains(target);
+					if(!isBlocked) {
+						insertIntoMoveLocations(target);
+					}
+					break;
+				} else {
+					insertIntoMoveLocations(target);
+				}
+			}
+		}
+	}
+	template <std::invocable<Vec2> F, std::invocable<Vec2> J>
+	void generateJumpMoves(Vec2 src, Vec2 jump, uint8_t pieceOwner, F &&insertIntoAttackingSquares, J &&insertIntoMoveLocations) {
+		Vec2 target = src + movementDirToBoardDir(jump, pieceOwner);
+		if(isPosWithinBounds(target)) {
+			insertIntoAttackingSquares(target);
+			if(!playerOccupancyBitsets[pieceOwner].contains(target)) {
+				insertIntoMoveLocations(target);
+			}
+		}
+	}
+	template <std::invocable<Vec2> F, std::invocable<Vec2> J>
+	void generateTripleSlashedArrowMoves(Vec2 src, Vec2 tripleSlashedArrowDir, uint8_t pieceOwner, F &&insertIntoAttackingSquares, J &&insertIntoMoveLocations) {
+		Vec2 dir = movementDirToBoardDir(tripleSlashedArrowDir, pieceOwner);
+		uint8_t jumpsRemaining = 4; // it will be decremented first before being checked, so this will make it trigger on the fourth jump
+		uint8_t distToEdgeOfBoard = std::min(dir.x? dir.x > 0? 35 - src.x : src.x : 35, dir.y? dir.y > 0? 35 - src.y : src.y : 35);
+		Vec2 target = src;
+		for(uint8_t dist = 0; dist < distToEdgeOfBoard; dist++) {
+			target += dir;
+			insertIntoAttackingSquares(target);
+			if(occupancyBitset.contains(target)) {
+				bool isBlocked = playerOccupancyBitsets[pieceOwner].contains(target);
+				if(!isBlocked) {
+					insertIntoMoveLocations(target);
+				}
+				if(!--jumpsRemaining) {
+					break;
+				}
+			} else {
+				insertIntoMoveLocations(target);
+			}
+		}
+	}
 	void generateMoves() {
 		squaresNeedingMoveRecalculation.forEachAndClear([this](size_t srcI) {
 			movesPerSquarePerPlayer[0][srcI].clear();
 			movesPerSquarePerPlayer[1][srcI].clear();
 			Vec2 src = Vec2::fromIndex(srcI);
 			Piece piece = getSquare(src);
-			auto pieceOwner = piece.getOwner();
+			uint8_t pieceOwner = piece.getOwner();
 			bool pieceIsRangeCapturing = isRangeCapturingPiece(piece.getSpecies());
-			auto pieceRank = piece.getRank();
+			uint8_t pieceRank = piece.getRank();
 			if(piece) {
-				auto &movements = PieceTable[piece.getSpecies()].movements;
+				const Movements &movements = PieceTable[piece.getSpecies()].movements;
 				BoardPosBitset attackingSquares;
 				BoardPosBitset validMoveLocations;
 				BoardPosBitset rangeCapturingMoveLocations;
 				for(const auto &slide : movements.slides) {
 					bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
-					Vec2 slideDir = movementDirToBoardDir(slide.dir, pieceOwner);
-					uint8_t distToEdgeOfBoard = std::min(slideDir.x? slideDir.x > 0? (35 - src.x) / slideDir.x : -src.x / slideDir.x : 35, slideDir.y? slideDir.y > 0? (35 - src.y) / slideDir.y : -src.y / slideDir.y : 35);
-					uint8_t maxDist = std::min(slide.range, distToEdgeOfBoard);
-					Vec2 target = src;
-					for(uint8_t dist = 0; dist < maxDist; dist++) {
-						target += slideDir;
-						attackingSquares.insert(target);
-						if(occupancyBitset.contains(target)) {
-							bool isBlocked = slideIsRangeCapturing? getSquare(target).getRank() >= pieceRank : playerOccupancyBitsets[pieceOwner].contains(target);
-							if(isBlocked) {
-								break;
-							}
-							if(slideIsRangeCapturing) {
-								rangeCapturingMoveLocations.insert(target);
-							} else {
-								validMoveLocations.insert(target);
-								break;
-							}
-						} else {
-							if(slideIsRangeCapturing) {
-								rangeCapturingMoveLocations.insert(target);
-							} else {
-								validMoveLocations.insert(target);
-							}
-						}
+					if(slideIsRangeCapturing) {
+						generateSlideMoves<true>(src, slide, pieceOwner, pieceRank, [&](Vec2 pos) {
+							attackingSquares.insert(pos);
+						}, [&](Vec2 pos) {
+							rangeCapturingMoveLocations.insert(pos);
+						});
+					} else {
+						generateSlideMoves<false>(src, slide, pieceOwner, pieceRank, [&](Vec2 pos) {
+							attackingSquares.insert(pos);
+						}, [&](Vec2 pos) {
+							validMoveLocations.insert(pos);
+						});
 					}
 				}
 				for(const Vec2 &jump : movements.jumps) {
-					Vec2 target = src + movementDirToBoardDir(jump, pieceOwner);
-					if(isPosWithinBounds(target)) {
-						attackingSquares.insert(target);
-						if(!playerOccupancyBitsets[pieceOwner].contains(target)) {
-							validMoveLocations.insert(target);
-						}
-					}
+					// arghh lambdas are so janky
+					generateJumpMoves(src, jump, pieceOwner, [&](Vec2 pos) {
+						attackingSquares.insert(pos);
+					}, [&](Vec2 pos) {
+						validMoveLocations.insert(pos);
+					});
 				}
 				for(const Vec2 &tripleSlashedArrowDir : movements.tripleSlashedArrowDirs) {
-					Vec2 dir = movementDirToBoardDir(tripleSlashedArrowDir, pieceOwner);
-					uint8_t jumpsRemaining = 4; // it will be decremented first before being checked, so this will make it trigger on the fourth jump
-					uint8_t distToEdgeOfBoard = std::min(dir.x? dir.x > 0? 35 - src.x : src.x : 35, dir.y? dir.y > 0? 35 - src.y : src.y : 35);
-					Vec2 target = src;
-					for(uint8_t dist = 0; dist < distToEdgeOfBoard; dist++) {
-						target += dir;
-						attackingSquares.insert(target);
-						if(occupancyBitset.contains(target)) {
-							bool isBlocked = playerOccupancyBitsets[pieceOwner].contains(target);
-							if(!isBlocked) {
-								validMoveLocations.insert(target);
-							}
-							if(!--jumpsRemaining) {
-								break;
-							}
-						} else {
-							validMoveLocations.insert(target);
-						}
+					generateTripleSlashedArrowMoves(src, tripleSlashedArrowDir, pieceOwner, [&](Vec2 pos) {
+						attackingSquares.insert(pos);
+					}, [&](Vec2 pos) {
+						validMoveLocations.insert(pos);
+					});
+				}
+				for(const CompoundMove &compoundMove : movements.compoundMoves) {
+					for(const Slide &slide : compoundMove.firstStep.slides) {
+						generateSlideMoves<false>(src, slide, pieceOwner, pieceRank, [&](Vec2 pos) {
+							attackingSquares.insert(pos);
+						}, [&](Vec2 pos) {
+							validMoveLocations.insert(pos);
+						});
+					}
+					for(const Vec2 &jump : compoundMove.firstStep.jumps) {
+						// arghh lambdas are so janky
+						generateJumpMoves(src, jump, pieceOwner, [&](Vec2 pos) {
+							attackingSquares.insert(pos);
+						}, [&](Vec2 pos) {
+							validMoveLocations.insert(pos);
+						});
 					}
 				}
-				// TODO: implement compound moves!!
-				// for(const auto &compoundMove : movements.compoundMoves) {
-					
-				// }
 				bidirectionalAttackMap.setAttacks(srcI, attackingSquares);
 				rangeCapturingMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][srcI], [src](const Vec2 &target) {
 					return createMove(src, target, true);
@@ -1073,7 +1128,7 @@ uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove =
 		totalNodesSearched += nodesSearched;
 		nodesSearched = 0;
 		eval = search(gameState, -MAX_EVAL, MAX_EVAL, depth);
-		std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
+		// std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
 		if(clock::now() >= stopTime) {
 			break;
 		}
@@ -1097,8 +1152,10 @@ void makeBestMove(GameState &gameState) {
 	std::cout << "move " << stringifyMove(bestMove) << std::endl;
 	gameState.makeMove(bestMove);
 	std::cout << "eval " << gameState.absEval << std::endl;
-	std::cout << "log ";
-	outputTtSize();
+	if(gameState.moveCounter % 100 == 0) {
+		std::cout << "log ";
+		outputTtSize();
+	}
 }
 struct FunctionTiming {
 	uint32_t nodesSearched;
@@ -1162,7 +1219,7 @@ int main() {
 				if(player == 0) {
 					makeBestMove(gameState);
 				}
-			} else if(command == "win" || command == "win" || command == "draw") {
+			} else if(command == "win" || command == "loss" || command == "draw") {
 				gameState.logTsfen();
 				std::cout << std::format("log Found {} nodes in total", totalNodesSearched) << std::endl;
 			} else if(command == "setparam") {
