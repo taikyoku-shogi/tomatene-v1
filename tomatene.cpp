@@ -243,9 +243,17 @@ uint8_t player = 0;
 float startingTime = 0;
 float timeIncrement = 0;
 
-constexpr inline uint32_t createMove(Vec2 src, Vec2 dest, bool rangeCaptures = false, bool didMiddleStep = false, Vec2 middleStepPos = { -1, -1 }) {
+std::string stringifyBoardPos(Vec2 pos) {
+	int8_t file = 36 - pos.x;
+	std::string rank(1, 'a' + (pos.y % 26)); // I love c++
+	if(pos.y >= 26) {
+		rank += rank;
+	}
+	return std::to_string(file) + rank;
+}
+constexpr inline uint32_t createMove(Vec2 src, Vec2 dest, bool rangeCaptures = false, bool didMiddleStep = false, Vec2 middleStep = { -1, -1 }) {
 	// std::cout << "log Creating move: "<< std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
-	return didMiddleStep << 29 | (middleStepPos.x + 1) << 27 | (middleStepPos.y + 1) << 25 | rangeCaptures << 24 | src.x << 18 | src.y << 12 | dest.x << 6 | dest.y;
+	return didMiddleStep << 29 | (middleStep.x + 1) << 27 | (middleStep.y + 1) << 25 | rangeCaptures << 24 | src.x << 18 | src.y << 12 | dest.x << 6 | dest.y;
 }
 inline constexpr Vec2 getMoveSrcPos(uint32_t move) {
 	return Vec2{ static_cast<int8_t>((move >> 18) & 0b111111), static_cast<int8_t>((move >> 12) & 0b111111) };
@@ -261,6 +269,20 @@ inline constexpr bool doesMoveHaveMiddleStep(uint32_t move) {
 }
 inline constexpr Vec2 getMoveMiddleStep(uint32_t move) {
 	return { static_cast<int8_t>(((move >> 27) & 0b11) - 1), static_cast<int8_t>(((move >> 25) & 0b11) - 1) };
+}
+std::string stringifyMove(uint32_t move) {
+	Vec2 srcPos = getMoveSrcPos(move);
+	Vec2 destPos = getMoveDestPos(move);
+	
+	// std::cout << "log stringifyMove = " << std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
+	std::string moveStr = stringifyBoardPos(srcPos) + " " + stringifyBoardPos(destPos);
+	
+	if(doesMoveHaveMiddleStep(move)) {
+		Vec2 middleStep = getMoveMiddleStep(move);
+		moveStr += " " + stringifyBoardPos(srcPos + middleStep);
+	}
+	
+	return moveStr;
 }
 
 // hacky wrapper around a uint16_t lol
@@ -641,8 +663,7 @@ public:
 				y += dirY;
 			}
 		} else if(doesMoveHaveMiddleStep(move)) {
-			// lion-like pieces. not yet implemented so this should never trigger.
-			std::cout << "log Does middle step: " << std::to_string(move) << std::endl;
+			// std::cout << "log Does middle step: " << std::to_string(move) << ", " << stringifyMove(move) << std::endl;
 			Vec2 middleStep = getMoveMiddleStep(move);
 			Vec2 middleStepPos = srcPos + middleStep;
 			clearSquare(middleStepPos, regenerateMoves, saveState);
@@ -661,8 +682,10 @@ public:
 		}
 		
 		// std::cout << std::format("Moving piece {} from ({}, {}) to ({}, {}); capturing {}", PieceTable[piece.getSpecies()].name, srcX, srcY, destX, destY, PieceTable[getSquare(destX, destY).getSpecies()].name) << std::endl;
-		clearSquare(srcPos, regenerateMoves, saveState);
-		if(!saveState && !ageShouldChange && occupancyBitset.contains(Vec2{ destX, destY })) {
+		if(srcPos != destPos) {
+			clearSquare(srcPos, regenerateMoves, saveState);
+		}
+		if(!saveState && !ageShouldChange && occupancyBitset.contains(destPos)) {
 			ageShouldChange = true;
 		}
 		setSquare(destPos, piece, regenerateMoves, saveState);
@@ -738,11 +761,11 @@ public:
 		}
 	}
 	template <std::invocable<Vec2> F, std::invocable<Vec2> J>
-	void generateJumpMoves(Vec2 src, Vec2 jump, uint8_t pieceOwner, F &&insertIntoAttackingSquares, J &&insertIntoMoveLocations) {
+	void generateJumpMoves(Vec2 src, Vec2 jump, uint8_t pieceOwner, F &&insertIntoAttackingSquares, J &&insertIntoMoveLocations, Vec2 definitelyEmptyLocation = { -1, -1 }) {
 		Vec2 target = src + movementDirToBoardDir(jump, pieceOwner);
 		if(isPosWithinBounds(target)) {
 			insertIntoAttackingSquares(target);
-			if(!playerOccupancyBitsets[pieceOwner].contains(target)) {
+			if(!playerOccupancyBitsets[pieceOwner].contains(target) || target == definitelyEmptyLocation) {
 				insertIntoMoveLocations(target);
 			}
 		}
@@ -783,7 +806,7 @@ public:
 				BoardPosBitset attackingSquares;
 				BoardPosBitset validMoveLocations;
 				BoardPosBitset rangeCapturingMoveLocations;
-				for(const auto &slide : movements.slides) {
+				for(const Slide &slide : movements.slides) {
 					bool slideIsRangeCapturing = pieceIsRangeCapturing && slide.range == 35;
 					if(slideIsRangeCapturing) {
 						generateSlideMoves<true>(src, slide, pieceOwner, pieceRank, [&](Vec2 pos) {
@@ -815,11 +838,15 @@ public:
 					});
 				}
 				for(const CompoundMove &compoundMove : movements.compoundMoves) {
+					std::vector<Vec2> step2StartPositions;
 					for(const Slide &slide : compoundMove.firstStep.slides) {
 						generateSlideMoves<false>(src, slide, pieceOwner, pieceRank, [&](Vec2 pos) {
 							attackingSquares.insert(pos);
 						}, [&](Vec2 pos) {
 							validMoveLocations.insert(pos);
+							if(!occupancyBitset.contains(pos)) {
+								step2StartPositions.push_back(pos);
+							}
 						});
 					}
 					for(const Vec2 &jump : compoundMove.firstStep.jumps) {
@@ -828,9 +855,39 @@ public:
 							attackingSquares.insert(pos);
 						}, [&](Vec2 pos) {
 							validMoveLocations.insert(pos);
+							// lion-like pieces (and the free eagle) can capture on the first step then move again. it's always a jump.
+							if(compoundMove.firstStep.canContinueAfterCapture || !occupancyBitset.contains(pos)) {
+								step2StartPositions.push_back(pos);
+							}
+						});
+					}
+					
+					for(const Vec2 &step2StartPos : step2StartPositions) {
+						for(const Slide &slide : compoundMove.secondStep.slides) {
+							generateSlideMoves<false>(step2StartPos, slide, pieceOwner, pieceRank, [&](Vec2 pos) {
+								attackingSquares.insert(pos);
+							}, [&](Vec2 pos) {
+								validMoveLocations.insert(pos);
+							});
+						}
+						BoardPosBitset moveWithMiddleStepPositions;
+						for(const Vec2 &jump : compoundMove.secondStep.jumps) {
+							generateJumpMoves(step2StartPos, jump, pieceOwner, [&](Vec2 pos) {
+								attackingSquares.insert(pos);
+							}, [&](Vec2 pos) {
+								if(compoundMove.firstStep.canContinueAfterCapture) {
+									moveWithMiddleStepPositions.insert(pos);
+								} else {
+									validMoveLocations.insert(pos);
+								}
+							}, src);
+						}
+						moveWithMiddleStepPositions.transformInto(movesPerSquarePerPlayer[pieceOwner][srcI], [&](Vec2 target) {
+							return createMove(src, target, false, true, step2StartPos - src);
 						});
 					}
 				}
+				
 				bidirectionalAttackMap.setAttacks(srcI, attackingSquares);
 				rangeCapturingMoveLocations.transformInto(movesPerSquarePerPlayer[pieceOwner][srcI], [src](const Vec2 &target) {
 					return createMove(src, target, true);
@@ -932,34 +989,12 @@ inline constexpr std::string_view INITIAL_TSFEN = {
 };
 inline GameState initialGameState = GameState::fromTsfen(INITIAL_TSFEN);
 
-std::string stringifyBoardPos(Vec2 pos) {
-	int8_t file = 36 - pos.x;
-	std::string rank(1, 'a' + (pos.y % 26)); // I love c++
-	if(pos.y >= 26) {
-		rank += rank;
-	}
-	return std::to_string(file) + rank;
-}
 Vec2 parseBoardPos(std::string boardPos) {
 	int8_t file = isNumber(boardPos.at(1))? (boardPos.at(0) - '0') * 10 + (boardPos.at(1) - '0') : boardPos.at(0) - '0';
 	int8_t x = 36 - file;
 	std::string rank = boardPos.substr(1 + isNumber(boardPos.at(1)));
 	int8_t y = rank.at(0) - 'a' + (rank.length() > 1) * 26;
 	return { x, y };
-}
-std::string stringifyMove(uint32_t move) {
-	Vec2 srcPos = getMoveSrcPos(move);
-	Vec2 destPos = getMoveDestPos(move);
-	
-	// std::cout << "log stringifyMove = " << std::to_string(srcX) << " " << std::to_string(srcY) << " " << std::to_string(destX) << " " << std::to_string(destY) << std::endl;
-	std::string moveStr = stringifyBoardPos(srcPos) + " " + stringifyBoardPos(destPos);
-	
-	if(doesMoveHaveMiddleStep(move)) {
-		Vec2 middleStep = getMoveMiddleStep(move);
-		moveStr += " " + stringifyBoardPos(srcPos + middleStep);
-	}
-	
-	return moveStr;
 }
 uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 	auto srcPos = parseBoardPos(arguments[1]);
@@ -977,7 +1012,7 @@ uint32_t parseMove(GameState &gameState, std::vector<std::string> arguments) {
 		}
 	}
 	bool didMiddleStep = false;
-	Vec2 middleStepPos = {0, 0};
+	Vec2 middleStepPos = { 0, 0 };
 	// each "opmove" command will have at least 5 arguments: "opmove [src] [dest] [time] [optime]" so more than 5 means there's a middle step
 	if(arguments.size() > 5) {
 		// must be a lion-like piece
@@ -1006,6 +1041,7 @@ eval_t search(GameState &gameState, eval_t alpha, eval_t beta, depth_t depth) {
 	}
 	TranspositionTableEntry* ttEntry = transpositionTable.get(gameState.hash);
 	// this makes it look at more nodes somehow... and there are hash collisions still... so I don't really trust it
+	// also it doesn't account for repetition draws so ends up in infinite loops
 	
 	// if(ttEntry && ttEntry->depth >= depth) {
 	// 	if(ttEntry->nodeType == NodeType::EXACT || (ttEntry->nodeType == NodeType::LOWER_BOUND && ttEntry->eval >= beta) || (ttEntry->nodeType == NodeType::UPPER_BOUND && ttEntry->eval <= alpha)) {
