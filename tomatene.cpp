@@ -140,6 +140,9 @@ struct Vec2 {
 	constexpr size_t toIndex() const {
 		return x + 36 * y;
 	}
+	constexpr float magnitude() const {
+		return std::sqrt(x * x + y * y);
+	}
 	constexpr Vec2 operator+(const Vec2 &other) const {
 		return { static_cast<int8_t>(x + other.x), static_cast<int8_t>(y + other.y) };
 	}
@@ -196,27 +199,114 @@ const std::array<PieceInfo, 302> PieceTable = { {
 	#undef Piece
 } };
 
+float getDirectionValue(Vec2 dir) {
+	if(!dir.x && dir.y > 0) {
+		// straight forward
+		return 1;
+	}
+	if(dir.y > 0) {
+		// diagonally forward
+		return 0.8;
+	}
+	if(dir.x && !dir.y) {
+		// sideways
+		return 0.75;
+	}
+	if(dir.x) {
+		// diagonally backwards
+		return 0.65;
+	}
+	// straight backwards
+	return 0.6;
+}
 inline std::array<eval_t, 302> calculateBasePieceValues() {
-	constexpr eval_t basePieceValue = 95;
-	constexpr eval_t slideFactor = 5;
-	constexpr eval_t rangeCapturingFactor = 10;
+	const float basePieceValue = 100;
+	const float movementFactor = 5;
+	const float rangeCapturingFactor = 15;
+	const float jumpFactor = 3;
+	const float tripleSlashedArrowFactor = 3; // this is on top of the factor of 35 for the unlimited range
+	const float doubleCaptureFactor = 50;
+	const float unableToReachOtherColouredSquaresFactor = 0.6;
+	const float royalBonus = 100000;
 	
 	std::array<eval_t, 302> values;
 	values[0] = 0;
 	for(int pieceSpecies = 1; pieceSpecies < 302; pieceSpecies++) {
 		const Movements &movements = PieceTable[pieceSpecies].movements;
-		eval_t value = basePieceValue; // centipawns
+		bool canReachOtherColouredSquares = false;
+		float movementValue = 0;
 		for(const auto &slide : movements.slides) {
 			bool isRangeCapturingSlide = isRangeCapturingPiece(static_cast<PieceSpecies::Type>(pieceSpecies)) && slide.range == 35;
-			value += slide.range * slideFactor * (isRangeCapturingSlide? rangeCapturingFactor : 1) * std::pow(slide.dir.x * slide.dir.x + slide.dir.y * slide.dir.y, 0.25);
+			movementValue += slide.range * (isRangeCapturingSlide? rangeCapturingFactor : 1) * getDirectionValue(slide.dir);
+			if(slide.dir.x % 2 || slide.dir.y % 2) {
+				canReachOtherColouredSquares = true;
+			}
 		}
 		for(const auto &jump : movements.jumps) {
-			value += slideFactor * std::pow(jump.x * jump.x + jump.y * jump.y, 0.25);
+			movementValue += jump.magnitude() * getDirectionValue(jump) * (std::abs(jump.x) > 1 || std::abs(jump.y) > 1? jumpFactor : 1);
+			if(jump.x % 2 || jump.y % 2) {
+				canReachOtherColouredSquares = true;
+			}
 		}
+		for(Vec2 tripleSlashedArrowDir : movements.tripleSlashedArrowDirs) {
+			movementValue += 35 * tripleSlashedArrowFactor * getDirectionValue(tripleSlashedArrowDir);
+			if(tripleSlashedArrowDir.x % 2 || tripleSlashedArrowDir.y % 2) {
+				canReachOtherColouredSquares = true;
+			}
+		}
+		for(CompoundMove compoundMove : movements.compoundMoves) {
+			float firstStepValue = 0;
+			for(const auto &slide : compoundMove.firstStep.slides) {
+				float slideValue = slide.range * getDirectionValue(slide.dir);
+				movementValue += slideValue;
+				firstStepValue += slideValue;
+				if(slide.dir.x % 2 || slide.dir.y % 2) {
+					canReachOtherColouredSquares = true;
+				}
+			}
+			for(const auto &jump : compoundMove.firstStep.jumps) {
+				float jumpValue = jump.magnitude() * getDirectionValue(jump);
+				movementValue += jumpValue * (std::abs(jump.x) > 1 || std::abs(jump.y) > 1? jumpFactor : 1);
+				firstStepValue += jumpValue;
+				if(jump.x % 2 || jump.y % 2) {
+					canReachOtherColouredSquares = true;
+				}
+			}
+			if(compoundMove.firstStep.canContinueAfterCapture) {
+				firstStepValue *= doubleCaptureFactor;
+			}
+			
+			firstStepValue = std::pow(firstStepValue, 0.7);
+			
+			for(const auto &slide : compoundMove.secondStep.slides) {
+				float slideValue = slide.range * getDirectionValue(slide.dir);
+				movementValue += slideValue * firstStepValue;
+				if(slide.dir.x % 2 || slide.dir.y % 2) {
+					canReachOtherColouredSquares = true;
+				}
+			}
+			for(const auto &jump : compoundMove.secondStep.jumps) {
+				float jumpValue = jump.magnitude() * getDirectionValue(jump) * (std::abs(jump.x) > 1 || std::abs(jump.y) > 1? jumpFactor : 1);
+				movementValue += jumpValue * firstStepValue;
+				if(jump.x % 2 || jump.y % 2) {
+					canReachOtherColouredSquares = true;
+				}
+			}
+		}
+		if(!canReachOtherColouredSquares) {
+			movementValue *= unableToReachOtherColouredSquaresFactor;
+		}
+		values[pieceSpecies] = basePieceValue + movementValue * movementFactor;
+	}
+	
+	// normalise so pawns are 100
+	eval_t pawnValue = values[PieceSpecies::P];
+	for(int pieceSpecies = 1; pieceSpecies < 302; pieceSpecies++) {
+		values[pieceSpecies] *= 100;
+		values[pieceSpecies] /= pawnValue;
 		if(pieceSpecies == PieceSpecies::K || pieceSpecies == PieceSpecies::CP) {
-			value += 100000;
+			values[pieceSpecies] += royalBonus;
 		}
-		values[pieceSpecies] = value;
 	}
 	return values;
 }
@@ -1164,7 +1254,9 @@ uint32_t findBestMove(GameState &gameState, depth_t maxDepth, float timeToMove =
 		totalNodesSearched += nodesSearched;
 		nodesSearched = 0;
 		eval = search(gameState, -MAX_EVAL, MAX_EVAL, depth);
-		// std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
+		if(depth == maxDepth) {
+			std::cout << "log Score for us after depth " << std::to_string(depth) << " and " << nodesSearched << " nodes: " << eval << std::endl;
+		}
 		if(clock::now() >= stopTime) {
 			break;
 		}
