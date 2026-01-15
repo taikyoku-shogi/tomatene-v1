@@ -9,7 +9,7 @@
 #define ENGINE_NAME "Tomatene"
 #define ENGINE_DESC "Experimental taikyoku shogi engine"
 #define ENGINE_AUTHOR "s1050613"
-#define ENGINE_VERSION std::format("v0 {} {}", __DATE__, __TIME__)
+#define ENGINE_VERSION std::format("v1 {} {}", __DATE__, __TIME__)
 
 // Centipawns
 typedef int32_t eval_t;
